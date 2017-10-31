@@ -23,6 +23,10 @@ public class Vector {
 		this(pointTowards.getX(), pointTowards.getY(), pointTowards.getZ());
 	}
 
+	public Vector(Normal convertFrom) {
+		this(convertFrom.getX(), convertFrom.getY(), convertFrom.getZ());
+	}
+
 	public Vector(double x, double y, double z) {
 		this.x = x;
 		this.y = y;
