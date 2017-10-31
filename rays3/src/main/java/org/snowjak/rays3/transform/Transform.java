@@ -1,5 +1,7 @@
 package org.snowjak.rays3.transform;
 
+import org.snowjak.rays3.geometry.Matrix;
+import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.geometry.Vector;
@@ -36,10 +38,25 @@ public interface Transform {
 	public Ray transform(Ray ray);
 
 	/**
+	 * Transform the given Normal
+	 * 
+	 * @param normal
+	 * @return the transformed Normal
+	 */
+	public Normal transform(Normal normal);
+
+	/**
 	 * If possible, compute the inverse of this Transform.
 	 * 
 	 * @return this Transform's inverse, or <code>null</code> if no such inverse
 	 *         is possible
 	 */
 	public Transform getInverse();
+
+	/**
+	 * Return the transformation-matrix that performs this Transform.
+	 * 
+	 * @return
+	 */
+	public Matrix getMatrixForm();
 }

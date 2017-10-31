@@ -156,21 +156,52 @@ public class Matrix {
 	 */
 	public Vector multiply(Vector vector) {
 
+		double[] newVector = this.multiply(new double[] { vector.getX(), vector.getY(), vector.getZ(), 1d });
+		return new Vector(newVector[0], newVector[1], newVector[2]);
+	}
+
+	/**
+	 * Multiply this Matrix by a 1x4 column vector.
+	 * <p>
+	 * <strong>Note</strong> that this column-vector is normalized to
+	 * homogeneous coordinates after multiplication:
+	 * 
+	 * <pre>
+	 *    vect[0] /= vect[3]
+	 *    vect[1] /= vect[3]
+	 *    vect[2] /= vect[3]
+	 *    vect[3] = 1
+	 * </pre>
+	 * </p>
+	 * 
+	 * @param columnVector
+	 * @return
+	 * @throws IllegalArgumentException
+	 *             if the given column-vector is not 1x4
+	 */
+	public double[] multiply(double[] columnVector) {
+
+		if (columnVector.length != 4)
+			throw new IllegalArgumentException(
+					"Given column-vector is not 1x4 as expected, but 1x" + Integer.toString(columnVector.length));
+
 		double[] newVector = new double[] {
-				values[0][0] * vector.getX() + values[0][1] * vector.getY() + values[0][2] * vector.getZ()
+				values[0][0] * columnVector[0] + values[0][1] * columnVector[1] + values[0][2] * columnVector[2]
 						+ values[0][3],
-				values[1][0] * vector.getX() + values[1][1] * vector.getY() + values[1][2] * vector.getZ()
+				values[1][0] * columnVector[0] + values[1][1] * columnVector[1] + values[1][2] * columnVector[2]
 						+ values[1][3],
-				values[2][0] * vector.getX() + values[2][1] * vector.getY() + values[2][2] * vector.getZ()
+				values[2][0] * columnVector[0] + values[2][1] * columnVector[1] + values[2][2] * columnVector[2]
 						+ values[2][3],
-				values[3][0] * vector.getX() + values[3][1] * vector.getY() + values[3][2] * vector.getZ()
+				values[3][0] * columnVector[0] + values[3][1] * columnVector[1] + values[3][2] * columnVector[2]
 						+ values[3][3] };
 
 		newVector[0] /= newVector[3];
 		newVector[1] /= newVector[3];
 		newVector[2] /= newVector[3];
+		newVector[3] = 1d;
 
-		return new Vector(newVector[0], newVector[1], newVector[2]);
+		return newVector;
+
 	}
 
 	/**

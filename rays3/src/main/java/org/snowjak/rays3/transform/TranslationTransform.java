@@ -1,5 +1,7 @@
 package org.snowjak.rays3.transform;
 
+import org.snowjak.rays3.geometry.Matrix;
+import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.geometry.Vector;
@@ -12,12 +14,11 @@ import org.snowjak.rays3.geometry.Vector;
 public class TranslationTransform implements Transform {
 
 	private double					dx, dy, dz;
+	private Matrix					matrixForm;
 	private TranslationTransform	inverse	= null;
 
 	public TranslationTransform(double dx, double dy, double dz) {
-		this.dx = dx;
-		this.dy = dy;
-		this.dz = dz;
+		this(dx, dy, dz, null);
 	}
 
 	/**
@@ -33,6 +34,13 @@ public class TranslationTransform implements Transform {
 		this.dy = dy;
 		this.dz = dz;
 		this.inverse = inverse;
+
+		//@formatter:off
+		this.matrixForm = new Matrix(new double[][] {	{ 1d, 0d, 0d, dx },
+														{ 0d, 1d, 0d, dy },
+														{ 0d, 0d, 1d, dz },
+														{ 0d, 0d, 0d, 1d } });
+		//@formatter:on
 	}
 
 	@Override
@@ -60,6 +68,19 @@ public class TranslationTransform implements Transform {
 		return new Ray(this.transform(ray.getOrigin()), ray.getDirection());
 	}
 
+	/**
+	 * {inheritDoc}
+	 * <p>
+	 * <strong>Note</strong>: a translation is considered to have <strong>no
+	 * effect</strong> on a Normal.
+	 * </p>
+	 */
+	@Override
+	public Normal transform(Normal normal) {
+
+		return normal;
+	}
+
 	@Override
 	public Transform getInverse() {
 
@@ -67,6 +88,12 @@ public class TranslationTransform implements Transform {
 			inverse = new TranslationTransform(-dx, -dy, -dz, this);
 
 		return inverse;
+	}
+
+	@Override
+	public Matrix getMatrixForm() {
+
+		return matrixForm;
 	}
 
 }
