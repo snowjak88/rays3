@@ -46,6 +46,11 @@ public class Vector {
 		return new Vector(x / getMagnitude(), y / getMagnitude(), z / getMagnitude());
 	}
 
+	public Vector negate() {
+
+		return new Vector(-x, -y, -z);
+	}
+
 	public Vector add(Vector addend) {
 
 		return new Vector(x + addend.x, y + addend.y, z + addend.z);

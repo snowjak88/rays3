@@ -22,6 +22,11 @@ public class Normal {
 		this.direction = vector;
 	}
 
+	public Normal negate() {
+
+		return new Normal(direction.negate());
+	}
+
 	public double getX() {
 
 		return direction.getX();
