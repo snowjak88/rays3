@@ -13,72 +13,100 @@ import org.snowjak.rays3.geometry.Vector;
  */
 public class ScaleTransform implements Transform {
 
-	private double			sx, sy, sz;
-	private ScaleTransform	inverse		= null;
+	private Matrix	worldToLocal	= null, worldToLocal_inverseTranspose = null;
+	private Matrix	localToWorld	= null, localToWorld_inverseTranspose = null;
 
-	private Matrix			matrixForm	= null, inverseTransposeMatrix = null;
-
+	/**
+	 * Create a new ScaleTransform, with the specified
+	 * <strong>world-to-local</strong> scaling terms.
+	 * 
+	 * @param sx
+	 * @param sy
+	 * @param sz
+	 */
 	public ScaleTransform(double sx, double sy, double sz) {
-		this(sx, sy, sz, null);
-	}
-
-	private ScaleTransform(double sx, double sy, double sz, ScaleTransform inverse) {
-		this.sx = sx;
-		this.sy = sy;
-		this.sz = sz;
-		this.inverse = inverse;
 
 		//@formatter:off
-		this.matrixForm = new Matrix(new double[][] {	{ sx, 0d, 0d, 0d },
-														{ 0d, sy, 0d, 0d },
-														{ 0d, 0d, sz, 0d },
-														{ 0d, 0d, 0d, 1d} });
+		this.worldToLocal = new Matrix(new double[][] {	{ sx,    0d,    0d,    0d },
+														{ 0d,    sy,    0d,    0d },
+														{ 0d,    0d,    sz,    0d },
+														{ 0d,    0d,    0d,    1d } });
+		this.localToWorld = new Matrix(new double[][] {	{ 1d/sx, 0d,    0d,    0d },
+														{ 0d,    1d/sy, 0d,    0d },
+														{ 0d,    0d,    1d/sz, 0d },
+														{ 0d,    0d,    0d,    1d } });
 		//@formatter:on
 	}
 
 	@Override
-	public Point transform(Point point) {
+	public Point worldToLocal(Point point) {
 
-		return new Point(point.getX() * sx, point.getY() * sy, point.getZ() * sz);
+		return new Point(apply(worldToLocal, point.getX(), point.getY(), point.getZ(), 1d));
 	}
 
 	@Override
-	public Vector transform(Vector vector) {
+	public Point localToWorld(Point point) {
 
-		return new Vector(vector.getX() * sx, vector.getY() * sy, vector.getZ() * sz);
+		return new Point(apply(localToWorld, point.getX(), point.getY(), point.getZ(), 1d));
 	}
 
 	@Override
-	public Ray transform(Ray ray) {
+	public Vector worldToLocal(Vector vector) {
 
-		return new Ray(this.transform(ray.getOrigin()), this.transform(ray.getDirection()));
+		return new Vector(apply(worldToLocal, vector.getX(), vector.getY(), vector.getZ(), 1d));
 	}
 
 	@Override
-	public Normal transform(Normal normal) {
+	public Vector localToWorld(Vector vector) {
 
-		if (inverseTransposeMatrix == null)
-			inverseTransposeMatrix = matrixForm.inverse().transpose();
-
-		double[] transformedResult = inverseTransposeMatrix
-				.multiply(new double[] { normal.getX(), normal.getY(), normal.getZ(), 1d });
-
-		return new Normal(transformedResult[0], transformedResult[1], transformedResult[2]);
+		return new Vector(apply(localToWorld, vector.getX(), vector.getY(), vector.getZ(), 1d));
 	}
 
 	@Override
-	public Transform getInverse() {
+	public Ray worldToLocal(Ray ray) {
 
-		if (this.inverse == null)
-			this.inverse = new ScaleTransform(1d / sx, 1d / sy, 1d / sz, this);
-
-		return this.inverse;
+		return new Ray(worldToLocal(ray.getOrigin()), worldToLocal(ray.getDirection()));
 	}
 
 	@Override
-	public Matrix getMatrixForm() {
+	public Ray localToWorld(Ray ray) {
 
-		return matrixForm;
+		return new Ray(localToWorld(ray.getOrigin()), localToWorld(ray.getDirection()));
+	}
+
+	@Override
+	public Normal worldToLocal(Normal normal) {
+
+		if (worldToLocal_inverseTranspose == null)
+			worldToLocal_inverseTranspose = worldToLocal.inverse().transpose();
+
+		return new Normal(apply(worldToLocal_inverseTranspose, normal.getX(), normal.getY(), normal.getZ(), 1d));
+	}
+
+	@Override
+	public Normal localToWorld(Normal normal) {
+
+		if (localToWorld_inverseTranspose == null)
+			localToWorld_inverseTranspose = localToWorld.inverse().transpose();
+
+		return new Normal(apply(localToWorld_inverseTranspose, normal.getX(), normal.getY(), normal.getZ(), 1d));
+	}
+
+	private double[] apply(Matrix matrix, double... coordinates) {
+
+		return matrix.multiply(coordinates);
+	}
+
+	@Override
+	public Matrix getWorldToLocal() {
+
+		return worldToLocal;
+	}
+
+	@Override
+	public Matrix getLocalToWorld() {
+
+		return localToWorld;
 	}
 
 }

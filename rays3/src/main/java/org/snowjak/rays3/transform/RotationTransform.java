@@ -15,9 +15,8 @@ import org.snowjak.rays3.geometry.Vector;
  */
 public class RotationTransform implements Transform {
 
-	private RotationTransform	inverse		= null;
-
-	private Matrix				matrixForm	= null, inverseTransposeMatrix = null;
+	private Matrix	worldToLocal	= null, worldToLocal_inverseTranspose = null;
+	private Matrix	localToWorld	= null, localToWorld_inverseTranspose = null;
 
 	/**
 	 * Construct a new RotationTransform, representing a rotation about the
@@ -26,79 +25,94 @@ public class RotationTransform implements Transform {
 	 * @param axis
 	 * @param degreesOfRotation
 	 */
-	public RotationTransform(Vector axis, double degreesOfRotation) {
-		this(axis, degreesOfRotation, null);
-	}
 
-	private RotationTransform(Vector axis, double degreesOfRotation, RotationTransform inverse) {
+	public RotationTransform(Vector axis, double degreesOfRotation) {
 
 		axis = axis.normalize();
 
 		final double radians = degreesOfRotation * FastMath.PI / 180d;
-		final double l = axis.getX(), m = axis.getY(), n = axis.getZ();
+		final double ax = axis.getX(), ay = axis.getY(), az = axis.getZ();
+		final double ax2 = FastMath.pow(ax, 2), ay2 = FastMath.pow(ay, 2), az2 = FastMath.pow(az, 2);
 		final double cos = FastMath.cos(radians), sin = FastMath.sin(radians);
 
 		//@formatter:off
-		this.matrixForm = new Matrix(new double[][] {	{ l * l * (1d - cos) + cos,     m * l * (1d - cos) - n * sin, n * l * (1d - cos) + m * sin, 0d },
-														{ l * m * (1d - cos) + n * sin, m * m * (1d - cos) + cos,     n * m * (1d- cos) - l * sin,  0d },
-														{ l * n * (1d - cos) - m * sin, m * n * (1d - cos) + l * sin, n * n * (1d - cos) + cos,     0d },
-														{ 0d,                           0d,                           0d,                           1d } });
+		this.worldToLocal = new Matrix(new double[][] {	{ cos + ax2*(1d - cos),     ax*ay*(1d - cos) - az*sin, ax*az*(1d - cos) + ay*sin, 0d },
+														{ ay*ax*(1 - cos) + az*sin, cos + ay2*(1d - cos),      ay*az*(1d - cos) - ax*sin, 0d },
+														{ az*ax*(1 - cos) - ay*sin, az*ay*(1d - cos) + ax*sin, cos + az2*(1d - cos),      0d },
+														{ 0d,                       0d,                        0d,                        1d } });
 		//@formatter:on
-
-		this.inverse = inverse;
-	}
-
-	private RotationTransform(Matrix matrixForm, RotationTransform inverse) {
-
-		this.matrixForm = matrixForm;
-		this.inverse = inverse;
+		this.localToWorld = this.worldToLocal.transpose();
 	}
 
 	@Override
-	public Point transform(Point point) {
+	public Point worldToLocal(Point point) {
 
-		double[] result = matrixForm.multiply(new double[] { point.getX(), point.getY(), point.getZ(), 1d });
-
-		return new Point(result[0], result[1], result[2]);
+		return new Point(apply(worldToLocal, point.getX(), point.getY(), point.getZ(), 1d));
 	}
 
 	@Override
-	public Vector transform(Vector vector) {
+	public Point localToWorld(Point point) {
 
-		return new Vector(this.transform(new Point(vector)));
+		return new Point(apply(localToWorld, point.getX(), point.getY(), point.getZ(), 1d));
 	}
 
 	@Override
-	public Ray transform(Ray ray) {
+	public Vector worldToLocal(Vector vector) {
 
-		return new Ray(this.transform(ray.getOrigin()), this.transform(ray.getDirection()));
+		return new Vector(apply(worldToLocal, vector.getX(), vector.getY(), vector.getZ(), 1d));
 	}
 
 	@Override
-	public Normal transform(Normal normal) {
+	public Vector localToWorld(Vector vector) {
 
-		if (inverseTransposeMatrix == null)
-			inverseTransposeMatrix = matrixForm.inverse().transpose();
-
-		double[] transformedResult = inverseTransposeMatrix
-				.multiply(new double[] { normal.getX(), normal.getY(), normal.getZ(), 1d });
-
-		return new Normal(transformedResult[0], transformedResult[1], transformedResult[2]);
+		return new Vector(apply(localToWorld, vector.getX(), vector.getY(), vector.getZ(), 1d));
 	}
 
 	@Override
-	public Transform getInverse() {
+	public Ray worldToLocal(Ray ray) {
 
-		if (this.inverse == null)
-			this.inverse = new RotationTransform(matrixForm.transpose(), this);
-
-		return this.inverse;
+		return new Ray(worldToLocal(ray.getOrigin()), worldToLocal(ray.getDirection()));
 	}
 
 	@Override
-	public Matrix getMatrixForm() {
+	public Ray localToWorld(Ray ray) {
 
-		return matrixForm;
+		return new Ray(localToWorld(ray.getOrigin()), localToWorld(ray.getDirection()));
+	}
+
+	@Override
+	public Normal worldToLocal(Normal normal) {
+
+		if (worldToLocal_inverseTranspose == null)
+			worldToLocal_inverseTranspose = worldToLocal.inverse().transpose();
+
+		return new Normal(apply(worldToLocal_inverseTranspose, normal.getX(), normal.getY(), normal.getZ(), 1d));
+	}
+
+	@Override
+	public Normal localToWorld(Normal normal) {
+
+		if (localToWorld_inverseTranspose == null)
+			localToWorld_inverseTranspose = localToWorld.inverse().transpose();
+
+		return new Normal(apply(localToWorld_inverseTranspose, normal.getX(), normal.getY(), normal.getZ(), 1d));
+	}
+
+	private double[] apply(Matrix matrix, double... coordinates) {
+
+		return matrix.multiply(coordinates);
+	}
+
+	@Override
+	public Matrix getWorldToLocal() {
+
+		return worldToLocal;
+	}
+
+	@Override
+	public Matrix getLocalToWorld() {
+
+		return localToWorld;
 	}
 
 }

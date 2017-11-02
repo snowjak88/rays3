@@ -13,87 +13,105 @@ import org.snowjak.rays3.geometry.Vector;
  */
 public class TranslationTransform implements Transform {
 
-	private double					dx, dy, dz;
-	private Matrix					matrixForm;
-	private TranslationTransform	inverse	= null;
-
-	public TranslationTransform(double dx, double dy, double dz) {
-		this(dx, dy, dz, null);
-	}
+	private Matrix worldToLocal, localToWorld;
 
 	/**
-	 * Private constructor; used to explicitly initialize the "inverse" link.
+	 * Create a new TranslationTransform, with the specified
+	 * <strong>world-to-local</strong> translation terms.
 	 * 
 	 * @param dx
 	 * @param dy
 	 * @param dz
-	 * @param inverse
 	 */
-	private TranslationTransform(double dx, double dy, double dz, TranslationTransform inverse) {
-		this.dx = dx;
-		this.dy = dy;
-		this.dz = dz;
-		this.inverse = inverse;
+	public TranslationTransform(double dx, double dy, double dz) {
 
 		//@formatter:off
-		this.matrixForm = new Matrix(new double[][] {	{ 1d, 0d, 0d, dx },
+		this.worldToLocal = new Matrix(new double[][] {	{ 1d, 0d, 0d, dx },
 														{ 0d, 1d, 0d, dy },
 														{ 0d, 0d, 1d, dz },
+														{ 0d, 0d, 0d, 1d } });
+		this.localToWorld = new Matrix(new double[][] {	{ 1d, 0d, 0d,-dx },
+														{ 0d, 1d, 0d,-dy },
+														{ 0d, 0d, 1d,-dz },
 														{ 0d, 0d, 0d, 1d } });
 		//@formatter:on
 	}
 
 	@Override
-	public Point transform(Point point) {
+	public Point worldToLocal(Point point) {
 
-		return new Point(point.getX() + dx, point.getY() + dy, point.getZ() + dz);
+		return new Point(apply(worldToLocal, point.getX(), point.getY(), point.getZ(), 1d));
+	}
+
+	@Override
+	public Point localToWorld(Point point) {
+
+		return new Point(apply(localToWorld, point.getX(), point.getY(), point.getZ(), 1d));
 	}
 
 	/**
-	 * {@inheritDoc}
-	 * <p>
-	 * <strong>Note</strong>: a translation is considered to have <strong>no
-	 * effect</strong> on a Vector.
-	 * </p>
+	 * As a rule, Vectors are considered to be unaffected by translations.
 	 */
 	@Override
-	public Vector transform(Vector vector) {
+	public Vector worldToLocal(Vector vector) {
+
+		return vector;
+	}
+
+	/**
+	 * As a rule, Vectors are considered to be unaffected by translations.
+	 */
+	@Override
+	public Vector localToWorld(Vector vector) {
 
 		return vector;
 	}
 
 	@Override
-	public Ray transform(Ray ray) {
+	public Ray worldToLocal(Ray ray) {
 
-		return new Ray(this.transform(ray.getOrigin()), ray.getDirection());
+		return new Ray(worldToLocal(ray.getOrigin()), worldToLocal(ray.getDirection()));
+	}
+
+	@Override
+	public Ray localToWorld(Ray ray) {
+
+		return new Ray(localToWorld(ray.getOrigin()), localToWorld(ray.getDirection()));
 	}
 
 	/**
-	 * {inheritDoc}
-	 * <p>
-	 * <strong>Note</strong>: a translation is considered to have <strong>no
-	 * effect</strong> on a Normal.
-	 * </p>
+	 * As a rule, Normals are considered to be unaffected by translations.
 	 */
 	@Override
-	public Normal transform(Normal normal) {
+	public Normal worldToLocal(Normal normal) {
 
 		return normal;
 	}
 
+	/**
+	 * As a rule, Normals are considered to be unaffected by translations.
+	 */
 	@Override
-	public Transform getInverse() {
+	public Normal localToWorld(Normal normal) {
 
-		if (inverse == null)
-			inverse = new TranslationTransform(-dx, -dy, -dz, this);
+		return normal;
+	}
 
-		return inverse;
+	private double[] apply(Matrix matrix, double... coordinates) {
+
+		return matrix.multiply(coordinates);
 	}
 
 	@Override
-	public Matrix getMatrixForm() {
+	public Matrix getWorldToLocal() {
 
-		return matrixForm;
+		return worldToLocal;
+	}
+
+	@Override
+	public Matrix getLocalToWorld() {
+
+		return localToWorld;
 	}
 
 }

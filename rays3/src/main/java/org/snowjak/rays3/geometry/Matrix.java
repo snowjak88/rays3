@@ -179,7 +179,7 @@ public class Matrix {
 	 * @throws IllegalArgumentException
 	 *             if the given column-vector is not 1x4
 	 */
-	public double[] multiply(double[] columnVector) {
+	public double[] multiply(double... columnVector) {
 
 		if (columnVector.length != 4)
 			throw new IllegalArgumentException(

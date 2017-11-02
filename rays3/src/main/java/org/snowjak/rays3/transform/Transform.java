@@ -14,49 +14,81 @@ import org.snowjak.rays3.geometry.Vector;
 public interface Transform {
 
 	/**
-	 * Transform the given Point.
+	 * Transform the given Point into local coordinates.
 	 * 
 	 * @param point
-	 * @return the transformed Point
+	 * @return
 	 */
-	public Point transform(Point point);
+	public Point worldToLocal(Point point);
 
 	/**
-	 * Transform the given Vector.
+	 * Transform the given Point into world coordinates.
+	 * 
+	 * @param point
+	 * @return
+	 */
+	public Point localToWorld(Point point);
+
+	/**
+	 * Transform the given Vector into local coordinates.
 	 * 
 	 * @param vector
 	 * @return the transformed Vector
 	 */
-	public Vector transform(Vector vector);
+	public Vector worldToLocal(Vector vector);
 
 	/**
-	 * Transform the given Ray
+	 * Transform the given Vector into world coordinates.
+	 * 
+	 * @param vector
+	 * @return the transformed Vector
+	 */
+	public Vector localToWorld(Vector vector);
+
+	/**
+	 * Transform the given Ray into local coordinates.
 	 * 
 	 * @param ray
 	 * @return the transformed Ray
 	 */
-	public Ray transform(Ray ray);
+	public Ray worldToLocal(Ray ray);
 
 	/**
-	 * Transform the given Normal
+	 * Transform the given Ray into world coordinates.
+	 * 
+	 * @param ray
+	 * @return the transformed Ray
+	 */
+	public Ray localToWorld(Ray ray);
+
+	/**
+	 * Transform the given Normal into local coordinates.
 	 * 
 	 * @param normal
 	 * @return the transformed Normal
 	 */
-	public Normal transform(Normal normal);
+	public Normal worldToLocal(Normal normal);
 
 	/**
-	 * If possible, compute the inverse of this Transform.
+	 * Transform the given Normal into world coordinates.
 	 * 
-	 * @return this Transform's inverse, or <code>null</code> if no such inverse
-	 *         is possible
+	 * @param normal
+	 * @return the transformed Normal
 	 */
-	public Transform getInverse();
+	public Normal localToWorld(Normal normal);
 
 	/**
-	 * Return the transformation-matrix that performs this Transform.
+	 * Return the Matrix implementing the world-to-local form of this Transform.
 	 * 
 	 * @return
 	 */
-	public Matrix getMatrixForm();
+	public Matrix getWorldToLocal();
+
+	/**
+	 * Return the Matrix implementing the local-to-world form of this Transform.
+	 * 
+	 * @return
+	 */
+	public Matrix getLocalToWorld();
+
 }

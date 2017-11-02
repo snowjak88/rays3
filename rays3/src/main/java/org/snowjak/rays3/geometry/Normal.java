@@ -18,6 +18,10 @@ public class Normal {
 		this.direction = new Vector(nx, ny, nz);
 	}
 
+	public Normal(double... coordinates) {
+		this.direction = new Vector(coordinates);
+	}
+
 	public Normal(Vector vector) {
 		this.direction = vector;
 	}
