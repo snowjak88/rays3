@@ -1,5 +1,6 @@
 package org.snowjak.rays3.transform;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.snowjak.rays3.geometry.Normal;
@@ -16,8 +17,22 @@ import org.snowjak.rays3.geometry.Vector;
  */
 public interface Transformable {
 
+	/**
+	 * Get the Transforms currently affecting this Transformable, in the order
+	 * such that an {@link Iterator} traversing the {@link List} will correctly
+	 * give the Transformable's orientation in local coordinates.
+	 * 
+	 * @return
+	 */
 	public List<Transform> getWorldToLocalTransforms();
 
+	/**
+	 * Get the Transforms currently affecting this Transformable, in the order
+	 * such that an {@link Iterator} traversing the {@link List} will correctly
+	 * give the Transformable's orientation in world coordinates.
+	 * 
+	 * @return
+	 */
 	public List<Transform> getLocalToWorldTransforms();
 
 	/**
