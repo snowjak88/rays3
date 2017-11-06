@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.math3.util.FastMath;
 import org.snowjak.rays3.geometry.Point;
+import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.transform.Transform;
 
 /**
@@ -24,16 +25,34 @@ public class AABB {
 	private Point minExtent, maxExtent;
 
 	/**
+	 * Given a collection of {@link Point}s (assumed to be expressed in
+	 * object-local coordinates), and a {@link List} of {@link Transform}s
+	 * (assumed to give the proper order for local-to-world transformation),
+	 * compute the AABB in global coordinates that encompasses these Points.
+	 * 
+	 * @param localPoints
+	 * @param localToWorld
+	 */
+	public AABB(Collection<Point> localPoints, List<Transform> localToWorld) {
+
+		this(localPoints.stream().map(p -> {
+			for (Transform t : localToWorld)
+				p = t.localToWorld(p);
+			return p;
+		}).collect(Collectors.toCollection(LinkedList::new)));
+	}
+
+	/**
 	 * Given a collection of {@link Point}s (assumed to be expressed in global
 	 * coordinates), compute the AABB that encompasses them all.
 	 * 
-	 * @param points
+	 * @param globalPoints
 	 */
-	public AABB(Collection<Point> points) {
+	public AABB(Collection<Point> globalPoints) {
 		double minX = Double.POSITIVE_INFINITY, minY = Double.POSITIVE_INFINITY, minZ = Double.POSITIVE_INFINITY;
 		double maxX = Double.NEGATIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY, maxZ = Double.NEGATIVE_INFINITY;
 
-		for (Point p : points) {
+		for (Point p : globalPoints) {
 			minX = FastMath.min(minX, p.getX());
 			minY = FastMath.min(minY, p.getY());
 			minZ = FastMath.min(minZ, p.getZ());
@@ -74,25 +93,6 @@ public class AABB {
 	}
 
 	/**
-	 * Given the {@link List} of {@link Transform}s (assumed to be in
-	 * local-to-world order), transform this AABB into its local-to-world
-	 * equivalent.
-	 * 
-	 * @param transforms
-	 * @return
-	 */
-	public AABB transform(List<Transform> transforms) {
-
-		Collection<Point> corners = getCorners().stream().map(p -> {
-			for (Transform t : transforms)
-				p = t.localToWorld(p);
-			return p;
-		}).collect(Collectors.toCollection(LinkedList::new));
-
-		return new AABB(corners);
-	}
-
-	/**
 	 * @return a {@link Collection} containing all 8 corners of this AABB, in no
 	 *         particular order.
 	 */
@@ -104,6 +104,66 @@ public class AABB {
 				new Point(maxExtent.getX(), minExtent.getY(), minExtent.getZ()),
 				new Point(maxExtent.getX(), minExtent.getY(), maxExtent.getZ()),
 				new Point(maxExtent.getX(), maxExtent.getY(), minExtent.getZ()));
+	}
+
+	/**
+	 * Given a {@link Ray} (expressed in global coordinates), determine if that
+	 * Ray intersects this AABB.
+	 * 
+	 * @param ray
+	 * @return
+	 */
+	public boolean isIntersecting(Ray ray) {
+
+		double temp;
+
+		double tmin = ( minExtent.getX() - ray.getOrigin().getX() ) / ray.getDirection().getX();
+		double tmax = ( maxExtent.getX() - ray.getOrigin().getX() ) / ray.getDirection().getX();
+
+		if (tmin > tmax) {
+			temp = tmin;
+			tmin = tmax;
+			tmax = temp;
+		}
+
+		double tymin = ( minExtent.getY() - ray.getOrigin().getY() ) / ray.getDirection().getY();
+		double tymax = ( maxExtent.getY() - ray.getOrigin().getY() ) / ray.getDirection().getY();
+
+		if (tymin > tymax) {
+			temp = tymin;
+			tymin = tymax;
+			tymax = temp;
+		}
+
+		if (( tmin > tymax ) || ( tymin > tmax ))
+			return false;
+
+		if (tymin > tmin)
+			tmin = tymin;
+
+		if (tymax < tmax)
+			tmax = tymax;
+
+		double tzmin = ( minExtent.getZ() - ray.getOrigin().getZ() ) / ray.getDirection().getZ();
+		double tzmax = ( maxExtent.getZ() - ray.getOrigin().getZ() ) / ray.getDirection().getZ();
+
+		if (tzmin > tzmax) {
+			temp = tzmin;
+			tzmin = tzmax;
+			tzmax = temp;
+		}
+
+		if (( tmin > tzmax ) || ( tzmin > tmax ))
+			return false;
+
+		// Commented out because non-effective.
+		/*
+		 * if (tzmin > tmin) tmin = tzmin;
+		 * 
+		 * if (tzmax < tmax) tmax = tzmax;
+		 */
+
+		return true;
 	}
 
 	public Point getMinExtent() {
