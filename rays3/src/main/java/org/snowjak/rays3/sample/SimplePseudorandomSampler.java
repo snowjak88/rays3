@@ -25,8 +25,8 @@ public class SimplePseudorandomSampler implements Sampler {
 		this.maxImageX = maxImageX;
 		this.maxImageY = maxImageY;
 
-		this.currImageX = minImageX;
-		this.currImageY = minImageY - 1;
+		this.currImageX = this.minImageX;
+		this.currImageY = this.minImageY - 1;
 	}
 
 	@Override
