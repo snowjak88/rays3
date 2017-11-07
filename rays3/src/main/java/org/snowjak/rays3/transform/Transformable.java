@@ -21,8 +21,6 @@ public interface Transformable {
 	 * Get the Transforms currently affecting this Transformable, in the order
 	 * such that an {@link Iterator} traversing the {@link List} will correctly
 	 * give the Transformable's orientation in local coordinates.
-	 * 
-	 * @return
 	 */
 	public List<Transform> getWorldToLocalTransforms();
 
@@ -30,10 +28,17 @@ public interface Transformable {
 	 * Get the Transforms currently affecting this Transformable, in the order
 	 * such that an {@link Iterator} traversing the {@link List} will correctly
 	 * give the Transformable's orientation in world coordinates.
-	 * 
-	 * @return
 	 */
 	public List<Transform> getLocalToWorldTransforms();
+
+	/**
+	 * Add the given {@link Transform} to the end of the list of world-to-local
+	 * Transforms (and to the beginning of the corresponding local-to-world
+	 * list).
+	 * 
+	 * @param transform
+	 */
+	public void appendTransform(Transform transform);
 
 	/**
 	 * Transform the given Point from world- to this-object-local coordinates.
