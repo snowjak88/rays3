@@ -2,6 +2,7 @@ package org.snowjak.rays3.geometry.shape;
 
 import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
+import org.snowjak.rays3.geometry.Point2D;
 
 /**
  * Describes a surface at a specific point.
@@ -15,8 +16,9 @@ public class SurfaceDescriptor {
 
 	private Point	point;
 	private Normal	normal;
+	private Point2D	param;
 
-	public SurfaceDescriptor(Point point, Normal normal) {
+	public SurfaceDescriptor(Point point, Normal normal, Point2D param) {
 		this.point = point;
 		this.normal = normal;
 	}
@@ -35,6 +37,14 @@ public class SurfaceDescriptor {
 	public Normal getNormal() {
 
 		return normal;
+	}
+
+	/**
+	 * @return the parameterization <code>(u,v)</code> of the surface
+	 */
+	public Point2D getParam() {
+
+		return param;
 	}
 
 }
