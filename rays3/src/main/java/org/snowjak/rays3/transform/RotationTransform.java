@@ -6,6 +6,7 @@ import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.geometry.Vector;
+import org.snowjak.rays3.intersect.Interaction;
 
 /**
  * Represent a rotating Transform in 3-space -- specifically, a measure of
@@ -96,6 +97,20 @@ public class RotationTransform implements Transform {
 			localToWorld_inverseTranspose = localToWorld.inverse().transpose();
 
 		return new Normal(apply(localToWorld_inverseTranspose, normal.getX(), normal.getY(), normal.getZ(), 1d));
+	}
+
+	@Override
+	public Interaction worldToLocal(Interaction interaction) {
+
+		return new Interaction(worldToLocal(interaction.getPoint()), worldToLocal(interaction.getInteractingRay()),
+				worldToLocal(interaction.getNormal()), interaction.getBdsf());
+	}
+
+	@Override
+	public Interaction localToWorld(Interaction interaction) {
+
+		return new Interaction(localToWorld(interaction.getPoint()), localToWorld(interaction.getInteractingRay()),
+				localToWorld(interaction.getNormal()), interaction.getBdsf());
 	}
 
 	private double[] apply(Matrix matrix, double... coordinates) {

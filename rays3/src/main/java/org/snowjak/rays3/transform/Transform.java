@@ -5,6 +5,7 @@ import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.geometry.Vector;
+import org.snowjak.rays3.intersect.Interaction;
 
 /**
  * Represents a single transformation in 3-space.
@@ -76,6 +77,22 @@ public interface Transform {
 	 * @return the transformed Normal
 	 */
 	public Normal localToWorld(Normal normal);
+
+	/**
+	 * Transform the given Interaction into local coordinates.
+	 * 
+	 * @param interaction
+	 * @return the transformed Interaction
+	 */
+	public Interaction worldToLocal(Interaction interaction);
+
+	/**
+	 * Transform the given Interaction into world coordinates.
+	 * 
+	 * @param interaction
+	 * @return the transformed Interaction
+	 */
+	public Interaction localToWorld(Interaction interaction);
 
 	/**
 	 * Return the Matrix implementing the world-to-local form of this Transform.
