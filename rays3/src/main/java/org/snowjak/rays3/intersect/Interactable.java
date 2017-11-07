@@ -1,6 +1,5 @@
 package org.snowjak.rays3.intersect;
 
-import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.transform.Transformable;
 
@@ -50,5 +49,5 @@ public interface Interactable extends Transformable {
 	 * @param ray
 	 * @return
 	 */
-	public Point getLocalIntersection(Ray ray);
+	public Interaction getLocalIntersection(Ray ray);
 }
