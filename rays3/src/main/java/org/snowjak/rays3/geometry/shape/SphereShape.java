@@ -2,7 +2,6 @@ package org.snowjak.rays3.geometry.shape;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.math3.util.FastMath;
@@ -20,14 +19,13 @@ import org.snowjak.rays3.transform.Transform;
  * 
  * @author snowjak88
  */
-public class SphereShape implements Shape {
+public class SphereShape extends AbstractShape {
 
 	/**
 	 * Represents an AABB in *global* space.
 	 */
-	private AABB					aabb;
-	private double					r;
-	private LinkedList<Transform>	worldToLocal	= new LinkedList<>(), localToWorld = new LinkedList<>();
+	private AABB	aabb;
+	private double	r;
 
 	/**
 	 * Initialize a new sphere, with a radius of 0.5, centered at the origin.
@@ -41,8 +39,8 @@ public class SphereShape implements Shape {
 	}
 
 	public SphereShape(double r, List<Transform> worldToLocal) {
+		super(worldToLocal);
 		this.r = r;
-		worldToLocal.stream().forEach(t -> this.appendTransform(t));
 
 		this.aabb = new AABB(Arrays.asList(new Point(0d, -r, 0d), new Point(0d, +r, 0d)), getLocalToWorldTransforms());
 	}
@@ -68,7 +66,10 @@ public class SphereShape implements Shape {
 	@Override
 	public Interaction getLocalIntersection(Ray ray) {
 
-		double t = getLocalIntersectionT(ray, false);
+		Double t = getLocalIntersectionT(ray, false);
+
+		if (t == null)
+			return null;
 
 		Ray newRay = new Ray(ray.getOrigin(), ray.getDirection(), t);
 		Point point = newRay.getPointAlong();
@@ -84,7 +85,8 @@ public class SphereShape implements Shape {
 
 	/**
 	 * For a given Ray, calculate the smallest value <code>t</code> that defines
-	 * its intersection-point along that ray with this sphere.
+	 * its intersection-point along that ray with this sphere -- or
+	 * <code>null</code> if no such intersection exists.
 	 * <p>
 	 * <strong>Note</strong> that this works only in object-local coordinates!
 	 * </p>
@@ -140,25 +142,6 @@ public class SphereShape implements Shape {
 		// Theta = acos ( y / r ) [normalized to [0,1] ]
 		return new Point2D(( FastMath.atan2(point.getZ(), point.getX()) + FastMath.PI ) / ( 2d * FastMath.PI ),
 				FastMath.acos(point.getY() / r) / ( FastMath.PI ));
-	}
-
-	@Override
-	public List<Transform> getWorldToLocalTransforms() {
-
-		return Collections.unmodifiableList(worldToLocal);
-	}
-
-	@Override
-	public List<Transform> getLocalToWorldTransforms() {
-
-		return Collections.unmodifiableList(localToWorld);
-	}
-
-	@Override
-	public void appendTransform(Transform transform) {
-
-		worldToLocal.addLast(transform);
-		localToWorld.addFirst(transform);
 	}
 
 	@Override

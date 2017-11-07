@@ -34,8 +34,8 @@ public interface Transformable {
 
 	/**
 	 * Add the given {@link Transform} to the end of the list of world-to-local
-	 * Transforms (and to the beginning of the corresponding local-to-world
-	 * list).
+	 * Transforms (and implicitly to the beginning of the corresponding
+	 * local-to-world list).
 	 * 
 	 * @param transform
 	 */
