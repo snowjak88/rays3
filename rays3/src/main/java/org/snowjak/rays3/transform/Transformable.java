@@ -7,6 +7,7 @@ import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.geometry.Vector;
+import org.snowjak.rays3.intersect.Interaction;
 
 /**
  * Indicates that an object is associated with one or more {@link Transform}s,
@@ -154,6 +155,38 @@ public interface Transformable {
 	public default Normal localToWorld(Normal normal) {
 
 		Normal working = normal;
+		for (Transform t : getLocalToWorldTransforms())
+			working = t.localToWorld(working);
+
+		return working;
+	}
+
+	/**
+	 * Transform the given Interaction from world- to this-object-local
+	 * coordinates.
+	 * 
+	 * @param interaction
+	 * @return
+	 */
+	public default Interaction worldToLocal(Interaction interaction) {
+
+		Interaction working = interaction;
+		for (Transform t : getWorldToLocalTransforms())
+			working = t.worldToLocal(working);
+
+		return working;
+	}
+
+	/**
+	 * Transform the given Interaction from this-object-local to
+	 * world-coordinates.
+	 * 
+	 * @param interaction
+	 * @return
+	 */
+	public default Interaction localToWorld(Interaction interaction) {
+
+		Interaction working = interaction;
 		for (Transform t : getLocalToWorldTransforms())
 			working = t.localToWorld(working);
 
