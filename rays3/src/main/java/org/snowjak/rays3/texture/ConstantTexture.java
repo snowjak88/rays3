@@ -1,8 +1,8 @@
-package org.snowjak.rays3.texture.mapping;
+package org.snowjak.rays3.texture;
 
 import org.snowjak.rays3.geometry.shape.SurfaceDescriptor;
 import org.snowjak.rays3.spectrum.Spectrum;
-import org.snowjak.rays3.texture.Texture;
+import org.snowjak.rays3.texture.mapping.LinearTextureMapping;
 
 /**
  * A "constant" texture is simply one color, all the time.
