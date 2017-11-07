@@ -4,6 +4,7 @@ import org.apache.commons.math3.util.FastMath;
 import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Vector;
+import org.snowjak.rays3.intersect.Interaction;
 import org.snowjak.rays3.spectrum.Spectrum;
 
 /**
@@ -14,7 +15,7 @@ import org.snowjak.rays3.spectrum.Spectrum;
 public abstract class BDSF {
 
 	/**
-	 * Sample the radiant energy reflected from the given point.
+	 * Sample the radiant energy reflectable from the given point.
 	 * <p>
 	 * Specifically, calculates:
 	 * 
@@ -32,14 +33,13 @@ public abstract class BDSF {
 	 * &#x03BB; := Spectrum denoting the specific wavelength we want to sample
 	 * t := specific time we want to sample
 	 * </pre>
+	 * 
+	 * All of these quantities are either given as parameters directly, or else
+	 * derived from the specified {@link Interaction}.
 	 * </p>
 	 * 
-	 * @param x
-	 *            point of reflection on the shape
-	 * @param w_e
-	 *            vector from <strong>x</strong> toward the eye
-	 * @param w_r
-	 *            vector from <strong>x</strong>, reflected away
+	 * @param interaction
+	 *            description of the surface-interaction
 	 * @param lambda
 	 *            wavelength(s) to sample
 	 * @param t
@@ -47,7 +47,7 @@ public abstract class BDSF {
 	 * @return a fraction of the radiance of the given Spectrum reflected back
 	 *         along the eye-vector
 	 */
-	public abstract Spectrum getReflectedRadiance(Point x, Vector w_e, Vector w_r, Spectrum lambda, double t);
+	public abstract Spectrum getReflectedRadiance(Interaction interaction, Spectrum lambda, double t);
 
 	/**
 	 * Determine the vector of reflection from the given point.

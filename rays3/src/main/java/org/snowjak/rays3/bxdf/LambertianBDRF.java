@@ -1,7 +1,7 @@
 package org.snowjak.rays3.bxdf;
 
-import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Vector;
+import org.snowjak.rays3.intersect.Interaction;
 import org.snowjak.rays3.spectrum.Spectrum;
 import org.snowjak.rays3.texture.Texture;
 
@@ -21,10 +21,24 @@ public class LambertianBDRF extends BDSF {
 	}
 
 	@Override
-	public Spectrum getReflectedRadiance(Point x, Vector w_e, Vector w_r, Spectrum lambda, double t) {
+	public Spectrum getReflectedRadiance(Interaction interaction, Spectrum lambda, double t) {
 
-		// TODO Auto-generated method stub
-		return null;
+		Spectrum irradiance = texture.evaluate(interaction);
+
+		// Reflected energy is proportional to the cosine of the angle between
+		// the two vectors (the eye and the reflected vectors).
+		Vector w_e = interaction.getInteractingRay().getDirection().negate();
+		Vector w_r = getReflectedVector(interaction.getPoint(), w_e, interaction.getNormal());
+
+		double cosTheta = w_e.dotProduct(w_r);
+		irradiance = irradiance.multiply(cosTheta);
+
+		// Finally, ensure that we're selecting only the desired
+		// energy-wavelengths (if that parameter is supplied).
+		if (lambda != null)
+			irradiance = irradiance.multiply(lambda);
+
+		return irradiance;
 	}
 
 }
