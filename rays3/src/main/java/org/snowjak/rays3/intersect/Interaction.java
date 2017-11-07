@@ -4,28 +4,17 @@ import org.snowjak.rays3.bxdf.BDSF;
 import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Ray;
+import org.snowjak.rays3.geometry.shape.SurfaceDescriptor;
 
-public class Interaction {
+public class Interaction extends SurfaceDescriptor {
 
-	private Point	point;
 	private Ray		interactingRay;
-	private Normal	normal;
 	private BDSF	bdsf;
 
 	public Interaction(Point point, Ray interactingRay, Normal normal, BDSF bdsf) {
-		super();
-		this.point = point;
+		super(point, normal);
 		this.interactingRay = interactingRay;
-		this.normal = normal;
 		this.bdsf = bdsf;
-	}
-
-	/**
-	 * @return the {@link Point} of interaction
-	 */
-	public Point point() {
-
-		return point;
 	}
 
 	/**
@@ -35,14 +24,6 @@ public class Interaction {
 	public Ray interactingRay() {
 
 		return interactingRay;
-	}
-
-	/**
-	 * @return the {@link Normal} at the point of interaction
-	 */
-	public Normal normal() {
-
-		return normal;
 	}
 
 	/**
