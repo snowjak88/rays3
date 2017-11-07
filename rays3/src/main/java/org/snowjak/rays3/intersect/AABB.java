@@ -25,6 +25,19 @@ public class AABB {
 	private Point minExtent, maxExtent;
 
 	/**
+	 * Given an existing AABB (assumed to be given in object-local coordinates),
+	 * and a {@link List} of {@link Transform}s (assumed to give the proper
+	 * order for local-to-world transformation), compute the corresponding AABB
+	 * in global coordinates.
+	 * 
+	 * @param copyOf
+	 * @param localToWorld
+	 */
+	public AABB(AABB copyOf, List<Transform> localToWorld) {
+		this(copyOf.getCorners(), localToWorld);
+	}
+
+	/**
 	 * Given a collection of {@link Point}s (assumed to be expressed in
 	 * object-local coordinates), and a {@link List} of {@link Transform}s
 	 * (assumed to give the proper order for local-to-world transformation),
