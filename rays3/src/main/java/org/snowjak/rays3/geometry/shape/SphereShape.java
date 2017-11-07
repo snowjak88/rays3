@@ -68,6 +68,35 @@ public class SphereShape implements Shape {
 	@Override
 	public Interaction getLocalIntersection(Ray ray) {
 
+		double t = getLocalIntersectionT(ray, false);
+
+		Ray newRay = new Ray(ray.getOrigin(), ray.getDirection(), t);
+		Point point = newRay.getPointAlong();
+		Normal normalAt = new Normal(new Vector(point).normalize());
+
+		// Compute the surface parameterization in terms of phi and theta.
+		// Phi = atan ( z / x ) [normalized to [0,1] ]
+		// Theta = acos ( y / r ) [normalized to [0,1] ]
+		Point2D param = computeSurfaceParameterization(point);
+
+		return new Interaction(point, newRay, normalAt, param, null);
+	}
+
+	/**
+	 * For a given Ray, calculate the smallest value <code>t</code> that defines
+	 * its intersection-point along that ray with this sphere.
+	 * <p>
+	 * <strong>Note</strong> that this works only in object-local coordinates!
+	 * </p>
+	 * 
+	 * @param ray
+	 * @param includeBehindRay
+	 *            <code>true</code> if we should consider intersections behind
+	 *            the Ray, or only those in front of it
+	 * @return
+	 */
+	private Double getLocalIntersectionT(Ray ray, boolean includeBehindRay) {
+
 		Vector l = new Vector(ray.getOrigin()).negate();
 		double t_ca = l.dotProduct(ray.getDirection());
 
@@ -84,31 +113,33 @@ public class SphereShape implements Shape {
 		double t0 = t_ca - t_hc;
 		double t1 = t_ca + t_hc;
 
-		double t;
+		if (includeBehindRay) {
+			if (FastMath.abs(t0) < FastMath.abs(t1))
+				return t0;
+			else
+				return t1;
+		}
 
 		if (t0 < 0 && t1 < 0)
 			return null;
 
 		if (t0 < 0 && t1 >= 0)
-			t = t1;
+			return t1;
 		else if (t0 > 0 && t1 < 0)
-			t = t0;
+			return t0;
 		else if (t0 < t1)
-			t = t1;
+			return t1;
 		else
-			t = t0;
+			return t0;
+	}
 
-		Ray newRay = new Ray(ray.getOrigin(), ray.getDirection(), t);
-		Point point = newRay.getPointAlong();
-		Normal normalAt = new Normal(new Vector(point).normalize());
+	private Point2D computeSurfaceParameterization(Point point) {
 
 		// Compute the surface parameterization in terms of phi and theta.
 		// Phi = atan ( z / x ) [normalized to [0,1] ]
 		// Theta = acos ( y / r ) [normalized to [0,1] ]
-		Point2D param = new Point2D(( FastMath.atan2(point.getZ(), point.getX()) + FastMath.PI ) / ( 2d * FastMath.PI ),
+		return new Point2D(( FastMath.atan2(point.getZ(), point.getX()) + FastMath.PI ) / ( 2d * FastMath.PI ),
 				FastMath.acos(point.getY() / r) / ( FastMath.PI ));
-
-		return new Interaction(point, newRay, normalAt, param, null);
 	}
 
 	@Override
@@ -133,8 +164,24 @@ public class SphereShape implements Shape {
 	@Override
 	public SurfaceDescriptor getSurfaceNearestTo(Point point) {
 
+		//
+		// For a sphere, this can be done quite simply.
+		// Transform everything to the local coordinate-system (where the sphere
+		// is centered on (0,0,0)).
+		// Then trace a Ray from the Point in question to (0,0,0), and find its
+		// intersection with the sphere.
+		//
 		Point localPoint = worldToLocal(point);
-		return localToWorld(getLocalIntersection(new Ray(localPoint, new Vector(localPoint).negate())));
+		Ray localRay = new Ray(localPoint, new Vector(localPoint).negate());
+
+		double t = getLocalIntersectionT(localRay, true);
+
+		Ray newRay = new Ray(localRay.getOrigin(), localRay.getDirection(), t);
+		Point newPoint = newRay.getPointAlong();
+		Normal normalAt = new Normal(new Vector(newPoint).normalize());
+		Point2D param = computeSurfaceParameterization(newPoint);
+
+		return new SurfaceDescriptor(localToWorld(newPoint), localToWorld(normalAt), param);
 	}
 
 }
