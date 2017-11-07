@@ -14,7 +14,8 @@ public interface Interactable extends Transformable {
 
 	/**
 	 * Given a {@link Ray} (expressed in global coordinates), determine whether
-	 * the Ray intersects this object or not.
+	 * the Ray comes close to intersecting this object. (Implementations will
+	 * probably use an {@link AABB} to quickly cull Rays that completely miss.)
 	 * 
 	 * @param ray
 	 * @return
@@ -23,7 +24,8 @@ public interface Interactable extends Transformable {
 
 	/**
 	 * Given a {@link Ray} (expressed in local coordinates), determine whether
-	 * the Ray intersects this object or not.
+	 * the Ray intersects this object or not. (Implementations will probably use
+	 * an {@link AABB} to quickly cull Rays that completely miss.)
 	 * 
 	 * @param ray
 	 * @return
