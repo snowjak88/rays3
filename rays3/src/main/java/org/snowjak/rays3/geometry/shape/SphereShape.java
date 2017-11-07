@@ -103,9 +103,10 @@ public class SphereShape implements Shape {
 		Normal normalAt = new Normal(new Vector(point).normalize());
 
 		// Compute the surface parameterization in terms of phi and theta.
-		// Phi = atan ( z / x )
-		// Theta = acos ( y / r )
-		Point2D param = new Point2D(FastMath.atan2(point.getZ(), point.getX()), FastMath.acos(point.getY() / r));
+		// Phi = atan ( z / x ) [normalized to [0,1] ]
+		// Theta = acos ( y / r ) [normalized to [0,1] ]
+		Point2D param = new Point2D(( FastMath.atan2(point.getZ(), point.getX()) + FastMath.PI ) / ( 2d * FastMath.PI ),
+				FastMath.acos(point.getY() / r) / ( FastMath.PI ));
 
 		return new Interaction(point, newRay, normalAt, param, null);
 	}
