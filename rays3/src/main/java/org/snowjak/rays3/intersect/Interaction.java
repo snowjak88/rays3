@@ -21,7 +21,7 @@ public class Interaction extends SurfaceDescriptor {
 	 * @return the {@link Ray}, originating with the eye-point, which does the
 	 *         interacting
 	 */
-	public Ray interactingRay() {
+	public Ray getInteractingRay() {
 
 		return interactingRay;
 	}
@@ -30,7 +30,7 @@ public class Interaction extends SurfaceDescriptor {
 	 * @return the {@link BDSF} associated with the interacting point on the
 	 *         object
 	 */
-	public BDSF bdsf() {
+	public BDSF getBdsf() {
 
 		return bdsf;
 	}
