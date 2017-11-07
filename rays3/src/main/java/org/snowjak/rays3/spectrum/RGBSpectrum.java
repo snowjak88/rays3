@@ -24,6 +24,18 @@ public class RGBSpectrum implements Spectrum {
 	}
 
 	@Override
+	public Spectrum multiply(Spectrum multiplicand) {
+
+		return new RGBSpectrum(rgb.multiply(multiplicand.toRGB()));
+	}
+
+	@Override
+	public Spectrum multiply(double scalar) {
+
+		return new RGBSpectrum(rgb.multiply(scalar));
+	}
+
+	@Override
 	public RGB toRGB() {
 
 		return rgb;
