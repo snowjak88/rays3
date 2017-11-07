@@ -14,7 +14,7 @@ import org.snowjak.rays3.spectrum.Spectrum;
 public abstract class BDSF {
 
 	/**
-	 * Determine the fraction of radiance reflected from the given point.
+	 * Sample the radiant energy reflected from the given point.
 	 * <p>
 	 * Specifically, calculates:
 	 * 
@@ -25,7 +25,7 @@ public abstract class BDSF {
 	 * where
 	 * 
 	 * <pre>
-	 * f<sub>r</sub> := fraction of incident light from <strong>w</strong><sub>r</sub> that's reflected along <strong>w</strong><sub>e</sub>
+	 * f<sub>r</sub> := radiant energy from <strong>w</strong><sub>r</sub> that's reflected along <strong>w</strong><sub>e</sub>
 	 * <strong>x</strong> := point of reflection on surface
 	 * <strong>w</strong><sub>e</sub> := "eye" vector, from point toward the eye
 	 * <strong>w</strong><sub>r</sub> := "reflected" vector, from point outbound
@@ -41,13 +41,13 @@ public abstract class BDSF {
 	 * @param w_r
 	 *            vector from <strong>x</strong>, reflected away
 	 * @param lambda
-	 *            wavelength at moment of sample
+	 *            wavelength(s) to sample
 	 * @param t
 	 *            time at moment of sample
 	 * @return a fraction of the radiance of the given Spectrum reflected back
 	 *         along the eye-vector
 	 */
-	public abstract double getReflectedRadiance(Point x, Vector w_e, Vector w_r, Spectrum lambda, double t);
+	public abstract Spectrum getReflectedRadiance(Point x, Vector w_e, Vector w_r, Spectrum lambda, double t);
 
 	/**
 	 * Determine the vector of reflection from the given point.
