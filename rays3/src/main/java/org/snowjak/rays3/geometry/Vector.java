@@ -10,6 +10,7 @@ import org.snowjak.rays3.Global;
  */
 public class Vector {
 
+	public static final Vector	ZERO		= new Vector(0d, 0d, 0d, 0d, 0d);
 	public static final Vector	I			= new Vector(1d, 0d, 0d, 1d, 1d), J = new Vector(0d, 1d, 0d, 1d, 1d),
 			K = new Vector(0d, 0d, 1d, 1d, 1d);
 
