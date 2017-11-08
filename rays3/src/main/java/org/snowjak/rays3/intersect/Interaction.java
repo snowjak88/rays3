@@ -5,17 +5,18 @@ import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Point2D;
 import org.snowjak.rays3.geometry.Ray;
+import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.geometry.shape.SurfaceDescriptor;
 
 public class Interaction extends SurfaceDescriptor {
 
-	private Ray		interactingRay;
-	private BDSF	bdsf;
+	private final Primitive	primitive;
+	private final Ray		interactingRay;
 
-	public Interaction(Point point, Ray interactingRay, Normal normal, Point2D param, BDSF bdsf) {
+	public Interaction(Point point, Ray interactingRay, Normal normal, Point2D param, Primitive primitive) {
 		super(point, normal, param);
 		this.interactingRay = interactingRay;
-		this.bdsf = bdsf;
+		this.primitive = primitive;
 	}
 
 	/**
@@ -28,11 +29,19 @@ public class Interaction extends SurfaceDescriptor {
 	}
 
 	/**
+	 * @return the {@link Primitive} being interacted with
+	 */
+	public Primitive getPrimitive() {
+
+		return primitive;
+	}
+
+	/**
 	 * @return the {@link BDSF} associated with the interacting point on the
 	 *         object
 	 */
 	public BDSF getBdsf() {
 
-		return bdsf;
+		return primitive.getBdsf();
 	}
 }
