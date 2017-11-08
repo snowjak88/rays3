@@ -106,6 +106,32 @@ public class Vector {
 				this.x * other.y - this.y * other.x);
 	}
 
+	/**
+	 * Create one possible orthogonal Vector to this Vector. The new Vector is
+	 * normalized after creation.
+	 */
+	public Vector orthogonal() {
+
+		if (Global.isNear(this.z, 0d)) {
+
+			double newX = Global.RND.nextGaussian();
+			double newZ = Global.RND.nextGaussian();
+			double newY = ( -this.x * newX - this.z * newZ ) / this.y;
+
+			return new Vector(newX, newY, newZ).normalize();
+
+		} else {
+
+			// => z2 = (-x1 * x2 - y1 * y2) / z1
+
+			double newX = Global.RND.nextGaussian();
+			double newY = Global.RND.nextGaussian();
+			double newZ = ( -this.x * newX - this.y * newY ) / this.z;
+
+			return new Vector(newX, newY, newZ).normalize();
+		}
+	}
+
 	public double getX() {
 
 		return x;
