@@ -12,12 +12,14 @@ import org.snowjak.rays3.texture.Texture;
  */
 public class LambertianBDRF extends BDSF {
 
-	private Texture texture;
+	private Texture	texture;
+	private Texture	emissive;
 
-	public LambertianBDRF(Texture texture) {
+	public LambertianBDRF(Texture texture, Texture emissive) {
 		super();
 
 		this.texture = texture;
+		this.emissive = emissive;
 	}
 
 	@Override
@@ -39,6 +41,17 @@ public class LambertianBDRF extends BDSF {
 			irradiance = irradiance.multiply(lambda);
 
 		return irradiance;
+	}
+
+	@Override
+	public Spectrum getEmissiveRadiance(Interaction interaction, Spectrum lambda, double t) {
+
+		Spectrum radiance = emissive.evaluate(interaction);
+
+		if (lambda != null)
+			radiance = radiance.multiply(lambda);
+
+		return radiance;
 	}
 
 }

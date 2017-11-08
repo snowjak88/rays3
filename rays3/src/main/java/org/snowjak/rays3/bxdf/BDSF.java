@@ -41,13 +41,49 @@ public abstract class BDSF {
 	 * @param interaction
 	 *            description of the surface-interaction
 	 * @param lambda
-	 *            wavelength(s) to sample
+	 *            wavelength(s) to sample (or <code>null</code> if no wavelength
+	 *            in particular)
 	 * @param t
 	 *            time at moment of sample
-	 * @return a fraction of the radiance of the given Spectrum reflected back
-	 *         along the eye-vector
+	 * @return the radiance of the given Spectrum reflected back along the
+	 *         eye-vector
 	 */
 	public abstract Spectrum getReflectedRadiance(Interaction interaction, Spectrum lambda, double t);
+
+	/**
+	 * Sample the radiant energy emitted from the given point.
+	 * <p>
+	 * Specifically, calculates:
+	 * 
+	 * <pre>
+	 * f<sub>e</sub> ( <strong>x</strong>, <strong>w</strong><sub>e</sub>, &#x03BB;, t )
+	 * </pre>
+	 * 
+	 * where
+	 * 
+	 * <pre>
+	 * f<sub>r</sub> := radiant energy from <strong>w</strong><sub>r</sub> that's reflected along <strong>w</strong><sub>e</sub>
+	 * <strong>x</strong> := point of reflection on surface
+	 * <strong>w</strong><sub>e</sub> := "eye" vector, from point toward the eye
+	 * &#x03BB; := Spectrum denoting the specific wavelength we want to sample
+	 * t := specific time we want to sample
+	 * </pre>
+	 * 
+	 * All of these quantities are either given as parameters directly, or else
+	 * derived from the specified {@link Interaction}.
+	 * </p>
+	 * </p>
+	 * 
+	 * @param interaction
+	 *            description of the surface-interaction
+	 * @param lambda
+	 *            wavelength(s) to sample (or <code>null</code> if no wavelength
+	 *            in particular)
+	 * @param t
+	 *            time at moment of sample
+	 * @return the radiance of the given Spectrum emitted along the eye-vector
+	 */
+	public abstract Spectrum getEmissiveRadiance(Interaction interaction, Spectrum lambda, double t);
 
 	/**
 	 * Determine the vector of reflection from the given point.
