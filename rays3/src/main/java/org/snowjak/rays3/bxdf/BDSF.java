@@ -5,6 +5,7 @@ import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.intersect.Interaction;
+import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.spectrum.Spectrum;
 
 /**
@@ -40,6 +41,8 @@ public abstract class BDSF {
 	 * 
 	 * @param interaction
 	 *            description of the surface-interaction
+	 * @param w_r
+	 *            reflection vector
 	 * @param lambda
 	 *            wavelength(s) to sample (or <code>null</code> if no wavelength
 	 *            in particular)
@@ -48,7 +51,7 @@ public abstract class BDSF {
 	 * @return the radiance of the given Spectrum reflected back along the
 	 *         eye-vector
 	 */
-	public abstract Spectrum getReflectedRadiance(Interaction interaction, Spectrum lambda, double t);
+	public abstract Spectrum getReflectedRadiance(Interaction interaction, Vector w_r, Spectrum lambda, double t);
 
 	/**
 	 * Sample the radiant energy emitted from the given point.
@@ -86,7 +89,44 @@ public abstract class BDSF {
 	public abstract Spectrum getEmissiveRadiance(Interaction interaction, Spectrum lambda, double t);
 
 	/**
-	 * Determine the vector of reflection from the given point.
+	 * Given an intersection point <code>x</code>, an eye-vector
+	 * <code>w_e</code>, and a surface-normal <code>n</code>, create a
+	 * reflection vector within this BDSF's bounds. Implementations may opt to
+	 * use importance sampling when selecting these samples.
+	 * 
+	 * @param x
+	 *            point of surface-interaction
+	 * @param w_e
+	 *            vector from the surface-point to the eye
+	 * @param n
+	 *            the surface-normal at the point
+	 * @param sample
+	 *            the {@link Sample} currently being processed
+	 * @return a reflection vector
+	 */
+	public abstract Vector sampleReflectionVector(Point x, Vector w_e, Normal n, Sample sample);
+
+	/**
+	 * Given an intersection point <code>x</code>, an eye-vector
+	 * <code>w_e</code>, a surface-normal <code>n</code>, and a
+	 * reflection-vector <code>w_r</code>, compute the Probability Distribution
+	 * Function value that this reflection-vector should have been chosen.
+	 * 
+	 * @param x
+	 *            point of surface-interaction
+	 * @param w_e
+	 *            vector from the surface-point to the eye
+	 * @param w_r
+	 *            vector reflected from the surface-point
+	 * @param n
+	 *            the surface-normal at the point
+	 * @return the probability that the given reflection-vector lies within this
+	 *         BDSF
+	 */
+	public abstract double reflectionPDF(Point x, Vector w_e, Vector w_r, Normal n);
+
+	/**
+	 * Determine the vector of perfect specular reflection from the given point.
 	 * 
 	 * @param x
 	 *            point of intersection on the shape
@@ -97,7 +137,7 @@ public abstract class BDSF {
 	 * @return the vector pointing along the path of light reflected from the
 	 *         surface
 	 */
-	public static Vector getReflectedVector(Point x, Vector w_e, Normal n) {
+	public static Vector getPerfectSpecularReflectionVector(Point x, Vector w_e, Normal n) {
 
 		/*
 		 * Vector nv = n.asVector().normalize(); w_e = w_e.normalize();

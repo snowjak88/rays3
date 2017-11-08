@@ -19,7 +19,7 @@ public class BDSFTest {
 		Normal n = new Normal(0d, 1d, 0d);
 
 		Vector expectedReflectedVector = new Vector(1d, 1d, 0d).normalize();
-		Vector reflectVector = BDSF.getReflectedVector(intersectPoint, w_e, n);
+		Vector reflectVector = BDSF.getPerfectSpecularReflectionVector(intersectPoint, w_e, n);
 
 		assertEquals("Reflected vector (x) is not as expected!", expectedReflectedVector.getX(), reflectVector.getX(),
 				0.0001);
