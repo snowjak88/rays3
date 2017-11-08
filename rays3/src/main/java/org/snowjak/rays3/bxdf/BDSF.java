@@ -8,6 +8,8 @@ import org.snowjak.rays3.intersect.Interaction;
 import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.spectrum.Spectrum;
 
+import static org.apache.commons.math3.util.FastMath.*;
+
 /**
  * Represents a Bi-Directional Scattering Function.
  * 
@@ -179,7 +181,94 @@ public abstract class BDSF {
 		double r = leavingIndexOfRefraction / enteringIndexOfRefraction;
 		double c = nv.negate().dotProduct(l);
 
-		double nv_factor = r * c - FastMath.sqrt(1d - FastMath.pow(r, 2) * ( 1d - FastMath.pow(c, 2) ));
+		double nv_factor = r * c - sqrt(1d - FastMath.pow(r, 2) * ( 1d - pow(c, 2) ));
 		return ( l.multiply(r) ).add(nv.multiply(nv_factor)).normalize();
+	}
+
+	/**
+	 * Calculate a {@link FresnelResult}, giving the relative fractions of
+	 * reflectance and transmittance that go into contributing to the total
+	 * incident light.
+	 * <p>
+	 * <strong>Note</strong> that this method uses Schlick's approximation to
+	 * Fresnel's equations, and so does not take the polarization of the
+	 * incident light into account.
+	 * </p>
+	 * 
+	 * @param x
+	 *            point of interaction on the shape
+	 * @param w_e
+	 *            vector from <strong>x</strong> toward the eye
+	 * @param n
+	 *            surface-normal at <strong>x</strong>
+	 * @param leavingIndexOfRefraction
+	 *            index-of-refraction of the material light is coming from
+	 *            (along <strong>w</strong><sub>e</sub> toward
+	 *            <strong>x</strong>)
+	 * @param enteringIndexOfRefraction
+	 *            index-of-refraction of the material light is entering (along
+	 *            <strong>w</strong><sub>e</sub> toward <strong>x</strong>)
+	 * @return a FresnelResult
+	 */
+	public static FresnelResult calculateFresnel(Point x, Vector w_e, Normal n, double leavingIndexOfRefraction,
+			double enteringIndexOfRefraction) {
+
+		final double n1 = leavingIndexOfRefraction, n2 = enteringIndexOfRefraction;
+		final double cos_theta_i = w_e.normalize().dotProduct(n.asVector().normalize());
+		double sin2_theta_t = pow(n1 / n2, 2d) * ( 1d - pow(cos_theta_i, 2d) );
+
+		double reflectance = 1d, transmittance = 0d;
+
+		if (sin2_theta_t <= 1d) {
+			//
+			// This is NOT a case of Total Internal Reflection
+			//
+			final double cos_theta_t = sqrt(1d - sin2_theta_t);
+			final double r_normal = pow(
+					( n1 * cos_theta_i - n2 * cos_theta_t ) / ( n1 * cos_theta_i + n2 * cos_theta_t ), 2d);
+			final double r_tangent = pow(
+					( n2 * cos_theta_i - n1 * cos_theta_t ) / ( n2 * cos_theta_i + n1 * cos_theta_t ), 2d);
+
+			reflectance = ( r_normal + r_tangent ) / 2d;
+			transmittance = 1d - reflectance;
+		} else {
+			//
+			// This is a case of Total Internal Reflection.
+			// As such, reflectance = 1.0, transmittance = 0.0
+			//
+		}
+
+		return new FresnelResult(reflectance, transmittance);
+	}
+
+	/**
+	 * Simple holder-class for Fresnel computation results -- i.e., which
+	 * fractions of the incident energy stem from:
+	 * <ul>
+	 * <li>reflectance</li>
+	 * <li>transmittance</li>
+	 * </ul>
+	 * 
+	 * @author snowjak88
+	 */
+	public static class FresnelResult {
+
+		private double reflectance, transmittance;
+
+		public FresnelResult(double reflectance, double transmittance) {
+
+			this.reflectance = reflectance;
+			this.transmittance = transmittance;
+		}
+
+		public double getReflectance() {
+
+			return reflectance;
+		}
+
+		public double getTransmittance() {
+
+			return transmittance;
+		}
 	}
 }

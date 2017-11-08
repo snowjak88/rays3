@@ -1,9 +1,10 @@
 package org.snowjak.rays3.bxdf;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.apache.commons.math3.util.FastMath;
 import org.junit.Test;
+import org.snowjak.rays3.bxdf.BDSF.FresnelResult;
 import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Vector;
@@ -47,6 +48,24 @@ public class BDSFTest {
 				0.0001);
 		assertEquals("Reflected vector (z) is not as expected!", expectedReflectedVector.getZ(), reflectVector.getZ(),
 				0.0001);
+	}
+
+	@Test
+	public void testCalculateFresnel() {
+
+		Point eyePoint = new Point(3d, 3d, 3d);
+		Point intersectionPoint = new Point(0d, 0d, 3d);
+		Vector w_e = new Vector(eyePoint).subtract(new Vector(intersectionPoint));
+		Normal n = new Normal(0d, 1d, 0d);
+
+		double expectedReflectance = ( 0.2038d + 0.04152d ) / 2d;
+		double expectedTransmittance = ( 0.7962d + 0.9585d ) / 2d;
+
+		FresnelResult result = BDSF.calculateFresnel(intersectionPoint, w_e, n, 1d, 2d);
+
+		assertEquals("Reflectance is not as expected!", expectedReflectance, result.getReflectance(), 0.0001);
+		assertEquals("Transmittance is not as expected!", expectedTransmittance, result.getTransmittance(), 0.0001);
+
 	}
 
 }
