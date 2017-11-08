@@ -18,7 +18,8 @@ public class Global {
 	 * The central thread-executor. Whenever possible, submit your threads to
 	 * this executor.
 	 */
-	public static final ExecutorService	EXECUTOR			= Executors.newCachedThreadPool();
+	public static final ExecutorService	EXECUTOR			= Executors
+			.newFixedThreadPool(2 * Runtime.getRuntime().availableProcessors());
 
 	/**
 	 * A pre-initialized pseudo-random number generator.
