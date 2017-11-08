@@ -12,7 +12,7 @@ package org.snowjak.rays3.geometry;
  */
 public class Normal {
 
-	private Vector direction;
+	private final Vector direction;
 
 	public Normal(double nx, double ny, double nz) {
 		this.direction = new Vector(nx, ny, nz);

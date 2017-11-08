@@ -52,7 +52,7 @@ public class Matrix {
 																			{ 0d, 0d, 0d, 1d } });
 	//@formatter:on
 
-	private double[][]			values;
+	private final double[][]	values;
 
 	/**
 	 * Initialize a new 4x4 matrix with the given 4x4 array of values.

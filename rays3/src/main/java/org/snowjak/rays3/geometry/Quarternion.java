@@ -21,8 +21,8 @@ import org.snowjak.rays3.transform.RotationTransform;
  */
 public class Quarternion {
 
-	private double	a, b, c, d;
-	private double	norm	= -1d;
+	private final double	a, b, c, d;
+	private double			norm	= -1d;
 
 	public Quarternion() {
 		this(0d, 0d, 0d, 0d);

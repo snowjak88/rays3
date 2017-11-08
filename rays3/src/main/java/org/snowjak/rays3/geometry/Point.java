@@ -9,7 +9,7 @@ import org.snowjak.rays3.Global;
  */
 public class Point {
 
-	private double x, y, z;
+	private final double x, y, z;
 
 	public Point() {
 		x = 0d;

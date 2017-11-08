@@ -7,7 +7,7 @@ package org.snowjak.rays3.geometry;
  */
 public class Point2D {
 
-	private double x, y;
+	private final double x, y;
 
 	/**
 	 * Create a new 2-d Point at (0,0)

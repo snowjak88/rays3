@@ -7,11 +7,11 @@ package org.snowjak.rays3.geometry;
  */
 public class Ray {
 
-	private Point	origin;
-	private Vector	direction;
-	private double	currT;
-	private double	minT, maxT;
-	private int		depth;
+	private final Point		origin;
+	private final Vector	direction;
+	private final double	currT;
+	private final double	minT, maxT;
+	private final int		depth;
 
 	/**
 	 * Initialize a new Ray:

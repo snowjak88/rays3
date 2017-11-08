@@ -14,7 +14,7 @@ public class Vector {
 	public static final Vector	I			= new Vector(1d, 0d, 0d, 1d, 1d), J = new Vector(0d, 1d, 0d, 1d, 1d),
 			K = new Vector(0d, 0d, 1d, 1d, 1d);
 
-	private double				x, y, z;
+	private final double		x, y, z;
 	private double				magnitude	= -1d, magnitudeSquared = -1d;
 
 	public Vector() {
