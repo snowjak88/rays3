@@ -28,7 +28,7 @@ public class VectorTest {
 
 		Vector basis = new Vector(-3d, 5d, 2d);
 		Vector othogonal = basis.orthogonal();
-		assertEquals(0d, basis.dotProduct(othogonal), Global.DOUBLE_TOLERANCE);
+		assertEquals(0d, basis.dotProduct(othogonal), 0.000000001);
 	}
 
 }
