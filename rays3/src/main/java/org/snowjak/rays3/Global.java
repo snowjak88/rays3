@@ -1,5 +1,6 @@
 package org.snowjak.rays3;
 
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -18,6 +19,11 @@ public class Global {
 	 * this executor.
 	 */
 	public static final ExecutorService	EXECUTOR			= Executors.newCachedThreadPool();
+
+	/**
+	 * A pre-initialized pseudo-random number generator.
+	 */
+	public static final Random			RND					= new Random(System.currentTimeMillis());
 
 	/**
 	 * Determine if two doubles are "near" one another (using

@@ -1,7 +1,6 @@
 package org.snowjak.rays3.sample;
 
-import java.util.Random;
-
+import org.snowjak.rays3.Global;
 import org.snowjak.rays3.spectrum.Spectrum;
 
 /**
@@ -13,10 +12,8 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class SimplePseudorandomSampler implements Sampler {
 
-	private int					minImageX, minImageY, maxImageX, maxImageY;
-	private int					currImageX, currImageY;
-
-	private static final Random	RND	= new Random(System.currentTimeMillis());
+	private int	minImageX, minImageY, maxImageX, maxImageY;
+	private int	currImageX, currImageY;
 
 	public SimplePseudorandomSampler(int minImageX, int minImageY, int maxImageX, int maxImageY) {
 
@@ -41,7 +38,8 @@ public class SimplePseudorandomSampler implements Sampler {
 			currImageX++;
 		}
 
-		return new Sample(this, (double) currImageX, (double) currImageY, RND.nextDouble(), RND.nextDouble());
+		return new Sample(this, (double) currImageX, (double) currImageY, Global.RND.nextDouble(),
+				Global.RND.nextDouble());
 	}
 
 	@Override
