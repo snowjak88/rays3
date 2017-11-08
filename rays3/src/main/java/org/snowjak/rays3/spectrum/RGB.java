@@ -34,46 +34,46 @@ public class RGB {
 	 */
 	public static final RGB	WHITE	= new RGB(1d, 1d, 1d);
 
-	private double			red, green, blue;
+	private double[]		rgb;
 
 	public RGB() {
 		this(0d, 0d, 0d);
 	}
 
 	public RGB(double red, double green, double blue) {
-		this.red = red;
-		this.green = green;
-		this.blue = blue;
+		this.rgb = new double[] { red, green, blue };
 	}
 
 	public RGB add(RGB addend) {
 
-		return new RGB(this.red + addend.red, this.green + addend.green, this.blue + addend.blue);
+		return new RGB(this.rgb[0] + addend.rgb[0], this.rgb[1] + addend.rgb[1], this.rgb[2] + addend.rgb[2]);
 	}
 
 	public RGB subtract(RGB subtrahend) {
 
-		return new RGB(this.red - subtrahend.red, this.green - subtrahend.green, this.blue - subtrahend.blue);
+		return new RGB(this.rgb[0] - subtrahend.rgb[0], this.rgb[1] - subtrahend.rgb[1],
+				this.rgb[2] - subtrahend.rgb[2]);
 	}
 
 	public RGB multiply(double multiplicand) {
 
-		return new RGB(this.red * multiplicand, this.green * multiplicand, this.blue * multiplicand);
+		return new RGB(this.rgb[0] * multiplicand, this.rgb[1] * multiplicand, this.rgb[2] * multiplicand);
 	}
 
 	public RGB multiply(RGB multiplicand) {
 
-		return new RGB(this.red * multiplicand.red, this.green * multiplicand.green, this.blue * multiplicand.blue);
+		return new RGB(this.rgb[0] * multiplicand.rgb[0], this.rgb[1] * multiplicand.rgb[1],
+				this.rgb[2] * multiplicand.rgb[2]);
 	}
 
 	public RGB divide(double divisor) {
 
-		return new RGB(this.red / divisor, this.green / divisor, this.blue / divisor);
+		return new RGB(this.rgb[0] / divisor, this.rgb[1] / divisor, this.rgb[2] / divisor);
 	}
 
 	public RGB divide(RGB divisor) {
 
-		return new RGB(this.red / divisor.red, this.green / divisor.green, this.blue / divisor.blue);
+		return new RGB(this.rgb[0] / divisor.rgb[0], this.rgb[1] / divisor.rgb[1], this.rgb[2] / divisor.rgb[2]);
 	}
 
 	/**
@@ -81,22 +81,35 @@ public class RGB {
 	 */
 	public RGB clamp() {
 
-		return new RGB(clampFraction(red), clampFraction(green), clampFraction(blue));
+		return new RGB(clampFraction(rgb[0]), clampFraction(rgb[1]), clampFraction(rgb[2]));
 	}
 
 	public double getRed() {
 
-		return red;
+		return rgb[0];
 	}
 
 	public double getGreen() {
 
-		return green;
+		return rgb[1];
 	}
 
 	public double getBlue() {
 
-		return blue;
+		return rgb[2];
+	}
+
+	/**
+	 * <strong>Note</strong> that the <code>double</code> array returned here is
+	 * the backing array of this RGB object. Modifying this array directly is
+	 * considered to be unsafe, as it breaks the "value-object" paradigm.
+	 * 
+	 * @return an array of 3 <code>double</code>s:
+	 *         <code>{ red, green, blue }</code>
+	 */
+	public double[] getComponents() {
+
+		return rgb;
 	}
 
 	private double clampFraction(double v) {
