@@ -35,6 +35,12 @@ public interface Interactable extends Transformable {
 	 * Given a {@link Ray} (expressed in global coordinates), compute the
 	 * {@link Interaction} describing the point at which that ray intersects the
 	 * object, or <code>null</code> if no such point exists.
+	 * <p>
+	 * One convention: when reporting the Interaction, configure the bundled Ray
+	 * ({@link Interaction#getInteractingRay()}) so that {@link Ray#getCurrT()},
+	 * {@link Ray#getMinT()}, and {@link Ray#getMaxT()} report on the distances
+	 * to the interaction.
+	 * </p>
 	 * 
 	 * @param ray
 	 * @return
