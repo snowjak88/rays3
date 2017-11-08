@@ -94,7 +94,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 			final Optional<Interaction> op_interaction = world
 					.getInteractable(ray)
 						.stream()
-						.map(s -> s.getIntersection(ray))
+						.map(p -> p.getIntersection(ray))
 						.sorted((i1, i2) -> Double.compare(i1.getInteractingRay().getCurrT(),
 								i2.getInteractingRay().getCurrT()))
 						.findFirst();
@@ -106,14 +106,14 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				final Vector w_e = interaction.getInteractingRay().getDirection().negate();
 				final Normal n = interaction.getNormal();
 
+				final double n1 = 1d;
+				final double n2 = interaction.getBdsf().getIndexOfRefraction();
+
 				//
 				// Construct both the reflected and transmitted rays.
 				//
 				final Vector reflectedVector = interaction.getBdsf().sampleReflectionVector(point, w_e, n, sample);
-
-				// TODO Refit this to refer to individually-configured
-				// indices-of-refraction
-				final Vector transmittedVector = BDSF.getTransmittedVector(point, w_e, n, 1d, 1d);
+				final Vector transmittedVector = BDSF.getTransmittedVector(point, w_e, n, n1, n2);
 
 				// Calculate the dot-product of the reflection-vector and the
 				// surface-normal.
@@ -135,9 +135,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				final Spectrum reflectedRadiance = followRay(reflectedRay);
 				final Spectrum transmittedRadiance = followRay(transmittedRay);
 
-				// TODO Refit this to refer to individually-configured
-				// indices-of-refraction
-				final FresnelResult fresnel = BDSF.calculateFresnel(point, w_e, n, 1d, 1d);
+				final FresnelResult fresnel = BDSF.calculateFresnel(point, w_e, n, n1, n2);
 
 				//
 				// Add together all incident radiances: emissive + ( reflective

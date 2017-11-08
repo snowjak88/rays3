@@ -17,6 +17,13 @@ import static org.apache.commons.math3.util.FastMath.*;
  */
 public abstract class BDSF {
 
+	private final double indexOfRefraction;
+
+	public BDSF(double indexOfRefraction) {
+
+		this.indexOfRefraction = indexOfRefraction;
+	}
+
 	/**
 	 * Sample the radiant energy reflectable from the given point.
 	 * <p>
@@ -239,6 +246,14 @@ public abstract class BDSF {
 		}
 
 		return new FresnelResult(reflectance, transmittance);
+	}
+
+	/**
+	 * @return this BDSF's index-of-refraction at the given point
+	 */
+	public double getIndexOfRefraction() {
+
+		return indexOfRefraction;
 	}
 
 	/**

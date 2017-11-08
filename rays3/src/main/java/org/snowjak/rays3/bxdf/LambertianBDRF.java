@@ -15,11 +15,11 @@ import org.snowjak.rays3.texture.Texture;
  */
 public class LambertianBDRF extends BDSF {
 
-	private Texture	texture;
-	private Texture	emissive;
+	private final Texture	texture;
+	private final Texture	emissive;
 
-	public LambertianBDRF(Texture texture, Texture emissive) {
-		super();
+	public LambertianBDRF(Texture texture, Texture emissive, double indexOfRefraction) {
+		super(indexOfRefraction);
 
 		this.texture = texture;
 		this.emissive = emissive;
@@ -121,6 +121,16 @@ public class LambertianBDRF extends BDSF {
 		// is 2.
 		//
 		return dotProduct / 2d;
+	}
+
+	public Texture getTexture() {
+
+		return texture;
+	}
+
+	public Texture getEmissive() {
+
+		return emissive;
 	}
 
 }
