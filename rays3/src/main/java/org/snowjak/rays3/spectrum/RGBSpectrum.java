@@ -7,7 +7,16 @@ package org.snowjak.rays3.spectrum;
  */
 public class RGBSpectrum implements Spectrum {
 
-	private RGB rgb;
+	/**
+	 * Represents a 0-energy Spectrum.
+	 */
+	public static final RGBSpectrum	BLACK	= new RGBSpectrum(RGB.BLACK);
+	/**
+	 * Represents a 1.0-energy Spectrum. (i.e., equivalent to {@link RGB#WHITE})
+	 */
+	public static final RGBSpectrum	WHITE	= new RGBSpectrum(RGB.WHITE);
+
+	private RGB						rgb;
 
 	public RGBSpectrum() {
 		this(RGB.BLACK);
