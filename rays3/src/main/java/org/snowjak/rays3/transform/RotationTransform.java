@@ -37,12 +37,12 @@ public class RotationTransform implements Transform {
 		final double cos = FastMath.cos(radians), sin = FastMath.sin(radians);
 
 		//@formatter:off
-		this.worldToLocal = new Matrix(new double[][] {	{ cos + ax2*(1d - cos),     ax*ay*(1d - cos) - az*sin, ax*az*(1d - cos) + ay*sin, 0d },
+		this.localToWorld = new Matrix(new double[][] {	{ cos + ax2*(1d - cos),     ax*ay*(1d - cos) - az*sin, ax*az*(1d - cos) + ay*sin, 0d },
 														{ ay*ax*(1 - cos) + az*sin, cos + ay2*(1d - cos),      ay*az*(1d - cos) - ax*sin, 0d },
 														{ az*ax*(1 - cos) - ay*sin, az*ay*(1d - cos) + ax*sin, cos + az2*(1d - cos),      0d },
 														{ 0d,                       0d,                        0d,                        1d } });
 		//@formatter:on
-		this.localToWorld = this.worldToLocal.transpose();
+		this.worldToLocal = this.localToWorld.transpose();
 	}
 
 	@Override

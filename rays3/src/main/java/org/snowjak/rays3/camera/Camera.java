@@ -133,13 +133,13 @@ public abstract class Camera {
 	 */
 	protected Ray cameraToWorld(Ray ray) {
 
-		Vector origin = new Vector(ray.getOrigin());
+		Point origin = ray.getOrigin();
 		Vector direction = ray.getDirection();
 
 		origin = cameraTwist.multiply(cameraTranslate).multiply(origin);
 		direction = cameraTwist.multiply(direction);
 
-		return new Ray(new Point(origin), direction);
+		return new Ray(origin, direction);
 	}
 
 	public double getImagePlaneSizeX() {

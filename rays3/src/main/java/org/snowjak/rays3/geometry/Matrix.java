@@ -1,6 +1,7 @@
 package org.snowjak.rays3.geometry;
 
 import org.apache.commons.math3.linear.MatrixUtils;
+import org.snowjak.rays3.Global;
 
 /**
  * Represents a 4x4 matrix.
@@ -148,15 +149,28 @@ public class Matrix {
 	}
 
 	/**
-	 * Multiply this Matrix by a Vector (treating that as a column-vector with a
+	 * Multiply this Matrix by a Point (treating that as a column-vector with a
 	 * 4th value of 1).
+	 * 
+	 * @param point
+	 * @return
+	 */
+	public Point multiply(Point point) {
+
+		double[] newVector = this.multiply(new double[] { point.getX(), point.getY(), point.getZ(), 1d });
+		return new Point(newVector[0], newVector[1], newVector[2]);
+	}
+
+	/**
+	 * Multiply this Matrix by a Vector (treating that as a column-vector with a
+	 * 4th value of 0).
 	 * 
 	 * @param vector
 	 * @return
 	 */
 	public Vector multiply(Vector vector) {
 
-		double[] newVector = this.multiply(new double[] { vector.getX(), vector.getY(), vector.getZ(), 1d });
+		double[] newVector = this.multiply(new double[] { vector.getX(), vector.getY(), vector.getZ(), 0d });
 		return new Vector(newVector[0], newVector[1], newVector[2]);
 	}
 
@@ -164,7 +178,8 @@ public class Matrix {
 	 * Multiply this Matrix by a 1x4 column vector.
 	 * <p>
 	 * <strong>Note</strong> that this column-vector is normalized to
-	 * homogeneous coordinates after multiplication:
+	 * homogeneous coordinates after multiplication, if the 4th coordinate is
+	 * not 0:
 	 * 
 	 * <pre>
 	 *    vect[0] /= vect[3]
@@ -195,10 +210,15 @@ public class Matrix {
 				values[3][0] * columnVector[0] + values[3][1] * columnVector[1] + values[3][2] * columnVector[2]
 						+ values[3][3] };
 
-		newVector[0] /= newVector[3];
-		newVector[1] /= newVector[3];
-		newVector[2] /= newVector[3];
-		newVector[3] = 1d;
+		if (!Global.isNear(newVector[3], 0d)) {
+			newVector[0] /= newVector[3];
+			newVector[1] /= newVector[3];
+			newVector[2] /= newVector[3];
+			newVector[3] = 1d;
+
+		} else {
+			newVector[3] = 0d;
+		}
 
 		return newVector;
 
@@ -311,6 +331,16 @@ public class Matrix {
 					foundMismatch = true;
 
 		return !foundMismatch;
+	}
+
+	@Override
+	public String toString() {
+
+		StringBuilder builder = new StringBuilder();
+		for (int r = 0; r < 4; r++)
+			builder.append(String.format("| %+5.5f %+5.5f %+5.5f %+5.5f |\n", values[r][0], values[r][1], values[r][2],
+					values[r][3]));
+		return builder.deleteCharAt(builder.length() - 1).toString();
 	}
 
 }

@@ -28,11 +28,11 @@ public class ScaleTransform implements Transform {
 	public ScaleTransform(double sx, double sy, double sz) {
 
 		//@formatter:off
-		this.worldToLocal = new Matrix(new double[][] {	{ sx,    0d,    0d,    0d },
+		this.localToWorld = new Matrix(new double[][] {	{ sx,    0d,    0d,    0d },
 														{ 0d,    sy,    0d,    0d },
 														{ 0d,    0d,    sz,    0d },
 														{ 0d,    0d,    0d,    1d } });
-		this.localToWorld = new Matrix(new double[][] {	{ 1d/sx, 0d,    0d,    0d },
+		this.worldToLocal = new Matrix(new double[][] {	{ 1d/sx, 0d,    0d,    0d },
 														{ 0d,    1d/sy, 0d,    0d },
 														{ 0d,    0d,    1d/sz, 0d },
 														{ 0d,    0d,    0d,    1d } });
