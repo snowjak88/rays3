@@ -23,15 +23,16 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class Sample {
 
-	private Sampler				sampler;
+	private Sampler					sampler;
 
-	private double				imageX, imageY;
-	private double				lensU, lensV;
-	private double				t;
-	private Spectrum			wavelength;
+	private final int				filmX, filmY;
+	private final double			imageX, imageY;
+	private final double			lensU, lensV;
+	private final double			t;
+	private final Spectrum			wavelength;
 
-	private Supplier<Double>	singleSampleSupplier;
-	private Supplier<Point2D>	twinSampleSupplier;
+	private final Supplier<Double>	singleSampleSupplier;
+	private final Supplier<Point2D>	twinSampleSupplier;
 
 	/**
 	 * Construct a new Sample.
@@ -53,11 +54,13 @@ public class Sample {
 	 * </p>
 	 * 
 	 * @param sampler
+	 * @param filmX
+	 * @param filmY
 	 * @param imageX
 	 * @param imageY
 	 */
-	public Sample(Sampler sampler, double imageX, double imageY) {
-		this(sampler, imageX, imageY, 0.5, 0.5);
+	public Sample(Sampler sampler, int filmX, int filmY, double imageX, double imageY) {
+		this(sampler, filmX, filmY, imageX, imageY, 0.5, 0.5);
 	}
 
 	/**
@@ -81,8 +84,8 @@ public class Sample {
 	 * @param lensU
 	 * @param lensV
 	 */
-	public Sample(Sampler sampler, double imageX, double imageY, double lensU, double lensV) {
-		this(sampler, imageX, imageY, lensU, lensV, 0.5d, null);
+	public Sample(Sampler sampler, int filmX, int filmY, double imageX, double imageY, double lensU, double lensV) {
+		this(sampler, filmX, filmY, imageX, imageY, lensU, lensV, 0.5d, null);
 	}
 
 	/**
@@ -93,6 +96,8 @@ public class Sample {
 	 * </p>
 	 * 
 	 * @param sampler
+	 * @param filmX
+	 * @param filmY
 	 * @param imageX
 	 * @param imageY
 	 * @param lensU
@@ -100,9 +105,9 @@ public class Sample {
 	 * @param t
 	 * @param wavelength
 	 */
-	public Sample(Sampler sampler, double imageX, double imageY, double lensU, double lensV, double t,
-			Spectrum wavelength) {
-		this(sampler, imageX, imageY, lensU, lensV, t, wavelength, new Supplier<Double>() {
+	public Sample(Sampler sampler, int filmX, int filmY, double imageX, double imageY, double lensU, double lensV,
+			double t, Spectrum wavelength) {
+		this(sampler, filmX, filmY, imageX, imageY, lensU, lensV, t, wavelength, new Supplier<Double>() {
 
 			private Random rnd = new Random(System.currentTimeMillis());
 
@@ -129,6 +134,8 @@ public class Sample {
 	 * Construct a new Sample.
 	 * 
 	 * @param sampler
+	 * @param filmX
+	 * @param filmY
 	 * @param imageX
 	 * @param imageY
 	 * @param lensU
@@ -138,10 +145,13 @@ public class Sample {
 	 * @param singleSampleSupplier
 	 * @param twinSampleSupplier
 	 */
-	public Sample(Sampler sampler, double imageX, double imageY, double lensU, double lensV, double t,
-			Spectrum wavelength, Supplier<Double> singleSampleSupplier, Supplier<Point2D> twinSampleSupplier) {
+	public Sample(Sampler sampler, int filmX, int filmY, double imageX, double imageY, double lensU, double lensV,
+			double t, Spectrum wavelength, Supplier<Double> singleSampleSupplier,
+			Supplier<Point2D> twinSampleSupplier) {
 
 		this.sampler = sampler;
+		this.filmX = filmX;
+		this.filmY = filmY;
 		this.imageX = imageX;
 		this.imageY = imageY;
 		this.lensU = lensU;
@@ -161,9 +171,25 @@ public class Sample {
 	}
 
 	/**
+	 * @return the film X coordinate this sample corresponds to
+	 */
+	public int getFilmX() {
+
+		return filmX;
+	}
+
+	/**
+	 * @return the film Y coordinate this sample corresponds to
+	 */
+	public int getFilmY() {
+
+		return filmY;
+	}
+
+	/**
 	 * @return the image X coordinate to be sampled
 	 */
-	public double getImageX() {
+	public double getImageU() {
 
 		return imageX;
 	}
@@ -171,7 +197,7 @@ public class Sample {
 	/**
 	 * @return the image Y coordinate to be sampled
 	 */
-	public double getImageY() {
+	public double getImageV() {
 
 		return imageY;
 	}

@@ -12,40 +12,84 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class SimplePseudorandomSampler implements Sampler {
 
-	private int	minImageX, minImageY, maxImageX, maxImageY;
-	private int	currImageX, currImageY;
+	private final int	minFilmX, minFilmY, maxFilmX, maxFilmY;
+	private int			currFilmX, currFilmY;
 
-	public SimplePseudorandomSampler(int minImageX, int minImageY, int maxImageX, int maxImageY) {
+	public SimplePseudorandomSampler(int filmSizeX, int filmSizeY) {
 
-		this.minImageX = minImageX;
-		this.minImageY = minImageY;
-		this.maxImageX = maxImageX;
-		this.maxImageY = maxImageY;
+		this.minFilmX = 0;
+		this.minFilmY = 0;
+		this.maxFilmX = filmSizeX - 1;
+		this.maxFilmY = filmSizeY - 1;
 
-		this.currImageX = this.minImageX;
-		this.currImageY = this.minImageY - 1;
+		/*
+		 * this.minImagePlaneX = -( imagePlaneSizeX / 2d ); this.minImagePlaneY
+		 * = -( imagePlaneSizeY / 2d ); this.maxImagePlaneX = +( imagePlaneSizeX
+		 * / 2d ); this.maxImagePlaneY = +( imagePlaneSizeY / 2d );
+		 */
+
+		this.currFilmX = this.minFilmX;
+		this.currFilmY = this.minFilmY - 1;
 	}
 
 	@Override
 	public Sample getNextSample() {
 
-		if (currImageX > maxImageX)
-			return null;
-
-		currImageY++;
-		if (currImageY > maxImageY) {
-			currImageY = minImageY;
-			currImageX++;
+		currFilmY++;
+		if (currFilmY > maxFilmY) {
+			currFilmY = minFilmY;
+			currFilmX++;
 		}
 
-		return new Sample(this, (double) currImageX, (double) currImageY, Global.RND.nextDouble(),
+		if (currFilmX > maxFilmX)
+			return null;
+
+		final double cameraU = mapXToU(currFilmX, minFilmX, maxFilmX);
+		final double cameraV = mapXToU(currFilmY, maxFilmY, minFilmY);
+
+		return new Sample(this, currFilmX, currFilmY, cameraU, cameraV, Global.RND.nextDouble(),
 				Global.RND.nextDouble());
+	}
+
+	private double mapXToU(int x, int minX, int maxX) {
+
+		return ( (double) x - (double) minX ) / ( (double) maxX - (double) minX );
 	}
 
 	@Override
 	public boolean isSampleAcceptable(Sample sample, Spectrum result) {
 
 		return true;
+	}
+
+	public int getMinFilmX() {
+
+		return minFilmX;
+	}
+
+	public int getMinFilmY() {
+
+		return minFilmY;
+	}
+
+	public int getMaxFilmX() {
+
+		return maxFilmX;
+	}
+
+	public int getMaxFilmY() {
+
+		return maxFilmY;
+	}
+
+	public int getFilmSizeX() {
+
+		return maxFilmX - minFilmX + 1;
+	}
+
+	public int getFilmSizeY() {
+
+		return maxFilmY - minFilmY + 1;
 	}
 
 }
