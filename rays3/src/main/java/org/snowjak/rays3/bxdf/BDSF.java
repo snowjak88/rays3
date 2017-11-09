@@ -206,6 +206,8 @@ public abstract class BDSF {
 	 *            point of interaction on the shape
 	 * @param w_e
 	 *            vector from <strong>x</strong> toward the eye
+	 * @param w_r
+	 *            vector reflected away from <strong>x</strong>
 	 * @param n
 	 *            surface-normal at <strong>x</strong>
 	 * @param leavingIndexOfRefraction
@@ -217,33 +219,17 @@ public abstract class BDSF {
 	 *            <strong>w</strong><sub>e</sub> toward <strong>x</strong>)
 	 * @return a FresnelResult
 	 */
-	public static FresnelResult calculateFresnel(Point x, Vector w_e, Normal n, double leavingIndexOfRefraction,
-			double enteringIndexOfRefraction) {
+	public static FresnelResult calculateFresnel(Point x, Vector w_e, Vector w_r, Normal n,
+			double leavingIndexOfRefraction, double enteringIndexOfRefraction) {
 
 		final double n1 = leavingIndexOfRefraction, n2 = enteringIndexOfRefraction;
-		final double cos_theta_i = w_e.normalize().dotProduct(n.asVector().normalize());
-		double sin2_theta_t = pow(n1 / n2, 2d) * ( 1d - pow(cos_theta_i, 2d) );
 
-		double reflectance = 1d, transmittance = 0d;
+		final double cos_theta = w_r.normalize().dotProduct(n.asVector().normalize());
 
-		if (sin2_theta_t <= 1d) {
-			//
-			// This is NOT a case of Total Internal Reflection
-			//
-			final double cos_theta_t = sqrt(1d - sin2_theta_t);
-			final double r_normal = pow(
-					( n1 * cos_theta_i - n2 * cos_theta_t ) / ( n1 * cos_theta_i + n2 * cos_theta_t ), 2d);
-			final double r_tangent = pow(
-					( n2 * cos_theta_i - n1 * cos_theta_t ) / ( n2 * cos_theta_i + n1 * cos_theta_t ), 2d);
+		final double r_0 = pow(( n1 - n2 ) / ( n1 + n2 ), 2);
+		final double r_theta = r_0 + ( 1d - r_0 ) * pow(1d - cos_theta, 5);
 
-			reflectance = ( r_normal + r_tangent ) / 2d;
-			transmittance = 1d - reflectance;
-		} else {
-			//
-			// This is a case of Total Internal Reflection.
-			// As such, reflectance = 1.0, transmittance = 0.0
-			//
-		}
+		double reflectance = max(min(r_theta, 1d), 0d), transmittance = 1d - reflectance;
 
 		return new FresnelResult(reflectance, transmittance);
 	}
