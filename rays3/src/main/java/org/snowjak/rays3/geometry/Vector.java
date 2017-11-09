@@ -10,9 +10,22 @@ import org.snowjak.rays3.Global;
  */
 public class Vector {
 
+	/**
+	 * The zero-vector -- { 0, 0, 0 }
+	 */
 	public static final Vector	ZERO		= new Vector(0d, 0d, 0d, 0d, 0d);
-	public static final Vector	I			= new Vector(1d, 0d, 0d, 1d, 1d), J = new Vector(0d, 1d, 0d, 1d, 1d),
-			K = new Vector(0d, 0d, 1d, 1d, 1d);
+	/**
+	 * The common X-axis -- { 1, 0, 0 }
+	 */
+	public static final Vector	I			= new Vector(1d, 0d, 0d, 1d, 1d);
+	/**
+	 * The common Y-axis -- { 0, 1, 0 }
+	 */
+	public static final Vector	J			= new Vector(0d, 1d, 0d, 1d, 1d);
+	/**
+	 * The common Z-axis -- { 0, 0, 1 }
+	 */
+	public static final Vector	K			= new Vector(0d, 0d, 1d, 1d, 1d);
 
 	private final double		x, y, z;
 	private double				magnitude	= -1d, magnitudeSquared = -1d;
