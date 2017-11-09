@@ -42,7 +42,7 @@ public class SphereShape extends AbstractShape {
 		super(worldToLocal);
 		this.r = r;
 
-		this.aabb = new AABB(Arrays.asList(new Point(0d, -r, 0d), new Point(0d, +r, 0d)), getLocalToWorldTransforms());
+		this.aabb = new AABB(Arrays.asList(new Point(-r, -r, -r), new Point(+r, +r, +r)), getLocalToWorldTransforms());
 	}
 
 	@Override
@@ -60,7 +60,10 @@ public class SphereShape extends AbstractShape {
 	@Override
 	public Interaction getIntersection(Ray ray) {
 
-		return localToWorld(getLocalIntersection(worldToLocal(ray)));
+		Interaction localInteraction = getLocalIntersection(worldToLocal(ray));
+		if (localInteraction == null)
+			return null;
+		return localToWorld(localInteraction);
 	}
 
 	@Override
@@ -127,12 +130,12 @@ public class SphereShape extends AbstractShape {
 
 		if (t0 < 0 && t1 >= 0)
 			return t1;
-		else if (t0 > 0 && t1 < 0)
+		else if (t0 >= 0 && t1 < 0)
 			return t0;
 		else if (t0 < t1)
-			return t1;
-		else
 			return t0;
+		else
+			return t1;
 	}
 
 	private Point2D computeSurfaceParameterization(Point point) {

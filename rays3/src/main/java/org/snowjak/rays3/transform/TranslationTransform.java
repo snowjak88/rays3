@@ -27,14 +27,14 @@ public class TranslationTransform implements Transform {
 	public TranslationTransform(double dx, double dy, double dz) {
 
 		//@formatter:off
-		this.worldToLocal = new Matrix(new double[][] {	{ 1d, 0d, 0d, dx },
-														{ 0d, 1d, 0d, dy },
-														{ 0d, 0d, 1d, dz },
-														{ 0d, 0d, 0d, 1d } });
-		this.localToWorld = new Matrix(new double[][] {	{ 1d, 0d, 0d,-dx },
-														{ 0d, 1d, 0d,-dy },
-														{ 0d, 0d, 1d,-dz },
-														{ 0d, 0d, 0d, 1d } });
+		this.worldToLocal = new Matrix(new double[][] {	{ 1d, 0d, 0d, -dx },
+														{ 0d, 1d, 0d, -dy },
+														{ 0d, 0d, 1d, -dz },
+														{ 0d, 0d, 0d,  1d } });
+		this.localToWorld = new Matrix(new double[][] {	{ 1d, 0d, 0d, +dx },
+														{ 0d, 1d, 0d, +dy },
+														{ 0d, 0d, 1d, +dz },
+														{ 0d, 0d, 0d,  1d } });
 		//@formatter:on
 	}
 
@@ -71,13 +71,15 @@ public class TranslationTransform implements Transform {
 	@Override
 	public Ray worldToLocal(Ray ray) {
 
-		return new Ray(worldToLocal(ray.getOrigin()), worldToLocal(ray.getDirection()));
+		return new Ray(worldToLocal(ray.getOrigin()), worldToLocal(ray.getDirection()), ray.getDepth(), ray.getCurrT(),
+				ray.getMinT(), ray.getMaxT());
 	}
 
 	@Override
 	public Ray localToWorld(Ray ray) {
 
-		return new Ray(localToWorld(ray.getOrigin()), localToWorld(ray.getDirection()));
+		return new Ray(localToWorld(ray.getOrigin()), localToWorld(ray.getDirection()), ray.getDepth(), ray.getCurrT(),
+				ray.getMinT(), ray.getMaxT());
 	}
 
 	/**
