@@ -19,33 +19,60 @@ import org.snowjak.rays3.sample.Sample;
  */
 public abstract class Camera {
 
-	private Matrix cameraMatrix;
+	private final Matrix	cameraTwist, cameraTranslate;
+	private final double	imagePlaneSizeX, imagePlaneSizeY;
 
 	/**
 	 * Construct a new Camera located at the given <code>eyePoint</code>,
 	 * looking at <code>lookAt</code>, with the camera's "up" vector oriented
 	 * along <code>up</code>.
+	 * <p>
+	 * The Camera's image-plane is considered to be centered at (0,0,0) (in
+	 * camera coordinates), with maximum extents at:
 	 * 
+	 * <pre>
+	 * [ -imagePlaneSizeX / 2, -imagePlaneSizeY / 2 ] , [ +imagePlaneSizeX / 2, +imagePlaneSizeY / 2 ]
+	 * </pre>
+	 * </p>
+	 * 
+	 * @param imagePlaneSizeX
+	 * @param imagePlaneSizeY
 	 * @param eyePoint
 	 * @param lookAt
 	 * @param up
 	 */
-	public Camera(Point eyePoint, Point lookAt, Vector up) {
+	public Camera(double imagePlaneSizeX, double imagePlaneSizeY, Point eyePoint, Point lookAt, Vector up) {
 
-		Vector eyeVect = new Vector(eyePoint), lookAtVect = new Vector(lookAt);
+		this.imagePlaneSizeX = imagePlaneSizeX;
+		this.imagePlaneSizeY = imagePlaneSizeY;
 
-		Vector cameraZAxis = lookAtVect.subtract(eyeVect).normalize();
-		Vector cameraXAxis = up.crossProduct(cameraZAxis).normalize();
-		Vector cameraYAxis = cameraZAxis.crossProduct(cameraXAxis).normalize();
+		final Vector eyeVect = new Vector(eyePoint), lookAtVect = new Vector(lookAt);
 
-		double dotXEye = cameraXAxis.dotProduct(eyeVect), dotYEye = cameraYAxis.dotProduct(eyeVect),
-				dotZEye = cameraZAxis.dotProduct(eyeVect);
+		final Vector cameraZAxis = lookAtVect.subtract(eyeVect).normalize();
+		final Vector cameraXAxis = up.crossProduct(cameraZAxis).normalize();
+		final Vector cameraYAxis = cameraZAxis.crossProduct(cameraXAxis).normalize();
 
 		//@formatter:off
-		cameraMatrix = new Matrix(new double[][] {	{ cameraXAxis.getX(), cameraYAxis.getX(), cameraZAxis.getX(), 0d },
-													{ cameraXAxis.getY(), cameraYAxis.getY(), cameraZAxis.getY(), 0d },
-													{ cameraXAxis.getZ(), cameraYAxis.getZ(), cameraZAxis.getZ(), 0d },
-													{ -dotXEye,           -dotYEye,           -dotZEye,           1d } });
+		final double dotXEye = cameraXAxis.dotProduct(eyeVect),
+				     dotYEye = cameraYAxis.dotProduct(eyeVect),
+				     dotZEye = cameraZAxis.dotProduct(eyeVect);
+		//@formatter:on
+
+		//@formatter:off
+		cameraTwist =
+				/*new Matrix(new double[][] {	{ cameraXAxis.getX(), cameraYAxis.getX(), cameraZAxis.getX(), 0d },
+											{ cameraXAxis.getY(), cameraYAxis.getY(), cameraZAxis.getY(), 0d },
+											{ cameraXAxis.getZ(), cameraYAxis.getZ(), cameraZAxis.getZ(), 0d },
+											{ -dotXEye,           -dotYEye,           -dotZEye,           1d } });*/
+				new Matrix(new double[][] {	{ cameraXAxis.getX(), cameraYAxis.getX(), cameraZAxis.getX(), 0d },
+											{ cameraXAxis.getY(), cameraYAxis.getY(), cameraZAxis.getY(), 0d },
+											{ cameraXAxis.getZ(), cameraYAxis.getZ(), cameraZAxis.getZ(), 0d },
+											{                 0d,                 0d,                 0d, 1d } });
+		cameraTranslate =
+				new Matrix(new double[][] {	{ 1d, 0d, 0d, -eyePoint.getX() },
+											{ 0d, 1d, 0d, -eyePoint.getY() },
+											{ 0d, 0d, 1d, +eyePoint.getZ() },
+											{ 0d, 0d, 0d,               1d } });
 		//@formatter:on
 	}
 
@@ -57,7 +84,7 @@ public abstract class Camera {
 	 */
 	public Ray getRay(Sample sample) {
 
-		return getRay(sample.getImageX(), sample.getImageY(), sample.getLensU(), sample.getLensV());
+		return getRay(sample.getImageU(), sample.getImageV(), sample.getLensU(), sample.getLensV());
 	}
 
 	/**
@@ -66,16 +93,16 @@ public abstract class Camera {
 	 * camera's lens is sampled at (0.5,0.5) -- i.e., through the middle of its
 	 * lens-system.
 	 * 
-	 * @param imageX
+	 * @param imageU
 	 *            x-coordinate in the image-plane. Clamped to the interval [0.0,
 	 *            1.0]
-	 * @param imageY
+	 * @param imageV
 	 *            y-coordinate in the image-plane. Clamped to the interval [0.0,
 	 *            1.0]
 	 */
-	public Ray getRay(double imageX, double imageY) {
+	public Ray getRay(double imageU, double imageV) {
 
-		return getRay(imageX, imageY, 0.5d, 0.5d);
+		return getRay(imageU, imageV, 0.5d, 0.5d);
 	}
 
 	/**
@@ -84,10 +111,10 @@ public abstract class Camera {
 	 * that it passes through the camera's composite-lens at the specified
 	 * <code>lens</code> location (clamped to the interval [0.0 - 1.0]).
 	 * 
-	 * @param imageX
+	 * @param imageU
 	 *            x-coordinate in the image-plane. Clamped to the interval [0.0,
 	 *            1.0]
-	 * @param imageY
+	 * @param imageV
 	 *            y-coordinate in the image-plane. Clamped to the interval [0.0,
 	 *            1.0]
 	 * @param lensU
@@ -98,7 +125,7 @@ public abstract class Camera {
 	 *            1.0]
 	 * @return
 	 */
-	public abstract Ray getRay(double imageX, double imageY, double lensU, double lensV);
+	public abstract Ray getRay(double imageU, double imageV, double lensU, double lensV);
 
 	/**
 	 * Transform the given {@link Ray} (in camera-coordinates) into a Ray in
@@ -109,10 +136,20 @@ public abstract class Camera {
 		Vector origin = new Vector(ray.getOrigin());
 		Vector direction = ray.getDirection();
 
-		origin = cameraMatrix.multiply(origin);
-		direction = cameraMatrix.multiply(direction);
+		origin = cameraTwist.multiply(cameraTranslate).multiply(origin);
+		direction = cameraTwist.multiply(direction);
 
 		return new Ray(new Point(origin), direction);
+	}
+
+	public double getImagePlaneSizeX() {
+
+		return imagePlaneSizeX;
+	}
+
+	public double getImagePlaneSizeY() {
+
+		return imagePlaneSizeY;
 	}
 
 }
