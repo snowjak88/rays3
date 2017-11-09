@@ -77,7 +77,7 @@ public class Point {
 	@Override
 	public String toString() {
 
-		return "Point [" + Double.toString(x) + ", " + Double.toString(y) + ", z=" + Double.toString(z) + "]";
+		return "Point [" + Double.toString(x) + ", " + Double.toString(y) + ", " + Double.toString(z) + "]";
 	}
 
 }
