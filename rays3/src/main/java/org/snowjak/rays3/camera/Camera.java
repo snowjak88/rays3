@@ -53,24 +53,14 @@ public abstract class Camera {
 		final Vector cameraYAxis = cameraZAxis.crossProduct(cameraXAxis).normalize();
 
 		//@formatter:off
-		final double dotXEye = cameraXAxis.dotProduct(eyeVect),
-				     dotYEye = cameraYAxis.dotProduct(eyeVect),
-				     dotZEye = cameraZAxis.dotProduct(eyeVect);
-		//@formatter:on
-
-		//@formatter:off
 		cameraTwist =
-				/*new Matrix(new double[][] {	{ cameraXAxis.getX(), cameraYAxis.getX(), cameraZAxis.getX(), 0d },
-											{ cameraXAxis.getY(), cameraYAxis.getY(), cameraZAxis.getY(), 0d },
-											{ cameraXAxis.getZ(), cameraYAxis.getZ(), cameraZAxis.getZ(), 0d },
-											{ -dotXEye,           -dotYEye,           -dotZEye,           1d } });*/
 				new Matrix(new double[][] {	{ cameraXAxis.getX(), cameraYAxis.getX(), cameraZAxis.getX(), 0d },
 											{ cameraXAxis.getY(), cameraYAxis.getY(), cameraZAxis.getY(), 0d },
 											{ cameraXAxis.getZ(), cameraYAxis.getZ(), cameraZAxis.getZ(), 0d },
 											{                 0d,                 0d,                 0d, 1d } });
 		cameraTranslate =
-				new Matrix(new double[][] {	{ 1d, 0d, 0d, -eyePoint.getX() },
-											{ 0d, 1d, 0d, -eyePoint.getY() },
+				new Matrix(new double[][] {	{ 1d, 0d, 0d, +eyePoint.getX() },
+											{ 0d, 1d, 0d, +eyePoint.getY() },
 											{ 0d, 0d, 1d, +eyePoint.getZ() },
 											{ 0d, 0d, 0d,               1d } });
 		//@formatter:on
@@ -136,7 +126,7 @@ public abstract class Camera {
 		Point origin = ray.getOrigin();
 		Vector direction = ray.getDirection();
 
-		origin = cameraTwist.multiply(cameraTranslate).multiply(origin);
+		origin = cameraTranslate.multiply(cameraTwist).multiply(origin);
 		direction = cameraTwist.multiply(direction);
 
 		return new Ray(origin, direction);
