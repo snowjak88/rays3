@@ -161,4 +161,11 @@ public class Vector {
 		return magnitudeSquared;
 	}
 
+	@Override
+	public String toString() {
+
+		return "Vector [" + Double.toString(x) + ", " + Double.toString(y) + ", " + Double.toString(z) + ", magnitude="
+				+ Double.toString(getMagnitude()) + "]";
+	}
+
 }

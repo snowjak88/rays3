@@ -243,4 +243,12 @@ public class Ray {
 
 		return maxT;
 	}
+
+	@Override
+	public String toString() {
+
+		return "Ray [origin=" + origin.toString() + ", direction=" + direction.toString() + ", currT="
+				+ Double.toString(currT) + ", minT=" + Double.toString(minT) + ", maxT=" + Double.toString(maxT)
+				+ ", depth=" + depth + "]";
+	}
 }

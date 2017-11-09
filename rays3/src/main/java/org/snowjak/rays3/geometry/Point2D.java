@@ -31,4 +31,10 @@ public class Point2D {
 		return y;
 	}
 
+	@Override
+	public String toString() {
+
+		return "Point2D [" + Double.toString(x) + ", " + Double.toString(y) + "]";
+	}
+
 }

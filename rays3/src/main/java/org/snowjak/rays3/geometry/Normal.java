@@ -51,4 +51,11 @@ public class Normal {
 		return direction;
 	}
 
+	@Override
+	public String toString() {
+
+		return "Normal [" + Double.toString(direction.getX()) + ", " + Double.toString(direction.getY()) + ", "
+				+ Double.toString(direction.getZ()) + "]";
+	}
+
 }
