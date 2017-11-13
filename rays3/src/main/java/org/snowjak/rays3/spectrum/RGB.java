@@ -36,61 +36,6 @@ public class RGB {
 
 	private double[]		rgb;
 
-	/**
-	 * Construct a new RGB trio from an HSL trio.
-	 * 
-	 * @param hue
-	 *            hue-angle, given in <strong>degrees</strong>
-	 * @param saturation
-	 *            saturation-value, given in <code>[0,1]</code>
-	 * @param lightness
-	 *            lightness-value, given in <code>[0,1]</code>
-	 * @return
-	 */
-	public static RGB fromHSL(double hue, double saturation, double lightness) {
-
-		final double chroma = ( 1d - FastMath.abs(2d * lightness - 1) ) * saturation;
-
-		final double h_prime = hue / 60d;
-
-		final double x = chroma * ( 1d - FastMath.abs(( h_prime % 2 ) - 1) );
-
-		final double r1, g1, b1;
-		if (h_prime >= 0d && h_prime <= 1d) {
-			r1 = chroma;
-			g1 = x;
-			b1 = 0d;
-		} else if (h_prime >= 1d && h_prime <= 2d) {
-			r1 = x;
-			g1 = chroma;
-			b1 = 0d;
-		} else if (h_prime >= 2d && h_prime <= 3d) {
-			r1 = 0d;
-			g1 = chroma;
-			b1 = x;
-		} else if (h_prime >= 3d && h_prime <= 4d) {
-			r1 = 0d;
-			g1 = x;
-			b1 = chroma;
-		} else if (h_prime >= 4d && h_prime <= 5d) {
-			r1 = x;
-			g1 = 0d;
-			b1 = chroma;
-		} else if (h_prime >= 5d && h_prime <= 6d) {
-			r1 = chroma;
-			g1 = 0d;
-			b1 = x;
-		} else {
-			r1 = 0d;
-			g1 = 0d;
-			b1 = 0d;
-		}
-
-		final double m = lightness - chroma / 2d;
-
-		return new RGB(r1 + m, g1 + m, b1 + m);
-	}
-
 	public RGB() {
 		this(0d, 0d, 0d);
 	}
