@@ -32,9 +32,6 @@ public class World {
 	 */
 	public Collection<Primitive> getInteractable(Ray ray) {
 
-		return primitives
-				.parallelStream()
-					.filter(s -> s.isInteracting(ray))
-					.collect(Collectors.toCollection(LinkedList::new));
+		return primitives.stream().filter(p -> p.isInteracting(ray)).collect(Collectors.toCollection(LinkedList::new));
 	}
 }
