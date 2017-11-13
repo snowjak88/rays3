@@ -192,4 +192,15 @@ public interface Transformable {
 
 		return working;
 	}
+
+	/**
+	 * Compute the world-coordinates for the center (<code>{0,0,0}</code>) of
+	 * this object's coordinate system.
+	 * 
+	 * @return
+	 */
+	public default Point getObjectZero() {
+
+		return localToWorld(new Point(0, 0, 0));
+	}
 }

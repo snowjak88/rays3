@@ -7,6 +7,7 @@ import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.snowjak.rays3.geometry.Point;
+import org.snowjak.rays3.geometry.Point2D;
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.intersect.Interaction;
@@ -56,6 +57,22 @@ public class AbstractShapeTest {
 
 			@Override
 			public SurfaceDescriptor getSurfaceNearestTo(Point point) {
+
+				// We don't care about this method for the purposes of this
+				// test.
+				return null;
+			}
+
+			@Override
+			public Point getLocalSurfaceFromParam(Point2D param) {
+
+				// We don't care about this method for the purposes of this
+				// test.
+				return null;
+			}
+
+			@Override
+			public Point2D getParamFromLocalSurface(Point surface) {
 
 				// We don't care about this method for the purposes of this
 				// test.

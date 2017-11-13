@@ -78,10 +78,8 @@ public class SphereShape extends AbstractShape {
 		Point point = newRay.getPointAlong();
 		Normal normalAt = new Normal(new Vector(point).normalize());
 
-		// Compute the surface parameterization in terms of phi and theta.
-		// Phi = atan ( z / x ) [normalized to [0,1] ]
-		// Theta = acos ( y / r ) [normalized to [0,1] ]
-		Point2D param = computeSurfaceParameterization(point);
+		// Compute the surface parameterization in terms of theta and phi.
+		Point2D param = getParamFromLocalSurface(point);
 
 		return new Interaction(point, newRay, normalAt, param, null);
 	}
@@ -138,15 +136,6 @@ public class SphereShape extends AbstractShape {
 			return t1;
 	}
 
-	private Point2D computeSurfaceParameterization(Point point) {
-
-		// Compute the surface parameterization in terms of phi and theta.
-		// Phi = atan ( z / x ) [normalized to [0,1] ]
-		// Theta = acos ( y / r ) [normalized to [0,1] ]
-		return new Point2D(( FastMath.atan2(point.getZ(), point.getX()) + FastMath.PI ) / ( 2d * FastMath.PI ),
-				FastMath.acos(point.getY() / r) / ( FastMath.PI ));
-	}
-
 	@Override
 	public SurfaceDescriptor getSurfaceNearestTo(Point point) {
 
@@ -165,9 +154,29 @@ public class SphereShape extends AbstractShape {
 		Ray newRay = new Ray(localRay.getOrigin(), localRay.getDirection(), localRay.getDepth(), t, t, t);
 		Point newPoint = newRay.getPointAlong();
 		Normal normalAt = new Normal(new Vector(newPoint).normalize());
-		Point2D param = computeSurfaceParameterization(newPoint);
+		Point2D param = getParamFromLocalSurface(newPoint);
 
 		return new SurfaceDescriptor(localToWorld(newPoint), localToWorld(normalAt), param);
+	}
+
+	@Override
+	public Point2D getParamFromLocalSurface(Point point) {
+
+		// Compute the surface parameterization in terms of theta and .
+		// Theta = acos ( z / r ) [normalized to [0,1] ]
+		// Phi = atan ( y / x ) [normalized to [0,1] ]
+		return new Point2D(FastMath.acos(point.getZ() / r) / ( FastMath.PI ),
+				( FastMath.atan2(point.getY(), point.getX()) + FastMath.PI ) / ( 2d * FastMath.PI ));
+	}
+
+	@Override
+	public Point getLocalSurfaceFromParam(Point2D param) {
+
+		final double theta = param.getX() * FastMath.PI;
+		final double phi = param.getY() * ( 2d * FastMath.PI ) - FastMath.PI;
+
+		return new Point(( this.r * FastMath.sin(theta) * FastMath.cos(phi) ),
+				( this.r * FastMath.sin(theta) * FastMath.sin(phi) ), ( this.r * FastMath.cos(theta) ));
 	}
 
 }

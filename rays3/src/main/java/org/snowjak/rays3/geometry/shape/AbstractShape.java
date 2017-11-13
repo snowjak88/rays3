@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.snowjak.rays3.geometry.Point;
+import org.snowjak.rays3.geometry.Point2D;
 import org.snowjak.rays3.intersect.Interactable;
 import org.snowjak.rays3.transform.Transform;
 
@@ -36,6 +37,24 @@ public abstract class AbstractShape implements Interactable {
 	 * @return
 	 */
 	public abstract SurfaceDescriptor getSurfaceNearestTo(Point point);
+
+	/**
+	 * Given a pair of surface parameters, compute a resulting 3-D point on the
+	 * surface.
+	 * 
+	 * @param param
+	 * @return
+	 */
+	public abstract Point getLocalSurfaceFromParam(Point2D param);
+
+	/**
+	 * Given a 3-D point (in object-local coordinates) on this surface, compute
+	 * the equivalent 2-D surface-parameters.
+	 * 
+	 * @param surface
+	 * @return
+	 */
+	public abstract Point2D getParamFromLocalSurface(Point surface);
 
 	@Override
 	public List<Transform> getWorldToLocalTransforms() {
