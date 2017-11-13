@@ -28,16 +28,16 @@ public class SimpleImageFilm implements Film {
 	@Override
 	public void addSample(Sample sample, Spectrum radiance) {
 
-		int imageU = (int) sample.getImageX();
-		int imageV = (int) sample.getImageY();
+		int filmX = sample.getFilmX();
+		int filmY = sample.getFilmY();
 
-		if (film[imageU][imageV] == null)
-			film[imageU][imageV] = radiance.toRGB().getComponents();
+		if (film[filmX][filmY] == null)
+			film[filmX][filmY] = radiance.toRGB().getComponents();
 		else {
 			RGB rgb = radiance.toRGB();
-			film[imageU][imageV][0] += rgb.getRed();
-			film[imageU][imageV][1] += rgb.getGreen();
-			film[imageU][imageV][2] += rgb.getBlue();
+			film[filmX][filmY][0] += rgb.getRed();
+			film[filmX][filmY][1] += rgb.getGreen();
+			film[filmX][filmY][2] += rgb.getBlue();
 		}
 
 	}
@@ -76,7 +76,7 @@ public class SimpleImageFilm implements Film {
 
 	private static int packRGB(double[] rgb) {
 
-		return (int) ( rgb[0] * 256 ) << 16 | (int) ( rgb[1] * 256 ) << 8 | (int) ( rgb[2] * 256 );
+		return ( (int) ( rgb[0] * 255d ) ) << 16 | ( (int) ( rgb[1] * 255d ) ) << 8 | ( (int) ( rgb[2] * 255d ) );
 	}
 
 }
