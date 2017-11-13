@@ -5,6 +5,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.apache.commons.math3.util.FastMath;
 import org.snowjak.rays3.Global;
 import org.snowjak.rays3.World;
 import org.snowjak.rays3.bxdf.BDSF;
@@ -88,13 +89,12 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 
 		private Spectrum followRay(Ray ray) {
 
-			if (ray.getDepth() >= maxRayDepth)
-				return RGBSpectrum.BLACK;
-
 			final Optional<Interaction> op_interaction = world
-					.getInteractable(ray)
+					.getPrimitives()
 						.stream()
+						.filter(p -> p.isInteracting(ray))
 						.map(p -> p.getIntersection(ray))
+						.filter(p -> p != null)
 						.sorted((i1, i2) -> Double.compare(i1.getInteractingRay().getCurrT(),
 								i2.getInteractingRay().getCurrT()))
 						.findFirst();
@@ -106,6 +106,13 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				final Vector w_e = interaction.getInteractingRay().getDirection().negate();
 				final Normal n = interaction.getNormal();
 
+				if (ray.getDepth() >= maxRayDepth)
+					return interaction
+							.getBdsf()
+								.getReflectableRadiance(interaction, w_e, sample.getWavelength(), sample.getT())
+								.add(interaction.getBdsf().getEmissiveRadiance(interaction, sample.getWavelength(),
+										sample.getT()));
+
 				final double n1 = 1d;
 				final double n2 = interaction.getBdsf().getIndexOfRefraction();
 
@@ -114,10 +121,6 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				//
 				final Vector reflectedVector = interaction.getBdsf().sampleReflectionVector(point, w_e, n, sample);
 				final Vector transmittedVector = BDSF.getTransmittedVector(point, w_e, n, n1, n2);
-
-				// Calculate the dot-product of the reflection-vector and the
-				// surface-normal.
-				final double cos_w_r = reflectedVector.normalize().dotProduct(n.asVector().normalize());
 
 				final Ray reflectedRay = new Ray(point, reflectedVector, ray);
 				final Ray transmittedRay = new Ray(point, transmittedVector, ray);
@@ -132,19 +135,28 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				//
 				// Follow both the reflected and transmitted rays.
 				//
-				final Spectrum reflectedRadiance = followRay(reflectedRay);
-				final Spectrum transmittedRadiance = followRay(transmittedRay);
+				final Spectrum incidentRadiance_reflection = followRay(reflectedRay);
+				final Spectrum incidentRadiance_transmission = followRay(transmittedRay);
 
-				final FresnelResult fresnel = BDSF.calculateFresnel(point, w_e, n, n1, n2);
+				//
+				// Compute the surface radiance due to reflection as the product
+				// of the surface's reflectable radiance and the
+				// actually-incident radiance.
+				final Spectrum reflectedRadiance = interaction
+						.getBdsf()
+							.getReflectableRadiance(interaction, reflectedVector, null, sample.getT())
+							.multiply(incidentRadiance_reflection);
+
+				final FresnelResult fresnel = BDSF.calculateFresnel(point, w_e, reflectedVector, n, n1, n2);
 
 				//
 				// Add together all incident radiances: emissive + ( reflective
 				// * cos(angle of reflection) ) + transmitted
-				return emissiveRadiance.add(reflectedRadiance.multiply(fresnel.getReflectance()).multiply(cos_w_r)).add(
-						transmittedRadiance.multiply(fresnel.getTransmittance()));
+				return emissiveRadiance.add(reflectedRadiance.multiply(fresnel.getReflectance())).add(
+						incidentRadiance_transmission.multiply(fresnel.getTransmittance()));
 
 			} else {
-				return RGBSpectrum.BLACK;
+				return RGBSpectrum.WHITE.multiply(1d - FastMath.abs(ray.getDirection().normalize().getZ()));
 			}
 		}
 
