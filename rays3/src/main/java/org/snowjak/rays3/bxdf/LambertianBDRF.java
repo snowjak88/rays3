@@ -26,7 +26,7 @@ public class LambertianBDRF extends BDSF {
 	}
 
 	@Override
-	public Spectrum getReflectedRadiance(Interaction interaction, Vector w_r, Spectrum lambda, double t) {
+	public Spectrum getReflectableRadiance(Interaction interaction, Vector w_r, Spectrum lambda, double t) {
 
 		Spectrum irradiance = texture.evaluate(interaction);
 

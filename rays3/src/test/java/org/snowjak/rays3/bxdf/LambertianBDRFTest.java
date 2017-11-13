@@ -46,7 +46,7 @@ public class LambertianBDRFTest {
 	@Test
 	public void testGetReflectedRadiance() {
 
-		final Spectrum reflected = bdrf.getReflectedRadiance(interaction, new Vector(1, 1, 0).normalize(), null, 0.5);
+		final Spectrum reflected = bdrf.getReflectableRadiance(interaction, new Vector(1, 1, 0).normalize(), null, 0.5);
 
 		assertEquals("Reflected-Red was not as expected!", cos(45d * PI / 180d), reflected.toRGB().getRed(), 0.00001);
 		assertEquals("Reflected-Green was not as expected!", 0d, reflected.toRGB().getGreen(), 0.00001);

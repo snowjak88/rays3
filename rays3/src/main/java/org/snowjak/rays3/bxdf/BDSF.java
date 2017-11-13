@@ -7,6 +7,7 @@ import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.intersect.Interaction;
 import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.spectrum.Spectrum;
+import org.snowjak.rays3.texture.Texture;
 
 import static org.apache.commons.math3.util.FastMath.*;
 
@@ -25,7 +26,12 @@ public abstract class BDSF {
 	}
 
 	/**
-	 * Sample the radiant energy reflectable from the given point.
+	 * Sample the radiant energy reflectable from the given point. This yields a
+	 * {@link Spectrum} giving the maximum "reflectable" (i.e., potential)
+	 * radiance obtained by reflection from this point on the surface. This is
+	 * usually heavily determined by a surface {@link Texture}. Usually, you
+	 * would multiply the resulting Spectrum by another Spectrum obtained by
+	 * ray-tracing the radiance actually incident on this point.
 	 * <p>
 	 * Specifically, calculates:
 	 * 
@@ -60,7 +66,7 @@ public abstract class BDSF {
 	 * @return the radiance of the given Spectrum reflected back along the
 	 *         eye-vector
 	 */
-	public abstract Spectrum getReflectedRadiance(Interaction interaction, Vector w_r, Spectrum lambda, double t);
+	public abstract Spectrum getReflectableRadiance(Interaction interaction, Vector w_r, Spectrum lambda, double t);
 
 	/**
 	 * Sample the radiant energy emitted from the given point.
