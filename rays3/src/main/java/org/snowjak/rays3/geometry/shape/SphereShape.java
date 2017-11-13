@@ -162,7 +162,7 @@ public class SphereShape extends AbstractShape {
 
 		double t = getLocalIntersectionT(localRay, true);
 
-		Ray newRay = new Ray(localRay.getOrigin(), localRay.getDirection(), t);
+		Ray newRay = new Ray(localRay.getOrigin(), localRay.getDirection(), localRay.getDepth(), t, t, t);
 		Point newPoint = newRay.getPointAlong();
 		Normal normalAt = new Normal(new Vector(newPoint).normalize());
 		Point2D param = computeSurfaceParameterization(newPoint);
