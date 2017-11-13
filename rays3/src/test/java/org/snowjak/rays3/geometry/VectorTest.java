@@ -2,10 +2,21 @@ package org.snowjak.rays3.geometry;
 
 import static org.junit.Assert.*;
 
+import org.apache.commons.math3.util.FastMath;
 import org.junit.Test;
 import org.snowjak.rays3.Global;
 
 public class VectorTest {
+
+	@Test
+	public void testNormalize() {
+
+		final Vector vect = new Vector(-3, 2, 7).normalize();
+		final double vect_length = FastMath
+				.sqrt(FastMath.pow(vect.getX(), 2) + FastMath.pow(vect.getY(), 2) + FastMath.pow(vect.getZ(), 2));
+		assertEquals(1d, vect_length, 0.00001);
+
+	}
 
 	@Test
 	public void testDotProduct() {

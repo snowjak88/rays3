@@ -80,7 +80,7 @@ public class Vector {
 
 	public Vector normalize() {
 
-		return new Vector(x / getMagnitude(), y / getMagnitude(), z / getMagnitude());
+		return new Vector(x / getMagnitude(), y / getMagnitude(), z / getMagnitude(), 1d, 1d);
 	}
 
 	public Vector negate() {
