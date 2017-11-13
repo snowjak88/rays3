@@ -80,6 +80,9 @@ public class Vector {
 
 	public Vector normalize() {
 
+		if (this.getMagnitude() == 1d)
+			return this;
+
 		return new Vector(x / getMagnitude(), y / getMagnitude(), z / getMagnitude(), 1d, 1d);
 	}
 
