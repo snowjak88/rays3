@@ -31,10 +31,10 @@ public class LambertianBDRF extends BDSF {
 		Spectrum irradiance = texture.evaluate(interaction);
 
 		// Reflected energy is proportional to the cosine of the angle between
-		// the two vectors (the eye and the reflected vectors).
-		Vector w_e = interaction.getInteractingRay().getDirection().negate();
+		// the reflection vector and the surface normal.
+		Vector n = interaction.getNormal().asVector();
 
-		double cosTheta = w_e.dotProduct(w_r);
+		double cosTheta = n.dotProduct(w_r);
 		irradiance = irradiance.multiply(cosTheta);
 
 		// Finally, ensure that we're selecting only the desired
