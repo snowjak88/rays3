@@ -5,6 +5,7 @@ import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.intersect.Interaction;
 import org.snowjak.rays3.sample.Sample;
+import org.snowjak.rays3.spectrum.RGBSpectrum;
 import org.snowjak.rays3.spectrum.Spectrum;
 import org.snowjak.rays3.texture.Texture;
 
@@ -18,6 +19,24 @@ public class LambertianBDRF extends BDSF {
 	private final Texture	texture;
 	private final Texture	emissive;
 
+	/**
+	 * Construct a new Lambertian-style BDRF.
+	 * 
+	 * @param texture
+	 * @param indexOfRefraction
+	 */
+	public LambertianBDRF(Texture texture, double indexOfRefraction) {
+		this(texture, null, indexOfRefraction);
+	}
+
+	/**
+	 * Construct a new Lambertian-style BDRF.
+	 * 
+	 * @param texture
+	 * @param emissive
+	 *            <code>null</code> if this BDRF does not emit any radiance
+	 * @param indexOfRefraction
+	 */
 	public LambertianBDRF(Texture texture, Texture emissive, double indexOfRefraction) {
 		super(indexOfRefraction);
 
@@ -48,12 +67,23 @@ public class LambertianBDRF extends BDSF {
 	@Override
 	public Spectrum getEmissiveRadiance(Interaction interaction, Spectrum lambda, double t) {
 
-		Spectrum radiance = emissive.evaluate(interaction);
+		Spectrum radiance;
+
+		if (emissive == null)
+			radiance = new RGBSpectrum();
+		else
+			radiance = emissive.evaluate(interaction);
 
 		if (lambda != null)
 			radiance = radiance.multiply(lambda);
 
 		return radiance;
+	}
+
+	@Override
+	public boolean hasEmissiveRadiance() {
+
+		return ( emissive != null );
 	}
 
 	@Override

@@ -104,6 +104,14 @@ public abstract class BDSF {
 	public abstract Spectrum getEmissiveRadiance(Interaction interaction, Spectrum lambda, double t);
 
 	/**
+	 * Indicates that the given surface is capable of emitting radiance itself,
+	 * and should be considered as a light-source.
+	 * 
+	 * @return <code>true</code> if the given BDSF can possibly emit radiance
+	 */
+	public abstract boolean hasEmissiveRadiance();
+
+	/**
 	 * Given an intersection point <code>x</code>, an eye-vector
 	 * <code>w_e</code>, and a surface-normal <code>n</code>, create a
 	 * reflection vector within this BDSF's bounds. Implementations may opt to

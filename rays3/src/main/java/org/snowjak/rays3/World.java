@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
 
-import org.snowjak.rays3.geometry.Ray;
+import org.snowjak.rays3.bxdf.BDSF;
 import org.snowjak.rays3.geometry.shape.Primitive;
 
 /**
@@ -14,24 +14,32 @@ import org.snowjak.rays3.geometry.shape.Primitive;
  */
 public class World {
 
-	private Collection<Primitive> primitives = new LinkedList<>();
+	private Collection<Primitive>	primitives	= new LinkedList<>();
+	private Collection<Primitive>	lights		= null;
 
 	public Collection<Primitive> getPrimitives() {
 
-		return primitives;
+		synchronized (this) {
+			this.lights = null;
+
+			return primitives;
+		}
 	}
 
 	/**
-	 * Filter the list of {@link Primitive}s currently in the world, returning
-	 * only those that are not obviously missed by the given Ray. (i.e., the
-	 * returned primitives may not actually interact with the Ray, but a quick
-	 * test reveals that they <em>might</em>)
-	 * 
-	 * @param ray
-	 * @return
+	 * Compute the list of those {@link Primitive}s that have configured their
+	 * {@link BDSF}s to be "emissive" -- i.e., such that their
+	 * <code>{@link BDSF#hasEmissiveRadiance()} == true</code>.
 	 */
-	public Collection<Primitive> getInteractable(Ray ray) {
+	public Collection<Primitive> getLights() {
 
-		return primitives.stream().filter(p -> p.isInteracting(ray)).collect(Collectors.toCollection(LinkedList::new));
+		synchronized (this) {
+			if (lights != null)
+				return lights;
+
+			lights = getPrimitives().stream().filter(p -> p.getBdsf().hasEmissiveRadiance()).collect(
+					Collectors.toCollection(LinkedList::new));
+			return lights;
+		}
 	}
 }
