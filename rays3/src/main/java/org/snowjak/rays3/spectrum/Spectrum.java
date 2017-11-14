@@ -9,6 +9,12 @@ package org.snowjak.rays3.spectrum;
 public interface Spectrum {
 
 	/**
+	 * @return <code>true</code> if this Spectrum has 0 energy associated with
+	 *         it.
+	 */
+	public boolean isBlack();
+
+	/**
 	 * Compute the result of adding this Spectrum's energy with another.
 	 */
 	public Spectrum add(Spectrum addend);
