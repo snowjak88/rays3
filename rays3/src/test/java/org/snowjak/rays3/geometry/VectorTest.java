@@ -13,7 +13,7 @@ public class VectorTest {
 
 		final Vector vect = new Vector(-3, 2, 7).normalize();
 		final double vect_length = FastMath
-				.sqrt(FastMath.pow(vect.getX(), 2) + FastMath.pow(vect.getY(), 2) + FastMath.pow(vect.getZ(), 2));
+				.sqrt(( vect.getX() * vect.getX() ) + ( vect.getY() * vect.getY() ) + ( vect.getZ() * vect.getZ() ));
 		assertEquals(1d, vect_length, 0.00001);
 
 	}

@@ -106,8 +106,8 @@ public class SphereShape extends AbstractShape {
 		if (t_ca < 0d)
 			return null;
 
-		double d2 = l.dotProduct(l) - FastMath.pow(t_ca, 2);
-		double r2 = FastMath.pow(r, 2);
+		double d2 = l.dotProduct(l) - ( t_ca * t_ca );
+		double r2 = ( r * r );
 		if (d2 > r2)
 			return null;
 

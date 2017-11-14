@@ -202,7 +202,7 @@ public abstract class BDSF {
 		double r = leavingIndexOfRefraction / enteringIndexOfRefraction;
 		double c = nv.negate().dotProduct(l);
 
-		double nv_factor = r * c - sqrt(1d - FastMath.pow(r, 2) * ( 1d - pow(c, 2) ));
+		double nv_factor = r * c - sqrt(1d - (r * r) * ( 1d - (c * c) ));
 		return ( l.multiply(r) ).add(nv.multiply(nv_factor)).normalize();
 	}
 

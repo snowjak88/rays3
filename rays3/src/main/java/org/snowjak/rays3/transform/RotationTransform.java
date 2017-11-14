@@ -33,7 +33,7 @@ public class RotationTransform implements Transform {
 
 		final double radians = degreesOfRotation * FastMath.PI / 180d;
 		final double ax = axis.getX(), ay = axis.getY(), az = axis.getZ();
-		final double ax2 = FastMath.pow(ax, 2), ay2 = FastMath.pow(ay, 2), az2 = FastMath.pow(az, 2);
+		final double ax2 = ( ax * ax ), ay2 = ( ay * ay ), az2 = ( az * az );
 		final double cos = FastMath.cos(radians), sin = FastMath.sin(radians);
 
 		//@formatter:off

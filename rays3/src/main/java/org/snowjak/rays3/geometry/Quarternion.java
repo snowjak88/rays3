@@ -132,8 +132,8 @@ public class Quarternion {
 	public double norm() {
 
 		if (this.norm < 0d)
-			this.norm = FastMath.sqrt(FastMath.pow(this.a, 2) + FastMath.pow(this.b, 2) + FastMath.pow(this.c, 2)
-					+ FastMath.pow(this.d, 2));
+			this.norm = FastMath
+					.sqrt(( this.a * this.a ) + ( this.b * this.b ) + ( this.c * this.c ) + ( this.d * this.d ));
 
 		return this.norm;
 	}
@@ -155,7 +155,7 @@ public class Quarternion {
 	 */
 	public Quarternion reciprocal() {
 
-		return this.conjugate().multiply(FastMath.pow(this.norm(), 2));
+		return this.conjugate().multiply(this.norm() * this.norm());
 	}
 
 	/**

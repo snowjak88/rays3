@@ -173,7 +173,7 @@ public class Vector {
 	public double getMagnitudeSquared() {
 
 		if (magnitudeSquared < 0d)
-			magnitudeSquared = FastMath.pow(x, 2) + FastMath.pow(y, 2) + FastMath.pow(z, 2);
+			magnitudeSquared = ( x * x ) + ( y * y ) + ( z * z );
 		return magnitudeSquared;
 	}
 
