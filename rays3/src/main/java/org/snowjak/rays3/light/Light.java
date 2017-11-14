@@ -33,8 +33,8 @@ public abstract class Light implements Transformable {
 	 * 
 	 * @param unitRadiance
 	 */
-	public Light(Spectrum unitRadiance) {
-		this(unitRadiance, FalloffType.QUADRATIC);
+	public Light(Spectrum unitRadiance, List<Transform> worldToLocal) {
+		this(unitRadiance, FalloffType.QUADRATIC, worldToLocal);
 	}
 
 	/**
@@ -44,9 +44,12 @@ public abstract class Light implements Transformable {
 	 * @param unitRadiance
 	 * @param falloffType
 	 */
-	public Light(Spectrum unitRadiance, FalloffType falloffType) {
+	public Light(Spectrum unitRadiance, FalloffType falloffType, List<Transform> worldToLocal) {
 		this.unitRadiance = unitRadiance;
 		this.falloffType = falloffType;
+
+		for (Transform t : worldToLocal)
+			this.appendTransform(t);
 	}
 
 	/**

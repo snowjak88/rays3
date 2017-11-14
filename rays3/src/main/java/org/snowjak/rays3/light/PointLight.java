@@ -1,8 +1,11 @@
 package org.snowjak.rays3.light;
 
+import java.util.List;
+
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.spectrum.Spectrum;
+import org.snowjak.rays3.transform.Transform;
 
 /**
  * Represents a {@link Light} of no size whatever.
@@ -11,8 +14,8 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class PointLight extends Light {
 
-	public PointLight(Spectrum unitRadiance) {
-		super(unitRadiance);
+	public PointLight(Spectrum unitRadiance, List<Transform> worldToLocal) {
+		super(unitRadiance, worldToLocal);
 	}
 
 	@Override

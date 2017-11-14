@@ -1,8 +1,11 @@
 package org.snowjak.rays3.light;
 
+import java.util.List;
+
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.spectrum.Spectrum;
+import org.snowjak.rays3.transform.Transform;
 
 /**
  * Represents a {@link Light} that is very, very far away -- for all practical
@@ -12,8 +15,8 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class InfiniteLight extends Light {
 
-	public InfiniteLight(Spectrum unitRadiance) {
-		super(unitRadiance, FalloffType.CONSTANT);
+	public InfiniteLight(Spectrum unitRadiance, List<Transform> worldToLocal) {
+		super(unitRadiance, FalloffType.CONSTANT, worldToLocal);
 	}
 
 	@Override
