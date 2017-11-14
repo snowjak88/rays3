@@ -17,6 +17,7 @@ import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.intersect.Interaction;
+import org.snowjak.rays3.light.Light;
 import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.sample.Sampler;
 import org.snowjak.rays3.spectrum.RGBSpectrum;
@@ -119,8 +120,13 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				//
 				// Construct both the reflected and transmitted rays.
 				//
-				final Vector reflectedVector = interaction.getBdsf().sampleReflectionVector(point, w_e, n, sample);
+				// final Vector reflectedVector =
+				// interaction.getBdsf().sampleReflectionVector(point, w_e, n,
+				// sample);
+				final Vector reflectedVector = BDSF.getPerfectSpecularReflectionVector(point, w_e, n);
 				final Vector transmittedVector = BDSF.getTransmittedVector(point, w_e, n, n1, n2);
+
+				final FresnelResult fresnel = BDSF.calculateFresnel(point, w_e, reflectedVector, n, n1, n2);
 
 				final Ray reflectedRay = new Ray(point, reflectedVector, ray);
 				final Ray transmittedRay = new Ray(point, transmittedVector, ray);
@@ -139,21 +145,27 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				final Spectrum incidentRadiance_transmission = followRay(transmittedRay);
 
 				//
-				// Compute the surface radiance due to reflection as the product
-				// of the surface's reflectable radiance and the
-				// actually-incident radiance.
-				final Spectrum reflectedRadiance = interaction
+				//
+				Spectrum totalLightRadiance = new RGBSpectrum();
+				for (Light l : world.getLights()) {
+					final Vector sampledVector = l.sampleLightVector(interaction.getPoint());
+					totalLightRadiance.add(l.getRadianceAt(sampledVector, interaction.getNormal()));
+				}
+
+				//
+				//
+				final Spectrum surfaceIrradiance = interaction
 						.getBdsf()
 							.getReflectableRadiance(interaction, reflectedVector, null, sample.getT())
-							.multiply(incidentRadiance_reflection);
-
-				final FresnelResult fresnel = BDSF.calculateFresnel(point, w_e, reflectedVector, n, n1, n2);
+							.multiply(totalLightRadiance);
 
 				//
 				// Add together all incident radiances: emissive + ( reflective
 				// * cos(angle of reflection) ) + transmitted
-				return emissiveRadiance.add(reflectedRadiance.multiply(fresnel.getReflectance())).add(
-						incidentRadiance_transmission.multiply(fresnel.getTransmittance()));
+				return emissiveRadiance
+						.add(surfaceIrradiance)
+							.add(incidentRadiance_reflection.multiply(fresnel.getReflectance()))
+							.add(incidentRadiance_transmission.multiply(fresnel.getTransmittance()));
 
 			} else {
 				return RGBSpectrum.WHITE.multiply(1d - FastMath.abs(ray.getDirection().normalize().getZ()));
