@@ -49,12 +49,9 @@ public class LambertianBDRF extends BDSF {
 
 		Spectrum irradiance = texture.evaluate(interaction);
 
-		// Reflected energy is proportional to the cosine of the angle between
-		// the reflection vector and the surface normal.
-		Vector n = interaction.getNormal().asVector();
-
-		double cosTheta = n.dotProduct(w_r);
-		irradiance = irradiance.multiply(cosTheta);
+		// For a simple Lambertian surface, we don't worry about the angle of
+		// interaction or any such thing. We simply evaluate the surface-color
+		// and return it.
 
 		// Finally, ensure that we're selecting only the desired
 		// energy-wavelengths (if that parameter is supplied).

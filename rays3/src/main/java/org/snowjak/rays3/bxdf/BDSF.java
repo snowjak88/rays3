@@ -1,6 +1,10 @@
 package org.snowjak.rays3.bxdf;
 
-import org.apache.commons.math3.util.FastMath;
+import static org.apache.commons.math3.util.FastMath.max;
+import static org.apache.commons.math3.util.FastMath.min;
+import static org.apache.commons.math3.util.FastMath.pow;
+import static org.apache.commons.math3.util.FastMath.sqrt;
+
 import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Vector;
@@ -8,8 +12,6 @@ import org.snowjak.rays3.intersect.Interaction;
 import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.spectrum.Spectrum;
 import org.snowjak.rays3.texture.Texture;
-
-import static org.apache.commons.math3.util.FastMath.*;
 
 /**
  * Represents a Bi-Directional Scattering Function.
@@ -202,7 +204,7 @@ public abstract class BDSF {
 		double r = leavingIndexOfRefraction / enteringIndexOfRefraction;
 		double c = nv.negate().dotProduct(l);
 
-		double nv_factor = r * c - sqrt(1d - (r * r) * ( 1d - (c * c) ));
+		double nv_factor = r * c - sqrt(1d - ( r * r ) * ( 1d - ( c * c ) ));
 		return ( l.multiply(r) ).add(nv.multiply(nv_factor)).normalize();
 	}
 

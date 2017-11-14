@@ -1,8 +1,7 @@
 package org.snowjak.rays3.bxdf;
 
-import static org.junit.Assert.*;
-
-import static org.apache.commons.math3.util.FastMath.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +47,7 @@ public class LambertianBDRFTest {
 
 		final Spectrum reflected = bdrf.getReflectableRadiance(interaction, new Vector(1, 1, 0).normalize(), null, 0.5);
 
-		assertEquals("Reflected-Red was not as expected!", cos(45d * PI / 180d), reflected.toRGB().getRed(), 0.00001);
+		assertEquals("Reflected-Red was not as expected!", 1d, reflected.toRGB().getRed(), 0.00001);
 		assertEquals("Reflected-Green was not as expected!", 0d, reflected.toRGB().getGreen(), 0.00001);
 		assertEquals("Reflected-Blue was not as expected!", 0d, reflected.toRGB().getBlue(), 0.00001);
 	}

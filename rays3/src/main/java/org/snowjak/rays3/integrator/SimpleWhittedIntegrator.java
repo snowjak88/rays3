@@ -5,7 +5,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import org.apache.commons.math3.util.FastMath;
 import org.snowjak.rays3.Global;
 import org.snowjak.rays3.World;
 import org.snowjak.rays3.bxdf.BDSF;
@@ -148,8 +147,8 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				//
 				Spectrum totalLightRadiance = new RGBSpectrum();
 				for (Light l : world.getLights()) {
-					final Vector sampledVector = l.sampleLightVector(interaction.getPoint());
-					totalLightRadiance.add(l.getRadianceAt(sampledVector, interaction.getNormal()));
+					final Vector sampledVector = l.sampleLightVector(point);
+					totalLightRadiance = totalLightRadiance.add(l.getRadianceAt(sampledVector, n));
 				}
 
 				//
@@ -168,7 +167,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 							.add(incidentRadiance_transmission.multiply(fresnel.getTransmittance()));
 
 			} else {
-				return RGBSpectrum.WHITE.multiply(1d - FastMath.abs(ray.getDirection().normalize().getZ()));
+				return RGBSpectrum.BLACK;
 			}
 		}
 

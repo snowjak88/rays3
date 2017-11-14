@@ -37,12 +37,12 @@ public class Main {
 
 				Primitive sphere = new Primitive(
 						new SphereShape(0.5, Arrays.asList(new TranslationTransform(x, 0d, z))), new LambertianBDRF(
-								new ConstantTexture(new RGBSpectrum(RGB.fromHSL(hue, saturation, 1d))), 100d));
+								new ConstantTexture(new RGBSpectrum(RGB.fromHSL(hue, saturation, 0.5d))), 100d));
 				world.getPrimitives().add(sphere);
 			}
 		}
 
-		Light light = new PointLight(new RGBSpectrum(RGB.WHITE.multiply(1d)),
+		Light light = new PointLight(new RGBSpectrum(RGB.WHITE.multiply(10d)),
 				Arrays.asList(new TranslationTransform(0d, 5d, 0d)));
 
 		world.getLights().add(light);

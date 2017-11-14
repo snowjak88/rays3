@@ -126,7 +126,9 @@ public abstract class Light implements Transformable {
 		if (cosTheta < 0d)
 			return new RGBSpectrum();
 
-		return getUnitRadiance().multiply(cosTheta).multiply(getFalloff().calculate(sampleLightVector.getMagnitude()));
+		final double falloffFraction = getFalloff().calculate(sampleLightVector.getMagnitude());
+
+		return getUnitRadiance().multiply(cosTheta).multiply(falloffFraction);
 	}
 
 	/**
