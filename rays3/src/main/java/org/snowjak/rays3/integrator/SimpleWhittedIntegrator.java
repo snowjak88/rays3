@@ -51,9 +51,18 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 	@Override
 	public void render(World world) {
 
+		int lastProgressPercent = -1;
+		int sampleCounter = 0;
 		Sample currentSample = getSampler().getNextSample();
 
 		while (currentSample != null) {
+
+			sampleCounter++;
+			final int progressPercent = (int) ( 100d * (double) sampleCounter / (double) getSampler().totalSamples() );
+			if (progressPercent > lastProgressPercent) {
+				lastProgressPercent = progressPercent;
+				System.out.println("(" + progressPercent + "% rendering-jobs submitted ...)");
+			}
 
 			Future<Spectrum> sampleResult = Global.EXECUTOR
 					.submit(new SampleCallable(world, currentSample, getCamera(), maxRayDepth));
@@ -96,7 +105,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 
 			//
 			// Follow the ray.
-			return followRay(ray);
+			return followRay(ray).multiply(1d / (double) sample.getSampler().getSamplesPerPixel());
 		}
 
 		private Spectrum followRay(Ray ray) {
@@ -171,12 +180,12 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 							.multiply(totalLightRadiance);
 
 				//
-				// Add together all incident radiances: emissive + ( reflective
-				// * cos(angle of reflection) ) + transmitted
+				// Add together all incident radiances: emissive + (surface irradiance)
+				// + ( reflective * cos(angle of reflection) ) + transmitted
 				return emissiveRadiance
-						.add(surfaceIrradiance)
-							.add(incidentRadiance_reflection.multiply(fresnel.getReflectance()))
-							.add(incidentRadiance_transmission.multiply(fresnel.getTransmittance()));
+						.add(surfaceIrradiance).multiply(fresnel.getReflectance())
+						.add(incidentRadiance_reflection.multiply(fresnel.getReflectance()).multiply(reflectedRay.getDirection().dotProduct(n.asVector().normalize())))
+						.add(incidentRadiance_transmission.multiply(fresnel.getTransmittance()));
 
 			} else {
 				return RGBSpectrum.BLACK;
