@@ -168,8 +168,14 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				//
 				Spectrum totalLightRadiance = new RGBSpectrum();
 				for (Light l : world.getLights()) {
-					final Vector sampledVector = l.sampleLightVector(point);
-					totalLightRadiance = totalLightRadiance.add(l.getRadianceAt(sampledVector, n));
+					final Vector sampledLightVector = l.sampleLightVector(point);
+					final Spectrum radianceFromLight = l.getRadianceAt(sampledLightVector, n);
+					if (!radianceFromLight.isBlack()) {
+
+						if (Light.isVisibleFrom(world, point, Light.getLightSurfacePoint(point, sampledLightVector)))
+
+							totalLightRadiance = totalLightRadiance.add(radianceFromLight);
+					}
 				}
 
 				//
@@ -180,12 +186,16 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 							.multiply(totalLightRadiance);
 
 				//
-				// Add together all incident radiances: emissive + (surface irradiance)
+				// Add together all incident radiances: emissive + (surface
+				// irradiance)
 				// + ( reflective * cos(angle of reflection) ) + transmitted
 				return emissiveRadiance
-						.add(surfaceIrradiance).multiply(fresnel.getReflectance())
-						.add(incidentRadiance_reflection.multiply(fresnel.getReflectance()).multiply(reflectedRay.getDirection().dotProduct(n.asVector().normalize())))
-						.add(incidentRadiance_transmission.multiply(fresnel.getTransmittance()));
+						.add(surfaceIrradiance)
+							.multiply(fresnel.getReflectance())
+							.add(incidentRadiance_reflection.multiply(fresnel.getReflectance()).multiply(
+									reflectedRay.getDirection().dotProduct(n.asVector().normalize())))
+							.add(incidentRadiance_transmission.multiply(fresnel
+									.getTransmittance()));
 
 			} else {
 				return RGBSpectrum.BLACK;
