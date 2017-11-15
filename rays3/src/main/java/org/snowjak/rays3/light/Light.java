@@ -6,9 +6,12 @@ import java.util.List;
 import java.util.function.DoubleFunction;
 
 import org.apache.commons.math3.util.FastMath;
+import org.snowjak.rays3.World;
 import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
+import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.geometry.Vector;
+import org.snowjak.rays3.intersect.Interaction;
 import org.snowjak.rays3.spectrum.RGBSpectrum;
 import org.snowjak.rays3.spectrum.Spectrum;
 import org.snowjak.rays3.transform.Transform;
@@ -129,6 +132,38 @@ public abstract class Light implements Transformable {
 		final double falloffFraction = getFalloff().calculate(sampleLightVector.getMagnitude());
 
 		return getUnitRadiance().multiply(cosTheta).multiply(falloffFraction);
+	}
+
+	/**
+	 * Checks to see if the given point on the surface of a Light is visible
+	 * from the given Point -- or, more properly, if any {@link Interaction}s
+	 * can be detected when tracing a Ray from <code>pointFrom</code> to
+	 * <code>lightSurfacePoint</code>.
+	 * 
+	 * @param world
+	 * @param pointFrom
+	 * @param lightSurfacePoint
+	 * @return
+	 */
+	public static boolean isVisibleFrom(World world, Point pointFrom, Point lightSurfacePoint) {
+
+		final Ray ray = new Ray(pointFrom, new Vector(lightSurfacePoint).subtract(new Vector(pointFrom)).normalize());
+		return world.getPrimitives().stream().filter(p -> p.isInteracting(ray)).allMatch(
+				p -> ( p.getIntersection(ray) ) != null);
+	}
+
+	/**
+	 * Given a {@link Point}, and a {@link Vector} from the surface of this
+	 * Light to that point (see {@link #sampleLightVector(Point)}), calculate
+	 * the corresponding {@link Point} on this Light's surface.
+	 * 
+	 * @param from
+	 * @param sampleLightVector
+	 * @return
+	 */
+	public static Point getLightSurfacePoint(Point from, Vector sampleLightVector) {
+
+		return new Point(sampleLightVector.negate().add(new Vector(from)));
 	}
 
 	/**
