@@ -1,6 +1,7 @@
 package org.snowjak.rays3.sample;
 
 import org.snowjak.rays3.Global;
+import org.snowjak.rays3.film.Film;
 import org.snowjak.rays3.spectrum.Spectrum;
 
 /**
@@ -10,86 +11,63 @@ import org.snowjak.rays3.spectrum.Spectrum;
  * 
  * @author snowjak88
  */
-public class SimplePseudorandomSampler implements Sampler {
+public class SimplePseudorandomSampler extends Sampler {
 
-	private final int	minFilmX, minFilmY, maxFilmX, maxFilmY;
-	private int			currFilmX, currFilmY;
+	private int	currFilmX, currFilmY;
+	private int	currSamplePerPixel;
 
-	public SimplePseudorandomSampler(int filmSizeX, int filmSizeY) {
+	public SimplePseudorandomSampler(int filmSizeX, int filmSizeY, int samplesPerPixel) {
 
-		this.minFilmX = 0;
-		this.minFilmY = 0;
-		this.maxFilmX = filmSizeX - 1;
-		this.maxFilmY = filmSizeY - 1;
+		super(0, 0, filmSizeX - 1, filmSizeY - 1, samplesPerPixel);
 
-		/*
-		 * this.minImagePlaneX = -( imagePlaneSizeX / 2d ); this.minImagePlaneY
-		 * = -( imagePlaneSizeY / 2d ); this.maxImagePlaneX = +( imagePlaneSizeX
-		 * / 2d ); this.maxImagePlaneY = +( imagePlaneSizeY / 2d );
-		 */
-
-		this.currFilmX = this.minFilmX;
-		this.currFilmY = this.minFilmY - 1;
+		this.currFilmX = this.getMinFilmX();
+		this.currFilmY = this.getMinFilmY();
+		this.currSamplePerPixel = -1;
 	}
 
 	@Override
 	public Sample getNextSample() {
 
-		currFilmY++;
-		if (currFilmY > maxFilmY) {
-			currFilmY = minFilmY;
-			currFilmX++;
+		currSamplePerPixel++;
+
+		if (currSamplePerPixel >= getSamplesPerPixel()) {
+			currSamplePerPixel = 0;
+
+			currFilmY++;
+			if (currFilmY > getMaxFilmY()) {
+				currFilmY = getMinFilmY();
+				currFilmX++;
+			}
+
+			if (currFilmX > getMaxFilmX())
+				return null;
 		}
 
-		if (currFilmX > maxFilmX)
-			return null;
+		final double currImageX = Film.convertDiscreteToContinuous(currFilmX),
+				currImageY = Film.convertDiscreteToContinuous(currFilmY);
 
-		final double cameraU = mapXToU(currFilmX, minFilmX, maxFilmX);
-		final double cameraV = mapXToU(currFilmY, maxFilmY, minFilmY);
+		final double imageXScatter = Global.RND.nextDouble() - 0.5d, imageYScatter = Global.RND.nextDouble() - 0.5d;
 
-		return new Sample(this, (double) currFilmX, (double) currFilmY, cameraU, cameraV, Global.RND.nextDouble(),
-				Global.RND.nextDouble());
+		final double imageX_scattered = currImageX + imageXScatter, imageY_scattered = currImageY + imageYScatter;
+
+		final double cameraU = mapXToU(imageX_scattered, Film.convertDiscreteToContinuous(getMinFilmX()),
+				Film.convertDiscreteToContinuous(getMaxFilmX()));
+		final double cameraV = mapXToU(imageY_scattered, Film.convertDiscreteToContinuous(getMinFilmY()),
+				Film.convertDiscreteToContinuous(getMaxFilmY()));
+
+		return new Sample(this, currFilmX, currFilmY, imageX_scattered, imageY_scattered, cameraU, cameraV,
+				Global.RND.nextDouble(), Global.RND.nextDouble());
 	}
 
-	private double mapXToU(int x, int minX, int maxX) {
+	private double mapXToU(double x, double minX, double maxX) {
 
-		return ( (double) x - (double) minX ) / ( (double) maxX - (double) minX );
+		return ( x - minX ) / ( maxX - minX );
 	}
 
 	@Override
 	public boolean isSampleAcceptable(Sample sample, Spectrum result) {
 
 		return true;
-	}
-
-	public int getMinFilmX() {
-
-		return minFilmX;
-	}
-
-	public int getMinFilmY() {
-
-		return minFilmY;
-	}
-
-	public int getMaxFilmX() {
-
-		return maxFilmX;
-	}
-
-	public int getMaxFilmY() {
-
-		return maxFilmY;
-	}
-
-	public int getFilmSizeX() {
-
-		return maxFilmX - minFilmX + 1;
-	}
-
-	public int getFilmSizeY() {
-
-		return maxFilmY - minFilmY + 1;
 	}
 
 }

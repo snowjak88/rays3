@@ -1,5 +1,6 @@
 package org.snowjak.rays3.film;
 
+import org.apache.commons.math3.util.FastMath;
 import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.spectrum.Spectrum;
 
@@ -34,9 +35,9 @@ public interface Film {
 	 * @param continuousCoordinate
 	 * @return
 	 */
-	public default int convertContinuousToDiscrete(double continuousCoordinate) {
+	public static int convertContinuousToDiscrete(double continuousCoordinate) {
 
-		return new Double(continuousCoordinate).intValue();
+		return (int) FastMath.floor(continuousCoordinate);
 	}
 
 	/**
@@ -46,8 +47,8 @@ public interface Film {
 	 * @param discreteCoordinate
 	 * @return
 	 */
-	public default double convertDiscreteToContinuous(int discreteCoordinate) {
+	public static double convertDiscreteToContinuous(int discreteCoordinate) {
 
-		return (double) discreteCoordinate + 0.5d;
+		return ( (double) discreteCoordinate ) + 0.5d;
 	}
 }

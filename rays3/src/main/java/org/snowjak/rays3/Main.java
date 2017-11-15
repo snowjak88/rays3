@@ -51,7 +51,7 @@ public class Main {
 
 		SimpleImageFilm film = new SimpleImageFilm(800, 600);
 
-		Sampler sampler = new SimplePseudorandomSampler(800, 600);
+		Sampler sampler = new SimplePseudorandomSampler(800, 600, 1);
 
 		AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4);
 		integrator.render(world);
