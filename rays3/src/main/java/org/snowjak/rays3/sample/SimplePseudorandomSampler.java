@@ -47,7 +47,7 @@ public class SimplePseudorandomSampler implements Sampler {
 		final double cameraU = mapXToU(currFilmX, minFilmX, maxFilmX);
 		final double cameraV = mapXToU(currFilmY, maxFilmY, minFilmY);
 
-		return new Sample(this, currFilmX, currFilmY, cameraU, cameraV, Global.RND.nextDouble(),
+		return new Sample(this, (double) currFilmX, (double) currFilmY, cameraU, cameraV, Global.RND.nextDouble(),
 				Global.RND.nextDouble());
 	}
 

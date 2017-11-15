@@ -28,7 +28,7 @@ public class SimplePseudorandomSamplerTest {
 
 		while (sample != null) {
 
-			int filmX = sample.getFilmX(), filmY = sample.getFilmY();
+			int filmX = new Double(sample.getFilmX()).intValue(), filmY = new Double(sample.getFilmY()).intValue();
 			assertTrue("Film-X is not within bounds!", ( filmX >= 0 ) && ( filmX < filmLocations.length ));
 			assertTrue("Film-Y is not within bounds!", ( filmY >= 0 ) && ( filmY < filmLocations[0].length ));
 

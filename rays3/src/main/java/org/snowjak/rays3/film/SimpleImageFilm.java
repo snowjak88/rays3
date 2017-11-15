@@ -28,8 +28,8 @@ public class SimpleImageFilm implements Film {
 	@Override
 	public void addSample(Sample sample, Spectrum radiance) {
 
-		int filmX = sample.getFilmX();
-		int filmY = sample.getFilmY();
+		int filmX = convertContinuousToDiscrete(sample.getFilmX());
+		int filmY = convertContinuousToDiscrete(sample.getFilmY());
 
 		if (film[filmX][filmY] == null)
 			film[filmX][filmY] = radiance.toRGB().getComponents();

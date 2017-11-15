@@ -25,8 +25,8 @@ public class Sample {
 
 	private Sampler					sampler;
 
-	private final int				filmX, filmY;
-	private final double			imageX, imageY;
+	private final double			filmX, filmY;
+	private final double			imageU, imageV;
 	private final double			lensU, lensV;
 	private final double			t;
 	private final Spectrum			wavelength;
@@ -56,11 +56,11 @@ public class Sample {
 	 * @param sampler
 	 * @param filmX
 	 * @param filmY
-	 * @param imageX
-	 * @param imageY
+	 * @param imageU
+	 * @param imageV
 	 */
-	public Sample(Sampler sampler, int filmX, int filmY, double imageX, double imageY) {
-		this(sampler, filmX, filmY, imageX, imageY, 0.5, 0.5);
+	public Sample(Sampler sampler, double filmX, double filmY, double imageU, double imageV) {
+		this(sampler, filmX, filmY, imageU, imageV, 0.5, 0.5);
 	}
 
 	/**
@@ -79,13 +79,14 @@ public class Sample {
 	 * </p>
 	 * 
 	 * @param sampler
-	 * @param imageX
-	 * @param imageY
+	 * @param imageU
+	 * @param imageV
 	 * @param lensU
 	 * @param lensV
 	 */
-	public Sample(Sampler sampler, int filmX, int filmY, double imageX, double imageY, double lensU, double lensV) {
-		this(sampler, filmX, filmY, imageX, imageY, lensU, lensV, 0.5d, null);
+	public Sample(Sampler sampler, double filmX, double filmY, double imageU, double imageV, double lensU,
+			double lensV) {
+		this(sampler, filmX, filmY, imageU, imageV, lensU, lensV, 0.5d, null);
 	}
 
 	/**
@@ -98,16 +99,16 @@ public class Sample {
 	 * @param sampler
 	 * @param filmX
 	 * @param filmY
-	 * @param imageX
-	 * @param imageY
+	 * @param imageU
+	 * @param imageV
 	 * @param lensU
 	 * @param lensV
 	 * @param t
 	 * @param wavelength
 	 */
-	public Sample(Sampler sampler, int filmX, int filmY, double imageX, double imageY, double lensU, double lensV,
+	public Sample(Sampler sampler, double filmX, double filmY, double imageU, double imageV, double lensU, double lensV,
 			double t, Spectrum wavelength) {
-		this(sampler, filmX, filmY, imageX, imageY, lensU, lensV, t, wavelength, new Supplier<Double>() {
+		this(sampler, filmX, filmY, imageU, imageV, lensU, lensV, t, wavelength, new Supplier<Double>() {
 
 			private Random rnd = new Random(System.currentTimeMillis());
 
@@ -136,8 +137,8 @@ public class Sample {
 	 * @param sampler
 	 * @param filmX
 	 * @param filmY
-	 * @param imageX
-	 * @param imageY
+	 * @param imageU
+	 * @param imageV
 	 * @param lensU
 	 * @param lensV
 	 * @param t
@@ -145,15 +146,15 @@ public class Sample {
 	 * @param singleSampleSupplier
 	 * @param twinSampleSupplier
 	 */
-	public Sample(Sampler sampler, int filmX, int filmY, double imageX, double imageY, double lensU, double lensV,
+	public Sample(Sampler sampler, double filmX, double filmY, double imageU, double imageV, double lensU, double lensV,
 			double t, Spectrum wavelength, Supplier<Double> singleSampleSupplier,
 			Supplier<Point2D> twinSampleSupplier) {
 
 		this.sampler = sampler;
 		this.filmX = filmX;
 		this.filmY = filmY;
-		this.imageX = imageX;
-		this.imageY = imageY;
+		this.imageU = imageU;
+		this.imageV = imageV;
 		this.lensU = lensU;
 		this.lensV = lensV;
 		this.t = t;
@@ -173,7 +174,7 @@ public class Sample {
 	/**
 	 * @return the film X coordinate this sample corresponds to
 	 */
-	public int getFilmX() {
+	public double getFilmX() {
 
 		return filmX;
 	}
@@ -181,25 +182,25 @@ public class Sample {
 	/**
 	 * @return the film Y coordinate this sample corresponds to
 	 */
-	public int getFilmY() {
+	public double getFilmY() {
 
 		return filmY;
 	}
 
 	/**
-	 * @return the image X coordinate to be sampled
+	 * @return the image U coordinate to be sampled
 	 */
 	public double getImageU() {
 
-		return imageX;
+		return imageU;
 	}
 
 	/**
-	 * @return the image Y coordinate to be sampled
+	 * @return the image V coordinate to be sampled
 	 */
 	public double getImageV() {
 
-		return imageY;
+		return imageV;
 	}
 
 	/**

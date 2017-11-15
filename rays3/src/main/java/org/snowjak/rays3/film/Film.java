@@ -26,4 +26,28 @@ public interface Film {
 	 * @param radiance
 	 */
 	public void addSample(Sample sample, Spectrum radiance);
+
+	/**
+	 * Given a "continuous" (i.e., decimal) image-coordinate, convert it to a
+	 * discrete image-coordinate.
+	 * 
+	 * @param continuousCoordinate
+	 * @return
+	 */
+	public default int convertContinuousToDiscrete(double continuousCoordinate) {
+
+		return new Double(continuousCoordinate).intValue();
+	}
+
+	/**
+	 * Given a discrete image-coordinate, convert it to a "continuous" (i.e.,
+	 * decimal) image-coordinate.
+	 * 
+	 * @param discreteCoordinate
+	 * @return
+	 */
+	public default double convertDiscreteToContinuous(int discreteCoordinate) {
+
+		return (double) discreteCoordinate + 0.5d;
+	}
 }
