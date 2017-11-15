@@ -6,6 +6,8 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.math3.util.FastMath;
+
 import org.snowjak.rays3.Global;
 import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.spectrum.RGB;
@@ -76,7 +78,10 @@ public class SimpleImageFilm implements Film {
 
 	private static int packRGB(double[] rgb) {
 
-		return ( (int) ( rgb[0] * 255d ) ) << 16 | ( (int) ( rgb[1] * 255d ) ) << 8 | ( (int) ( rgb[2] * 255d ) );
+		final double r = FastMath.max(FastMath.min(rgb[0], 1d), 0d);
+		final double g = FastMath.max(FastMath.min(rgb[1], 1d), 0d);
+		final double b = FastMath.max(FastMath.min(rgb[2], 1d), 0d);
+		return ( (int) ( r * 255d ) ) << 16 | ( (int) ( g * 255d ) ) << 8 | ( (int) ( b * 255d ) );
 	}
 
 }
