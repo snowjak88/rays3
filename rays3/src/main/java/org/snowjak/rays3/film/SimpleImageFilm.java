@@ -19,7 +19,7 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class SimpleImageFilm implements Film {
 
-	private double[][][] film;
+	private final double[][][] film;
 
 	public SimpleImageFilm(int imageWidth, int imageHeight) {
 		this.film = new double[imageWidth][imageHeight][];
@@ -28,8 +28,8 @@ public class SimpleImageFilm implements Film {
 	@Override
 	public void addSample(Sample sample, Spectrum radiance) {
 
-		int filmX = Film.convertContinuousToDiscrete(sample.getImageX());
-		int filmY = Film.convertContinuousToDiscrete(sample.getImageY());
+		final int filmX = Film.convertContinuousToDiscrete(sample.getImageX());
+		final int filmY = Film.convertContinuousToDiscrete(sample.getImageY());
 
 		if (film[filmX][filmY] == null)
 			film[filmX][filmY] = radiance.toRGB().getComponents();
@@ -60,7 +60,7 @@ public class SimpleImageFilm implements Film {
 
 				for (int u = 0; u < film.length; u++)
 					for (int v = 0; v < film[0].length; v++)
-						image.setRGB(u, v, packRGB(film[u][v]));
+						image.setRGB(u, film[0].length - v - 1, packRGB(film[u][v]));
 
 				try {
 					ImageIO.write(image, "png", imageFile);
