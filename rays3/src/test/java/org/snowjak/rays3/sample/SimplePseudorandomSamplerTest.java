@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.snowjak.rays3.film.Film;
 
 public class SimplePseudorandomSamplerTest {
 
@@ -30,7 +31,8 @@ public class SimplePseudorandomSamplerTest {
 
 		while (sample != null) {
 
-			final int filmX = sample.getFilmX(), filmY = sample.getFilmY();
+			final int filmX = Film.convertContinuousToDiscrete(sample.getImageX()),
+					filmY = Film.convertContinuousToDiscrete(sample.getImageY());
 			assertTrue("Film-X (" + filmX + ") is not within bounds [" + 0 + ", " + filmLocations.length + ")",
 					( filmX >= 0 ) && ( filmX < filmLocations.length ));
 			assertTrue("Film-Y (" + filmY + ") is not within bounds [" + 0 + ", " + filmLocations[0].length + ")",
