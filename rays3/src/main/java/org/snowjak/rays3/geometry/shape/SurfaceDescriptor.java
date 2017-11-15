@@ -21,6 +21,7 @@ public class SurfaceDescriptor {
 	public SurfaceDescriptor(Point point, Normal normal, Point2D param) {
 		this.point = point;
 		this.normal = normal;
+		this.param = param;
 	}
 
 	/**
