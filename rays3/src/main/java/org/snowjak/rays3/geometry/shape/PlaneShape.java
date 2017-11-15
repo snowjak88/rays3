@@ -1,5 +1,6 @@
 package org.snowjak.rays3.geometry.shape;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.math3.util.FastMath;
@@ -20,6 +21,19 @@ import org.snowjak.rays3.transform.Transform;
  */
 public class PlaneShape extends AbstractShape {
 
+	/**
+	 * Create a new PlaneShape with the default orientation (see
+	 * {@link PlaneShape} class description).
+	 */
+	public PlaneShape() {
+		this(Collections.emptyList());
+	}
+
+	/**
+	 * Create a new PlaneShape with the given set of transformations.
+	 * 
+	 * @param worldToLocal
+	 */
 	public PlaneShape(List<Transform> worldToLocal) {
 		super(worldToLocal);
 	}
@@ -46,7 +60,11 @@ public class PlaneShape extends AbstractShape {
 	@Override
 	public Interaction getIntersection(Ray ray) {
 
-		return localToWorld(getLocalIntersection(worldToLocal(ray)));
+		Interaction localInteraction = getLocalIntersection(worldToLocal(ray));
+		if (localInteraction == null)
+			return null;
+
+		return localToWorld(localInteraction);
 	}
 
 	@Override
@@ -60,7 +78,7 @@ public class PlaneShape extends AbstractShape {
 		Ray intersectingRay = new Ray(ray.getOrigin(), ray.getDirection(), ray.getDepth(), t, t, t);
 		Point intersectionPoint = intersectingRay.getPointAlong();
 		Normal normal = new Normal(Vector.J);
-		Point2D surfaceParam = new Point2D(intersectionPoint.getX(), intersectionPoint.getZ());
+		Point2D surfaceParam = getParamFromLocalSurface(intersectionPoint);
 
 		return new Interaction(intersectionPoint, intersectingRay, normal, surfaceParam, null);
 	}
