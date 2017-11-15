@@ -37,18 +37,22 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class SimpleWhittedIntegrator extends AbstractIntegrator {
 
-	private final int maxRayDepth;
+	private final int	maxRayDepth;
+
+	private boolean		finishedGettingSamples;
 
 	public SimpleWhittedIntegrator(Camera camera, Film film, Sampler sampler, int maxRayDepth) {
 		super(camera, film, sampler);
 
 		this.maxRayDepth = maxRayDepth;
+		this.finishedGettingSamples = false;
 	}
 
 	@Override
 	public void render(World world) {
 
 		Sample currentSample = getSampler().getNextSample();
+
 		while (currentSample != null) {
 
 			Future<Spectrum> sampleResult = Global.EXECUTOR
@@ -58,6 +62,14 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 
 			currentSample = getSampler().getNextSample();
 		}
+
+		this.finishedGettingSamples = true;
+	}
+
+	@Override
+	public boolean isFinishedGettingSamples() {
+
+		return finishedGettingSamples;
 	}
 
 	public static class SampleCallable implements Callable<Spectrum> {

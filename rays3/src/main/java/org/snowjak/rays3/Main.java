@@ -56,6 +56,9 @@ public class Main {
 		AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4);
 		integrator.render(world);
 
+		while (!integrator.isFinishedGettingSamples()) {
+			// Do nothing.
+		}
 		while (( (ThreadPoolExecutor) Global.EXECUTOR ).getActiveCount() > 0) {
 			// Do nothing.
 		}

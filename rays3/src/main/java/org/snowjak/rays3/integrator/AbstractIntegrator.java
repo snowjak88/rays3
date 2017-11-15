@@ -38,6 +38,8 @@ public abstract class AbstractIntegrator {
 
 	public abstract void render(World world);
 
+	public abstract boolean isFinishedGettingSamples();
+
 	public Camera getCamera() {
 
 		return camera;
