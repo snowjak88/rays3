@@ -1,8 +1,8 @@
 package org.snowjak.rays3.sample;
 
-import java.util.Random;
 import java.util.function.Supplier;
 
+import org.snowjak.rays3.Global;
 import org.snowjak.rays3.geometry.Point2D;
 import org.snowjak.rays3.spectrum.Spectrum;
 
@@ -23,16 +23,16 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class Sample {
 
-	private Sampler					sampler;
+	private Sampler								sampler;
 
-	private final double			imageX, imageY;
-	private final double			imageU, imageV;
-	private final double			lensU, lensV;
-	private final double			t;
-	private final Spectrum			wavelength;
+	private final double						imageX, imageY;
+	private final double						imageU, imageV;
+	private final double						lensU, lensV;
+	private final double						t;
+	private final Spectrum						wavelength;
 
-	private final Supplier<Double>	singleSampleSupplier;
-	private final Supplier<Point2D>	twinSampleSupplier;
+	private final Supplier<Supplier<Double>>	singleSampleSupplier;
+	private final Supplier<Supplier<Point2D>>	twinSampleSupplier;
 
 	/**
 	 * Construct a new Sample.
@@ -108,24 +108,36 @@ public class Sample {
 	 */
 	public Sample(Sampler sampler, double imageX, double imageY, double imageU, double imageV, double lensU,
 			double lensV, double t, Spectrum wavelength) {
-		this(sampler, imageX, imageY, imageU, imageV, lensU, lensV, t, wavelength, new Supplier<Double>() {
-
-			private Random rnd = new Random(System.currentTimeMillis());
+		this(sampler, imageX, imageY, imageU, imageV, lensU, lensV, t, wavelength, new Supplier<Supplier<Double>>() {
 
 			@Override
-			public Double get() {
+			public Supplier<Double> get() {
 
-				return rnd.nextDouble();
+				return new Supplier<Double>() {
+
+					@Override
+					public Double get() {
+
+						return Global.RND.nextDouble();
+					}
+
+				};
 			}
 
-		}, new Supplier<Point2D>() {
-
-			private Random rnd = new Random(System.currentTimeMillis());
+		}, new Supplier<Supplier<Point2D>>() {
 
 			@Override
-			public Point2D get() {
+			public Supplier<Point2D> get() {
 
-				return new Point2D(rnd.nextDouble(), rnd.nextDouble());
+				return new Supplier<Point2D>() {
+
+					@Override
+					public Point2D get() {
+
+						return new Point2D(Global.RND.nextDouble(), Global.RND.nextDouble());
+					}
+
+				};
 			}
 
 		});
@@ -147,8 +159,8 @@ public class Sample {
 	 * @param twinSampleSupplier
 	 */
 	public Sample(Sampler sampler, double imageX, double imageY, double imageU, double imageV, double lensU,
-			double lensV, double t, Spectrum wavelength, Supplier<Double> singleSampleSupplier,
-			Supplier<Point2D> twinSampleSupplier) {
+			double lensV, double t, Spectrum wavelength, Supplier<Supplier<Double>> singleSampleSupplier,
+			Supplier<Supplier<Point2D>> twinSampleSupplier) {
 
 		this.sampler = sampler;
 		this.imageX = imageX;
@@ -237,17 +249,19 @@ public class Sample {
 	}
 
 	/**
-	 * @return an additional single (i.e., <code>double</code>) sample
+	 * @return a {@link Supplier} of additional single (i.e.,
+	 *         <code>double</code>) samples
 	 */
-	public double getAdditionalSingleSample() {
+	public Supplier<Double> getAdditionalSingleSampleSupplier() {
 
 		return singleSampleSupplier.get();
 	}
 
 	/**
-	 * @return an additional twin (i.e., {@link Point2D}) sample
+	 * @return a {@link Supplier} of additional twin (i.e., {@link Point2D})
+	 *         samples
 	 */
-	public Point2D getAdditionalTwinSample() {
+	public Supplier<Point2D> getAdditionalTwinSample() {
 
 		return twinSampleSupplier.get();
 	}
