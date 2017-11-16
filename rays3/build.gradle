@@ -5,6 +5,8 @@ sourceCompatibility = 1.8
 version = '0.1'
 mainClassName = 'org.snowjak.rays3.Main'
 
+applicationDefaultJvmArgs = ["-XX:+UseParallelGC", "-XX:+UseParallelOldGC"]
+
 repositories {
 	mavenCentral()
 }
