@@ -59,11 +59,6 @@ public class SimplePseudorandomSampler extends Sampler {
 				Global.RND.nextDouble());
 	}
 
-	private double mapXToU(double x, double minX, double maxX) {
-
-		return ( x - minX ) / ( maxX - minX );
-	}
-
 	@Override
 	public boolean isSampleAcceptable(Sample sample, Spectrum result) {
 

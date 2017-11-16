@@ -77,4 +77,9 @@ public abstract class Sampler {
 		return maxFilmY - minFilmY + 1;
 	}
 
+	public static double mapXToU(double x, double minX, double maxX) {
+	
+		return ( x - minX ) / ( maxX - minX );
+	}
+
 }
