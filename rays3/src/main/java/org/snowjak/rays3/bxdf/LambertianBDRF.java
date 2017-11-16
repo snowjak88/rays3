@@ -1,7 +1,15 @@
 package org.snowjak.rays3.bxdf;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.function.Supplier;
+
+import org.apache.commons.math3.distribution.EnumeratedDistribution;
+import org.apache.commons.math3.util.Pair;
+
 import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
+import org.snowjak.rays3.geometry.Point2D;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.intersect.Interaction;
 import org.snowjak.rays3.sample.Sample;
@@ -93,32 +101,52 @@ public class LambertianBDRF extends BDSF {
 		//
 
 		//
-		// Let's construct a coordinate system about n -- call it N, P, Q.
-		Vector p = n.asVector().orthogonal();
-		Vector q = n.asVector().crossProduct(p);
+		// Let's construct a coordinate system about n -- call it Nv, Pv, Qv.
+		final Vector nv = n.asVector().normalize();
+		final Vector pv = nv.orthogonal().normalize();
+		final Vector qv = nv.crossProduct(pv).normalize();
 
 		//
-		// Select 3 factors, one for each of the new basis-vectors.
-		// i --> N, j --> P, k --> Q
+		// Now compile a distribution of candidate reflection-vectors, and
+		// select one of them.
 		//
-		// Note that i is not scaled onto the interval [-1,1]. We want to select
-		// from the hemisphere pointing along N -- and so we only want to go
-		// along N.
-		//
-		double i = sample.getAdditionalSingleSample();
-		double j = ( 2d * sample.getAdditionalSingleSample() ) - 1d;
-		double k = ( 2d * sample.getAdditionalSingleSample() ) - 1d;
-		//
-		// Assemble the new reflection vector.
-		//
-		// @formatter:off
-		Vector reflection = n.asVector().multiply(i)
-							.add(p.multiply(j))
-							.add(q.multiply(k))
-							.normalize();
-		// @formatter:on
+		List<Pair<Vector, Double>> reflectionVectors = new LinkedList<>();
+		for (int c = 0; c < sample.getSampler().getSamplesPerPixel(); c++) {
 
-		return reflection;
+			//
+			// Select 3 factors, one for each of the new basis-vectors.
+			// i --> N, j --> P, k --> Q
+			//
+			// Note that i is not scaled onto the interval [-1,1]. We want to
+			// select
+			// from the hemisphere pointing along N -- and so we only want to go
+			// along N.
+			//
+			Supplier<Double> reflectionISampler = sample.getAdditionalSingleSampleSupplier();
+			Supplier<Point2D> reflectionJKSampler = sample.getAdditionalTwinSample();
+
+			final double i = reflectionISampler.get();
+			final Point2D jk = reflectionJKSampler.get();
+
+			double j = ( 2d * jk.getX() ) - 1d;
+			double k = ( 2d * jk.getY() ) - 1d;
+			//
+			// Assemble the new reflection vector.
+			//
+			// @formatter:off
+			Vector reflection = nv.multiply(i)
+								.add(pv.multiply(j))
+								.add(qv.multiply(k))
+								.normalize();
+			// @formatter:on
+			//
+			reflectionVectors.add(new Pair<>(reflection, reflection.dotProduct(nv)));
+		}
+		//
+		//
+		EnumeratedDistribution<Vector> reflectionDistribution = new EnumeratedDistribution<>(reflectionVectors);
+
+		return reflectionDistribution.sample();
 	}
 
 	@Override
