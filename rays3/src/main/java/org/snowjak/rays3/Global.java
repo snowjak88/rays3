@@ -1,8 +1,8 @@
 package org.snowjak.rays3;
 
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.commons.math3.util.FastMath;
 
@@ -12,19 +12,24 @@ public class Global {
 	 * Defines the margin by which two double values may be said to be "near"
 	 * one another.
 	 */
-	public static final double			DOUBLE_TOLERANCE	= 1e-20;
+	public static final double				DOUBLE_TOLERANCE	= 1e-20;
 
 	/**
 	 * The central thread-executor. Whenever possible, submit your threads to
 	 * this executor.
 	 */
-	public static final ExecutorService	EXECUTOR			= Executors
-			.newFixedThreadPool(2 * Runtime.getRuntime().availableProcessors());
+	public static final ThreadPoolExecutor	EXECUTOR			= (ThreadPoolExecutor) Executors
+			.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+	// new ThreadPoolExecutor(
+	// Runtime.getRuntime().availableProcessors(),
+	// Runtime.getRuntime().availableProcessors() * 4, 10,
+	// TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+	// .newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 	/**
 	 * A pre-initialized pseudo-random number generator.
 	 */
-	public static final Random			RND					= new Random(System.currentTimeMillis());
+	public static final Random				RND					= new Random(System.currentTimeMillis());
 
 	/**
 	 * Determine if two doubles are "near" one another (using

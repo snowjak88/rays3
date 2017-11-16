@@ -27,6 +27,8 @@ public interface Film {
 	 * @param radiance
 	 */
 	public void addSample(Sample sample, Spectrum radiance);
+	
+	public int countSamplesAdded();
 
 	/**
 	 * Given a "continuous" (i.e., decimal) image-coordinate, convert it to a

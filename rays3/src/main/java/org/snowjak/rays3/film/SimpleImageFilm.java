@@ -3,6 +3,9 @@ package org.snowjak.rays3.film;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.imageio.ImageIO;
 
@@ -21,9 +24,16 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class SimpleImageFilm implements Film {
 
-	private final double[][][] film;
+	private final AtomicInteger	samplesAdded;
+	private final Lock			filmLock;
+
+	private final double[][][]	film;
 
 	public SimpleImageFilm(int imageWidth, int imageHeight) {
+
+		this.samplesAdded = new AtomicInteger(0);
+		this.filmLock = new ReentrantLock();
+
 		this.film = new double[imageWidth][imageHeight][];
 	}
 
@@ -33,14 +43,23 @@ public class SimpleImageFilm implements Film {
 		final int filmX = Film.convertContinuousToDiscrete(sample.getImageX());
 		final int filmY = Film.convertContinuousToDiscrete(sample.getImageY());
 
-		if (film[filmX][filmY] == null)
-			film[filmX][filmY] = radiance.toRGB().getComponents();
-		else {
-			RGB rgb = radiance.toRGB();
-			film[filmX][filmY][0] += rgb.getRed();
-			film[filmX][filmY][1] += rgb.getGreen();
-			film[filmX][filmY][2] += rgb.getBlue();
+		filmLock.lock();
+
+		try {
+			if (film[filmX][filmY] == null)
+				film[filmX][filmY] = radiance.toRGB().getComponents();
+			else {
+				RGB rgb = radiance.toRGB();
+				film[filmX][filmY][0] += rgb.getRed();
+				film[filmX][filmY][1] += rgb.getGreen();
+				film[filmX][filmY][2] += rgb.getBlue();
+			}
+
+		} finally {
+			filmLock.unlock();
 		}
+
+		samplesAdded.incrementAndGet();
 
 	}
 
@@ -82,6 +101,12 @@ public class SimpleImageFilm implements Film {
 		final double g = FastMath.max(FastMath.min(rgb[1], 1d), 0d);
 		final double b = FastMath.max(FastMath.min(rgb[2], 1d), 0d);
 		return ( (int) ( r * 255d ) ) << 16 | ( (int) ( g * 255d ) ) << 8 | ( (int) ( b * 255d ) );
+	}
+
+	@Override
+	public int countSamplesAdded() {
+
+		return samplesAdded.get();
 	}
 
 }

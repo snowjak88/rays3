@@ -2,8 +2,7 @@ package org.snowjak.rays3.integrator;
 
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.snowjak.rays3.Global;
 import org.snowjak.rays3.World;
@@ -37,13 +36,16 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class SimpleWhittedIntegrator extends AbstractIntegrator {
 
-	private final int	maxRayDepth;
+	private final AtomicInteger	samplesSubmitted;
 
-	private boolean		finishedGettingSamples;
+	private final int			maxRayDepth;
+
+	private boolean				finishedGettingSamples;
 
 	public SimpleWhittedIntegrator(Camera camera, Film film, Sampler sampler, int maxRayDepth) {
 		super(camera, film, sampler);
 
+		this.samplesSubmitted = new AtomicInteger(0);
 		this.maxRayDepth = maxRayDepth;
 		this.finishedGettingSamples = false;
 	}
@@ -51,23 +53,13 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 	@Override
 	public void render(World world) {
 
-		int lastProgressPercent = -1;
-		int sampleCounter = 0;
 		Sample currentSample = getSampler().getNextSample();
 
 		while (currentSample != null) {
 
-			sampleCounter++;
-			final int progressPercent = (int) ( 100d * (double) sampleCounter / (double) getSampler().totalSamples() );
-			if (progressPercent > lastProgressPercent) {
-				lastProgressPercent = progressPercent;
-				System.out.println("(" + progressPercent + "% rendering-jobs submitted ...)");
-			}
+			Global.EXECUTOR.submit(new RenderSampleCallable(world, currentSample, getCamera(), getFilm(), maxRayDepth));
 
-			Future<Spectrum> sampleResult = Global.EXECUTOR
-					.submit(new SampleCallable(world, currentSample, getCamera(), maxRayDepth));
-
-			Global.EXECUTOR.submit(new UpdateFilmTask(getFilm(), currentSample, sampleResult));
+			samplesSubmitted.incrementAndGet();
 
 			currentSample = getSampler().getNextSample();
 		}
@@ -81,38 +73,82 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 		return finishedGettingSamples;
 	}
 
-	public static class SampleCallable implements Callable<Spectrum> {
+	@Override
+	public int countSamplesSubmitted() {
+
+		return samplesSubmitted.get();
+	}
+
+	public static class RenderSampleCallable implements Runnable {
 
 		private final World		world;
 		private final Sample	sample;
 		private final Camera	camera;
+		private final Film		film;
 		private final int		maxRayDepth;
 
-		public SampleCallable(World world, Sample sample, Camera camera, int maxRayDepth) {
+		public RenderSampleCallable(World world, Sample sample, Camera camera, Film film, int maxRayDepth) {
 
 			this.world = world;
 			this.sample = sample;
 			this.camera = camera;
+			this.film = film;
 			this.maxRayDepth = maxRayDepth;
+		}
+
+		@Override
+		public void run() {
+
+			//
+			// Set up the initial ray to follow.
+			final Ray ray = camera.getRay(sample);
+
+			//
+			// Follow the ray.
+			//
+			// (notice that the initial ray-follow, at least, is kept on this
+			// same thread)
+			try {
+				final Spectrum spectrum = FollowRayCallable.followRay(ray, world, maxRayDepth, sample).multiply(
+						1d / (double) sample.getSampler().getSamplesPerPixel());
+
+				if (sample.getSampler().isSampleAcceptable(sample, spectrum))
+					film.addSample(sample, spectrum);
+
+			} catch (Exception e) {
+				// TODO: handle exception
+				e.printStackTrace();
+			}
+		}
+
+	}
+
+	public static class FollowRayCallable implements Callable<Spectrum> {
+
+		private final Ray		ray;
+		private final World		world;
+		private final int		maxRayDepth;
+		private final Sample	sample;
+
+		public FollowRayCallable(Ray ray, World world, int maxRayDepth, Sample sample) {
+
+			this.ray = ray;
+			this.world = world;
+			this.maxRayDepth = maxRayDepth;
+			this.sample = sample;
 		}
 
 		@Override
 		public Spectrum call() throws Exception {
 
-			//
-			// Set up the initial ray to follow.
-			Ray ray = camera.getRay(sample);
-
-			//
-			// Follow the ray.
-			return followRay(ray).multiply(1d / (double) sample.getSampler().getSamplesPerPixel());
+			return FollowRayCallable.followRay(ray, world, maxRayDepth, sample);
 		}
 
-		private Spectrum followRay(Ray ray) {
+		public static Spectrum followRay(Ray ray, World world, int maxRayDepth, Sample sample) {
 
 			final Optional<Interaction> op_interaction = world
 					.getPrimitives()
-						.stream()
+						.parallelStream()
 						.filter(p -> p.isInteracting(ray))
 						.map(p -> p.getIntersection(ray))
 						.filter(p -> p != null)
@@ -161,8 +197,12 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				//
 				// Follow both the reflected and transmitted rays.
 				//
-				final Spectrum incidentRadiance_reflection = followRay(reflectedRay);
-				final Spectrum incidentRadiance_transmission = followRay(transmittedRay);
+				// Notice that we have only the Future objects here. We will
+				// not try to access these Futures until we actually need them,
+				// right at the end of this method (when we total up all
+				// radiances).
+				final Spectrum incidentRadiance_reflection = followRay(reflectedRay, world, maxRayDepth, sample);
+				final Spectrum incidentRadiance_transmission = followRay(transmittedRay, world, maxRayDepth, sample);
 
 				//
 				//
@@ -203,40 +243,4 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 		}
 
 	}
-
-	public static class UpdateFilmTask implements Runnable {
-
-		private final Film				film;
-		private final Sample			sample;
-		private final Future<Spectrum>	f_spectrum;
-
-		public UpdateFilmTask(Film film, Sample sample, Future<Spectrum> spectrum) {
-
-			this.film = film;
-			this.sample = sample;
-			this.f_spectrum = spectrum;
-		}
-
-		@Override
-		public void run() {
-
-			try {
-
-				final Spectrum spectrum = f_spectrum.get();
-
-				if (sample.getSampler().isSampleAcceptable(sample, spectrum)) {
-					synchronized (film) {
-						film.addSample(sample, spectrum);
-					}
-				}
-
-			} catch (InterruptedException | ExecutionException e) {
-
-				// TODO add some kind of logging eventually
-				e.printStackTrace();
-			}
-		}
-
-	}
-
 }

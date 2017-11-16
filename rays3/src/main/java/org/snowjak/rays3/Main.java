@@ -1,8 +1,14 @@
 package org.snowjak.rays3;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.math3.util.FastMath;
 import org.snowjak.rays3.bxdf.LambertianBDRF;
@@ -11,6 +17,7 @@ import org.snowjak.rays3.camera.PinholeCamera;
 import org.snowjak.rays3.film.SimpleImageFilm;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Vector;
+import org.snowjak.rays3.geometry.shape.PlaneShape;
 import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.geometry.shape.SphereShape;
 import org.snowjak.rays3.integrator.AbstractIntegrator;
@@ -18,9 +25,10 @@ import org.snowjak.rays3.integrator.SimpleWhittedIntegrator;
 import org.snowjak.rays3.light.Light;
 import org.snowjak.rays3.light.PointLight;
 import org.snowjak.rays3.sample.Sampler;
-import org.snowjak.rays3.sample.SimplePseudorandomSampler;
+import org.snowjak.rays3.sample.StratifiedSampler;
 import org.snowjak.rays3.spectrum.RGB;
 import org.snowjak.rays3.spectrum.RGBSpectrum;
+import org.snowjak.rays3.texture.CheckerboardTexture;
 import org.snowjak.rays3.texture.ConstantTexture;
 import org.snowjak.rays3.transform.TranslationTransform;
 
@@ -36,32 +44,51 @@ public class Main {
 				final double saturation = FastMath.sqrt(( x * x ) + ( z * z )) / FastMath.sqrt(5 * 5 + 5 * 5);
 
 				Primitive sphere = new Primitive(
-						new SphereShape(0.5, Arrays.asList(new TranslationTransform(x, 0d, z))), new LambertianBDRF(
-								new ConstantTexture(new RGBSpectrum(RGB.fromHSL(hue, saturation, 0.5d))), 100d));
+						new SphereShape(0.4, Arrays.asList(new TranslationTransform(x, 0d, z))), new LambertianBDRF(
+								new ConstantTexture(new RGBSpectrum(RGB.fromHSL(hue, saturation, 0.5d))), 1.3d));
 				world.getPrimitives().add(sphere);
 			}
 		}
 
-		Light light = new PointLight(new RGBSpectrum(RGB.WHITE.multiply(10d)),
+		Primitive plane = new Primitive(new PlaneShape(Arrays.asList(new TranslationTransform(0d, -3d, 0d))),
+				new LambertianBDRF(new CheckerboardTexture(new ConstantTexture(new RGBSpectrum(RGB.RED)),
+						new ConstantTexture(new RGBSpectrum(RGB.WHITE).multiply(0.05))), 1000d));
+
+		world.getPrimitives().add(plane);
+
+		Light light = new PointLight(new RGBSpectrum(RGB.WHITE.multiply(64d)),
 				Arrays.asList(new TranslationTransform(0d, 5d, 0d)));
 
 		world.getLights().add(light);
 
-		Camera camera = new PinholeCamera(3.2d, 2.4d, new Point(0, 1.5, -3), new Point(0, 0, 0), Vector.J, 1d);
+		Camera camera = new PinholeCamera(4d, 3d, new Point(0, 1.5, -8), new Point(0, 0, 0), Vector.J, 5d);
 
-		SimpleImageFilm film = new SimpleImageFilm(800, 600);
+		SimpleImageFilm film = new SimpleImageFilm(400, 300);
 
-		Sampler sampler = new SimplePseudorandomSampler(800, 600, 1);
+		Sampler sampler = new StratifiedSampler(400, 300, 4);
 
 		AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4);
+
+		ScheduledExecutorService statusService = Executors.newSingleThreadScheduledExecutor();
+		final DateFormat dateFmt = SimpleDateFormat.getTimeInstance();
+		statusService.scheduleWithFixedDelay(
+				() -> System.out.println("[" + dateFmt.format(new Date()) + "] " + integrator.countSamplesSubmitted()
+						+ " samples submitted, " + film.countSamplesAdded() + " processed out of " + sampler.totalSamples() + " total ..."),
+				1, 5, TimeUnit.SECONDS);
+
 		integrator.render(world);
 
 		while (!integrator.isFinishedGettingSamples()) {
 			// Do nothing.
 		}
+		while (( (ThreadPoolExecutor) Global.EXECUTOR ).getQueue().size() > 0) {
+			// Do nothing.
+		}
 		while (( (ThreadPoolExecutor) Global.EXECUTOR ).getActiveCount() > 0) {
 			// Do nothing.
 		}
+
+		statusService.shutdown();
 
 		System.out.println("Writing image to file ...");
 		film.writeImage(new File("render.png"));
