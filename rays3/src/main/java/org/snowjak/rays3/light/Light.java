@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.function.DoubleFunction;
 
 import org.apache.commons.math3.util.FastMath;
+import org.snowjak.rays3.Global;
 import org.snowjak.rays3.World;
 import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
@@ -147,9 +148,15 @@ public abstract class Light implements Transformable {
 	 */
 	public static boolean isVisibleFrom(World world, Point pointFrom, Point lightSurfacePoint) {
 
-		final Ray ray = new Ray(pointFrom, new Vector(lightSurfacePoint).subtract(new Vector(pointFrom)).normalize());
-		return world.getPrimitives().stream().filter(p -> p.isInteracting(ray)).allMatch(
-				p -> ( p.getIntersection(ray) ) == null);
+		final Vector toLight = new Vector(lightSurfacePoint).subtract(new Vector(pointFrom)).normalize();
+		final Ray ray = new Ray(pointFrom, toLight);
+		return world
+				.getPrimitives()
+					.parallelStream()
+					.filter(p -> p.isInteracting(ray))
+					.map(p -> p.getIntersection(ray))
+					.filter(i -> i != null)
+					.allMatch(i -> Global.isNear(i.getInteractingRay().getCurrT(), 0d));
 	}
 
 	/**

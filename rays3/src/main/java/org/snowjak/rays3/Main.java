@@ -62,7 +62,7 @@ public class Main {
 
 		SimpleImageFilm film = new SimpleImageFilm(400, 300);
 
-		Sampler sampler = new StratifiedSampler(400, 300, 1);
+		Sampler sampler = new StratifiedSampler(400, 300, 8);
 
 		AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4);
 
@@ -77,12 +77,16 @@ public class Main {
 
 		integrator.render(world);
 
-		while (!Global.EXECUTOR.isQuiescent() && Global.EXECUTOR.getActiveThreadCount() > 0) {
+		while (integrator.countSamplesSubmitted() < sampler.totalSamples()) {
+			// Do nothing.
+		}
+		while (film.countSamplesAdded() < sampler.totalSamples()) {
 			// Do nothing.
 		}
 
 		//
 		// Remember to shut down the global executors!
+		System.out.println("Shutting down worker threads ...");
 		Global.EXECUTOR.shutdown();
 		Global.SCHEDULED_EXECUTOR.shutdown();
 

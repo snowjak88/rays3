@@ -55,15 +55,13 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 	@Override
 	public void render(World world) {
 
-		Sample currentSample = getSampler().getNextSample();
+		Sample currentSample;
 
-		while (currentSample != null) {
+		while (( currentSample = getSampler().getNextSample() ) != null) {
 
-			Global.EXECUTOR.submit(new RenderSampleTask(world, currentSample, getCamera(), getFilm(), maxRayDepth));
+			Global.EXECUTOR.execute(new RenderSampleTask(world, currentSample, getCamera(), getFilm(), maxRayDepth));
 
 			samplesSubmitted.incrementAndGet();
-
-			currentSample = getSampler().getNextSample();
 		}
 
 		this.finishedGettingSamples = true;
@@ -116,8 +114,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 			// (notice that the initial ray-follow, at least, is kept on this
 			// same thread)
 			final Spectrum spectrum = new FollowRayRecursiveTask(ray, world, maxRayDepth, sample)
-					.fork()
-						.join()
+					.invoke()
 						.multiply(1d / (double) sample.getSampler().getSamplesPerPixel());
 
 			if (sample.getSampler().isSampleAcceptable(sample, spectrum))

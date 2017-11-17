@@ -29,6 +29,7 @@ public class SimpleImageFilm implements Film {
 	private final BlockingQueue<Pair<int[], Spectrum>>	resultsQueue;
 
 	private final double[][][]							film;
+	private final boolean[][]							filmUpdated;
 
 	public SimpleImageFilm(int imageWidth, int imageHeight) {
 
@@ -36,6 +37,15 @@ public class SimpleImageFilm implements Film {
 		this.resultsQueue = new LinkedBlockingQueue<>();
 
 		this.film = new double[imageWidth][imageHeight][3];
+		this.filmUpdated = new boolean[imageWidth][imageHeight];
+
+		for (int i = 0; i < imageWidth; i++)
+			for (int j = 0; j < imageHeight; j++) {
+				filmUpdated[i][j] = false;
+
+				for (int k = 0; k < 3; k++)
+					film[i][j][k] = 0d;
+			}
 
 		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(() -> {
 			Pair<int[], Spectrum> result;
@@ -43,14 +53,13 @@ public class SimpleImageFilm implements Film {
 				final int filmX = result.getFirst()[0];
 				final int filmY = result.getFirst()[1];
 
-				if (film[filmX][filmY] == null)
-					film[filmX][filmY] = result.getSecond().toRGB().getComponents();
-				else {
-					RGB rgb = result.getSecond().toRGB();
-					film[filmX][filmY][0] += rgb.getRed();
-					film[filmX][filmY][1] += rgb.getGreen();
-					film[filmX][filmY][2] += rgb.getBlue();
-				}
+				filmUpdated[filmX][filmY] = true;
+
+				final RGB rgb = result.getSecond().toRGB();
+				film[filmX][filmY][0] += rgb.getRed();
+				film[filmX][filmY][1] += rgb.getGreen();
+				film[filmX][filmY][2] += rgb.getBlue();
+
 			}
 		}, 100, 100, TimeUnit.MILLISECONDS);
 	}
@@ -61,14 +70,12 @@ public class SimpleImageFilm implements Film {
 		final int filmX = Film.convertContinuousToDiscrete(sample.getImageX());
 		final int filmY = Film.convertContinuousToDiscrete(sample.getImageY());
 
-		if (sample.getSampler().isSampleAcceptable(sample, radiance)) {
-			try {
-				resultsQueue.put(new Pair<>(new int[] { filmX, filmY }, radiance));
+		try {
+			resultsQueue.put(new Pair<>(new int[] { filmX, filmY }, radiance));
 
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
 		samplesAdded.incrementAndGet();
@@ -83,6 +90,11 @@ public class SimpleImageFilm implements Film {
 	 *             if any exception occurred during file-writing
 	 */
 	public void writeImage(final File imageFile) {
+
+		for (int i = 0; i < filmUpdated.length; i++)
+			for (int j = 0; j < filmUpdated[i].length; j++)
+				if (filmUpdated[i][j] == false)
+					System.err.println("Film location [" + i + "][" + j + "] was never updated!");
 
 		BufferedImage image = new BufferedImage(film.length, film[0].length, BufferedImage.TYPE_INT_RGB);
 
