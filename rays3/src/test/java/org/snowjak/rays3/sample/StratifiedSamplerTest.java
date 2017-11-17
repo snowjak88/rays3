@@ -15,8 +15,8 @@ public class StratifiedSamplerTest {
 	@Before
 	public void setUp() throws Exception {
 
-		this.sampler = new StratifiedSampler(64, 64, 4);
-		this.film = new short[64][64];
+		this.sampler = new StratifiedSampler(640, 480, 4);
+		this.film = new short[640][480];
 	}
 
 	public void testPixelSampleCount() {
@@ -53,8 +53,8 @@ public class StratifiedSamplerTest {
 
 		for (int i = sampler.getMinFilmX(); i <= sampler.getMaxFilmX(); i++)
 			for (int j = sampler.getMinFilmY(); j <= sampler.getMaxFilmY(); j++) {
-				assertEquals("Film-location at [" + i + "," + j + "] not visited expected number of times!", 4,
-						film[i][j]);
+				assertEquals("Film-location at [" + i + "," + j + "] not visited expected number of times!",
+						sampler.getSamplesPerPixel(), film[i][j]);
 			}
 	}
 

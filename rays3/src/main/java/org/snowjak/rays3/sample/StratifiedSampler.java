@@ -4,6 +4,8 @@ import static org.apache.commons.math3.util.FastMath.ceil;
 import static org.apache.commons.math3.util.FastMath.pow;
 import static org.apache.commons.math3.util.FastMath.sqrt;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.function.Supplier;
 
 import org.snowjak.rays3.Global;
@@ -27,11 +29,13 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class StratifiedSampler extends Sampler {
 
-	private int					currFilmX, currFilmY, currPixelSample;
+	private int							currFilmX, currFilmY, currPixelSample;
 
-	private Supplier<Point2D>	imageSamples, lensSamples;
-	private Supplier<Double>	timeSamples;
-	private final int			gridSideSize;
+	private Supplier<Point2D>			imageSamples, lensSamples;
+	private Supplier<Double>			timeSamples;
+	private final int					gridSideSize;
+
+	private final BlockingQueue<Sample>	samplesQueue;
 
 	/**
 	 * Create a new StratifiedSampler.
@@ -56,10 +60,36 @@ public class StratifiedSampler extends Sampler {
 		imageSamples = new Stratified2DSupplier(gridSideSize);
 		lensSamples = new Stratified2DSupplier(gridSideSize);
 		timeSamples = new Stratified1DSupplier(gridSideSize);
+
+		samplesQueue = new ArrayBlockingQueue<>(Global.EXECUTOR.getParallelism());
+
+		Global.EXECUTOR.submit(() -> {
+			Sample sample;
+			try {
+				while (( sample = generateNextSample() ) != null)
+					samplesQueue.put(sample);
+
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		});
 	}
 
 	@Override
 	public Sample getNextSample() {
+
+		try {
+			return samplesQueue.take();
+
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	protected Sample generateNextSample() {
 
 		currPixelSample++;
 		if (currPixelSample >= getSamplesPerPixel()) {
