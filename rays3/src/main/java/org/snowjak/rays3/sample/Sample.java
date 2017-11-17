@@ -26,7 +26,6 @@ public class Sample {
 	private Sampler								sampler;
 
 	private final double						imageX, imageY;
-	private final double						imageU, imageV;
 	private final double						lensU, lensV;
 	private final double						t;
 	private final Spectrum						wavelength;
@@ -56,11 +55,9 @@ public class Sample {
 	 * @param sampler
 	 * @param imageX
 	 * @param imageY
-	 * @param imageU
-	 * @param imageV
 	 */
-	public Sample(Sampler sampler, double imageX, double imageY, double imageU, double imageV) {
-		this(sampler, imageX, imageY, imageU, imageV, 0.5, 0.5);
+	public Sample(Sampler sampler, double imageX, double imageY) {
+		this(sampler, imageX, imageY, 0.5, 0.5);
 	}
 
 	/**
@@ -79,14 +76,13 @@ public class Sample {
 	 * </p>
 	 * 
 	 * @param sampler
-	 * @param imageU
-	 * @param imageV
+	 * @param imageX
+	 * @param imageY
 	 * @param lensU
 	 * @param lensV
 	 */
-	public Sample(Sampler sampler, double imageX, double imageY, double imageU, double imageV, double lensU,
-			double lensV) {
-		this(sampler, imageX, imageY, imageU, imageV, lensU, lensV, 0.5d, null);
+	public Sample(Sampler sampler, double imageX, double imageY, double lensU, double lensV) {
+		this(sampler, imageX, imageY, lensU, lensV, 0.5d, null);
 	}
 
 	/**
@@ -99,16 +95,14 @@ public class Sample {
 	 * @param sampler
 	 * @param imageX
 	 * @param imageY
-	 * @param imageU
-	 * @param imageV
 	 * @param lensU
 	 * @param lensV
 	 * @param t
 	 * @param wavelength
 	 */
-	public Sample(Sampler sampler, double imageX, double imageY, double imageU, double imageV, double lensU,
-			double lensV, double t, Spectrum wavelength) {
-		this(sampler, imageX, imageY, imageU, imageV, lensU, lensV, t, wavelength, new Supplier<Supplier<Double>>() {
+	public Sample(Sampler sampler, double imageX, double imageY, double lensU, double lensV, double t,
+			Spectrum wavelength) {
+		this(sampler, imageX, imageY, lensU, lensV, t, wavelength, new Supplier<Supplier<Double>>() {
 
 			@Override
 			public Supplier<Double> get() {
@@ -149,8 +143,6 @@ public class Sample {
 	 * @param sampler
 	 * @param imageX
 	 * @param imageY
-	 * @param imageU
-	 * @param imageV
 	 * @param lensU
 	 * @param lensV
 	 * @param t
@@ -158,15 +150,13 @@ public class Sample {
 	 * @param singleSampleSupplier
 	 * @param twinSampleSupplier
 	 */
-	public Sample(Sampler sampler, double imageX, double imageY, double imageU, double imageV, double lensU,
-			double lensV, double t, Spectrum wavelength, Supplier<Supplier<Double>> singleSampleSupplier,
+	public Sample(Sampler sampler, double imageX, double imageY, double lensU, double lensV, double t,
+			Spectrum wavelength, Supplier<Supplier<Double>> singleSampleSupplier,
 			Supplier<Supplier<Point2D>> twinSampleSupplier) {
 
 		this.sampler = sampler;
 		this.imageX = imageX;
 		this.imageY = imageY;
-		this.imageU = imageU;
-		this.imageV = imageV;
 		this.lensU = lensU;
 		this.lensV = lensV;
 		this.t = t;
@@ -197,22 +187,6 @@ public class Sample {
 	public double getImageY() {
 
 		return imageY;
-	}
-
-	/**
-	 * @return the image U coordinate to be sampled
-	 */
-	public double getImageU() {
-
-		return imageU;
-	}
-
-	/**
-	 * @return the image V coordinate to be sampled
-	 */
-	public double getImageV() {
-
-		return imageV;
 	}
 
 	/**

@@ -1,11 +1,12 @@
 package org.snowjak.rays3.sample;
 
-import static org.apache.commons.math3.util.FastMath.*;
+import static org.apache.commons.math3.util.FastMath.ceil;
+import static org.apache.commons.math3.util.FastMath.pow;
+import static org.apache.commons.math3.util.FastMath.sqrt;
 
 import java.util.function.Supplier;
 
 import org.snowjak.rays3.Global;
-import org.snowjak.rays3.film.Film;
 import org.snowjak.rays3.geometry.Point2D;
 import org.snowjak.rays3.spectrum.Spectrum;
 
@@ -79,14 +80,8 @@ public class StratifiedSampler extends Sampler {
 		final Point2D lensSample = lensSamples.get();
 		final double timeSample = timeSamples.get();
 
-		final double imageU = mapXToU(imageSample.getX() + (double) currFilmX,
-				Film.convertDiscreteToContinuous(getMinFilmX()), Film.convertDiscreteToContinuous(getMaxFilmX()));
-		final double imageV = mapXToU(imageSample.getY() + (double) currFilmY,
-				Film.convertDiscreteToContinuous(getMinFilmY()), Film.convertDiscreteToContinuous(getMaxFilmY()));
-
 		return new Sample(this, imageSample.getX() + (double) currFilmX, imageSample.getY() + (double) currFilmY,
-				imageU, imageV, lensSample.getX(), lensSample.getY(), timeSample, null,
-				new Supplier<Supplier<Double>>() {
+				lensSample.getX(), lensSample.getY(), timeSample, null, new Supplier<Supplier<Double>>() {
 
 					@Override
 					public Supplier<Double> get() {

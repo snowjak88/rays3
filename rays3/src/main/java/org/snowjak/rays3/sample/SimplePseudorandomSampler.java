@@ -50,13 +50,7 @@ public class SimplePseudorandomSampler extends Sampler {
 
 		final double imageX_scattered = currImageX + imageXScatter, imageY_scattered = currImageY + imageYScatter;
 
-		final double cameraU = mapXToU(imageX_scattered, Film.convertDiscreteToContinuous(getMinFilmX()),
-				Film.convertDiscreteToContinuous(getMaxFilmX()));
-		final double cameraV = mapXToU(imageY_scattered, Film.convertDiscreteToContinuous(getMinFilmY()),
-				Film.convertDiscreteToContinuous(getMaxFilmY()));
-
-		return new Sample(this, imageX_scattered, imageY_scattered, cameraU, cameraV, Global.RND.nextDouble(),
-				Global.RND.nextDouble());
+		return new Sample(this, imageX_scattered, imageY_scattered, Global.RND.nextDouble(), Global.RND.nextDouble());
 	}
 
 	@Override

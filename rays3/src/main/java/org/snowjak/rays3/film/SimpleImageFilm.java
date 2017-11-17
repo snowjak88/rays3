@@ -3,14 +3,15 @@ package org.snowjak.rays3.film;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.imageio.ImageIO;
 
 import org.apache.commons.math3.util.FastMath;
-
+import org.apache.commons.math3.util.Pair;
 import org.snowjak.rays3.Global;
 import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.spectrum.RGB;
@@ -24,17 +25,34 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class SimpleImageFilm implements Film {
 
-	private final AtomicInteger	samplesAdded;
-	private final Lock			filmLock;
+	private final AtomicInteger							samplesAdded;
+	private final BlockingQueue<Pair<int[], Spectrum>>	resultsQueue;
 
-	private final double[][][]	film;
+	private final double[][][]							film;
 
 	public SimpleImageFilm(int imageWidth, int imageHeight) {
 
 		this.samplesAdded = new AtomicInteger(0);
-		this.filmLock = new ReentrantLock();
+		this.resultsQueue = new LinkedBlockingQueue<>();
 
-		this.film = new double[imageWidth][imageHeight][];
+		this.film = new double[imageWidth][imageHeight][3];
+
+		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(() -> {
+			Pair<int[], Spectrum> result;
+			while (( result = resultsQueue.poll() ) != null) {
+				final int filmX = result.getFirst()[0];
+				final int filmY = result.getFirst()[1];
+
+				if (film[filmX][filmY] == null)
+					film[filmX][filmY] = result.getSecond().toRGB().getComponents();
+				else {
+					RGB rgb = result.getSecond().toRGB();
+					film[filmX][filmY][0] += rgb.getRed();
+					film[filmX][filmY][1] += rgb.getGreen();
+					film[filmX][filmY][2] += rgb.getBlue();
+				}
+			}
+		}, 100, 100, TimeUnit.MILLISECONDS);
 	}
 
 	@Override
@@ -43,20 +61,14 @@ public class SimpleImageFilm implements Film {
 		final int filmX = Film.convertContinuousToDiscrete(sample.getImageX());
 		final int filmY = Film.convertContinuousToDiscrete(sample.getImageY());
 
-		filmLock.lock();
+		if (sample.getSampler().isSampleAcceptable(sample, radiance)) {
+			try {
+				resultsQueue.put(new Pair<>(new int[] { filmX, filmY }, radiance));
 
-		try {
-			if (film[filmX][filmY] == null)
-				film[filmX][filmY] = radiance.toRGB().getComponents();
-			else {
-				RGB rgb = radiance.toRGB();
-				film[filmX][filmY][0] += rgb.getRed();
-				film[filmX][filmY][1] += rgb.getGreen();
-				film[filmX][filmY][2] += rgb.getBlue();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-
-		} finally {
-			filmLock.unlock();
 		}
 
 		samplesAdded.incrementAndGet();
@@ -72,27 +84,21 @@ public class SimpleImageFilm implements Film {
 	 */
 	public void writeImage(final File imageFile) {
 
-		Global.EXECUTOR.submit(new Runnable() {
+		BufferedImage image = new BufferedImage(film.length, film[0].length, BufferedImage.TYPE_INT_RGB);
 
-			@Override
-			public void run() {
+		for (int u = 0; u < film.length; u++)
+			for (int v = 0; v < film[0].length; v++)
+				image.setRGB(u, film[0].length - v - 1, packRGB(film[u][v]));
 
-				BufferedImage image = new BufferedImage(film.length, film[0].length, BufferedImage.TYPE_INT_RGB);
+		try {
+			ImageIO.write(image, "png", imageFile);
 
-				for (int u = 0; u < film.length; u++)
-					for (int v = 0; v < film[0].length; v++)
-						image.setRGB(u, film[0].length - v - 1, packRGB(film[u][v]));
+		} catch (IOException e) {
+			System.err.println("Exception encountered while saving to the image-file \"" + imageFile.getAbsolutePath()
+					+ "\": " + e.getMessage());
+			e.printStackTrace(System.err);
+		}
 
-				try {
-					ImageIO.write(image, "png", imageFile);
-
-				} catch (IOException e) {
-					System.err.println("Exception encountered while saving to the image-file \""
-							+ imageFile.getAbsolutePath() + "\": " + e.getMessage());
-					e.printStackTrace(System.err);
-				}
-			}
-		});
 	}
 
 	private static int packRGB(double[] rgb) {

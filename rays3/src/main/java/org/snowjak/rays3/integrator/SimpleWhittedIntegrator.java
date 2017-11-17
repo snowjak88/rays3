@@ -1,7 +1,9 @@
 package org.snowjak.rays3.integrator;
 
 import java.util.Optional;
-import java.util.concurrent.Callable;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.RecursiveAction;
+import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.snowjak.rays3.Global;
@@ -57,7 +59,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 
 		while (currentSample != null) {
 
-			Global.EXECUTOR.submit(new RenderSampleCallable(world, currentSample, getCamera(), getFilm(), maxRayDepth));
+			Global.EXECUTOR.submit(new RenderSampleTask(world, currentSample, getCamera(), getFilm(), maxRayDepth));
 
 			samplesSubmitted.incrementAndGet();
 
@@ -79,16 +81,21 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 		return samplesSubmitted.get();
 	}
 
-	public static class RenderSampleCallable implements Runnable {
+	public static class RenderSampleTask extends RecursiveAction {
 
-		private final World		world;
-		private final Sample	sample;
-		private final Camera	camera;
-		private final Film		film;
-		private final int		maxRayDepth;
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= 3322955501411696398L;
+		private final World			world;
+		private final Sample		sample;
+		private final Camera		camera;
+		private final Film			film;
+		private final int			maxRayDepth;
 
-		public RenderSampleCallable(World world, Sample sample, Camera camera, Film film, int maxRayDepth) {
+		public RenderSampleTask(World world, Sample sample, Camera camera, Film film, int maxRayDepth) {
 
+			super();
 			this.world = world;
 			this.sample = sample;
 			this.camera = camera;
@@ -97,7 +104,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 		}
 
 		@Override
-		public void run() {
+		protected void compute() {
 
 			//
 			// Set up the initial ray to follow.
@@ -108,30 +115,31 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 			//
 			// (notice that the initial ray-follow, at least, is kept on this
 			// same thread)
-			try {
-				final Spectrum spectrum = FollowRayCallable.followRay(ray, world, maxRayDepth, sample).multiply(
-						1d / (double) sample.getSampler().getSamplesPerPixel());
+			final Spectrum spectrum = new FollowRayRecursiveTask(ray, world, maxRayDepth, sample)
+					.fork()
+						.join()
+						.multiply(1d / (double) sample.getSampler().getSamplesPerPixel());
 
-				if (sample.getSampler().isSampleAcceptable(sample, spectrum))
-					film.addSample(sample, spectrum);
-
-			} catch (Exception e) {
-				// TODO: handle exception
-				e.printStackTrace();
-			}
+			if (sample.getSampler().isSampleAcceptable(sample, spectrum))
+				film.addSample(sample, spectrum);
 		}
 
 	}
 
-	public static class FollowRayCallable implements Callable<Spectrum> {
+	public static class FollowRayRecursiveTask extends RecursiveTask<Spectrum> {
 
-		private final Ray		ray;
-		private final World		world;
-		private final int		maxRayDepth;
-		private final Sample	sample;
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= 6129032173615008877L;
+		private final Ray			ray;
+		private final World			world;
+		private final int			maxRayDepth;
+		private final Sample		sample;
 
-		public FollowRayCallable(Ray ray, World world, int maxRayDepth, Sample sample) {
+		public FollowRayRecursiveTask(Ray ray, World world, int maxRayDepth, Sample sample) {
 
+			super();
 			this.ray = ray;
 			this.world = world;
 			this.maxRayDepth = maxRayDepth;
@@ -139,12 +147,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 		}
 
 		@Override
-		public Spectrum call() throws Exception {
-
-			return FollowRayCallable.followRay(ray, world, maxRayDepth, sample);
-		}
-
-		public static Spectrum followRay(Ray ray, World world, int maxRayDepth, Sample sample) {
+		protected Spectrum compute() {
 
 			final Optional<Interaction> op_interaction = world
 					.getPrimitives()
@@ -201,8 +204,10 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				// not try to access these Futures until we actually need them,
 				// right at the end of this method (when we total up all
 				// radiances).
-				final Spectrum incidentRadiance_reflection = followRay(reflectedRay, world, maxRayDepth, sample);
-				final Spectrum incidentRadiance_transmission = followRay(transmittedRay, world, maxRayDepth, sample);
+				final ForkJoinTask<Spectrum> incidentRadiance_reflection = new FollowRayRecursiveTask(reflectedRay,
+						world, maxRayDepth, sample).fork();
+				final ForkJoinTask<Spectrum> incidentRadiance_transmission = new FollowRayRecursiveTask(transmittedRay,
+						world, maxRayDepth, sample).fork();
 
 				//
 				//
@@ -232,9 +237,9 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				return emissiveRadiance
 						.add(surfaceIrradiance)
 							.multiply(fresnel.getReflectance())
-							.add(incidentRadiance_reflection.multiply(fresnel.getReflectance()).multiply(
+							.add(incidentRadiance_reflection.join().multiply(fresnel.getReflectance()).multiply(
 									reflectedRay.getDirection().dotProduct(n.asVector().normalize())))
-							.add(incidentRadiance_transmission.multiply(fresnel
+							.add(incidentRadiance_transmission.join().multiply(fresnel
 									.getTransmittance()));
 
 			} else {
@@ -243,4 +248,5 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 		}
 
 	}
+
 }

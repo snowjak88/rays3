@@ -6,9 +6,6 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.math3.util.FastMath;
@@ -54,7 +51,6 @@ public class Main {
 		Primitive plane = new Primitive(new PlaneShape(Arrays.asList(new TranslationTransform(0d, -3d, 0d))),
 				new LambertianBDRF(new CheckerboardTexture(new ConstantTexture(new RGBSpectrum(RGB.RED)),
 						new ConstantTexture(new RGBSpectrum(RGB.WHITE).multiply(0.05))), 1000d));
-
 		world.getPrimitives().add(plane);
 
 		Light light = new PointLight(new RGBSpectrum(RGB.WHITE.multiply(64d)),
@@ -62,7 +58,7 @@ public class Main {
 
 		world.getLights().add(light);
 
-		Camera camera = new PinholeCamera(4d, 3d, new Point(0, 1.5, -8), new Point(0, 0, 0), Vector.J, 5d);
+		Camera camera = new PinholeCamera(400, 300, 4d, 3d, new Point(0, 1.5, -8), new Point(0, 0, 0), Vector.J, 5d);
 
 		SimpleImageFilm film = new SimpleImageFilm(400, 300);
 
@@ -70,10 +66,9 @@ public class Main {
 
 		AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4);
 
-		ScheduledExecutorService statusService = Executors.newSingleThreadScheduledExecutor();
 		final DateFormat dateFmt = SimpleDateFormat.getTimeInstance();
 		final NumberFormat numFmt = NumberFormat.getIntegerInstance();
-		statusService.scheduleWithFixedDelay(
+		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(
 				() -> System.out.println(
 						"[" + dateFmt.format(new Date()) + "] " + numFmt.format(integrator.countSamplesSubmitted())
 								+ " samples submitted, " + numFmt.format(film.countSamplesAdded())
@@ -82,24 +77,17 @@ public class Main {
 
 		integrator.render(world);
 
-		while (!integrator.isFinishedGettingSamples()) {
-			// Do nothing.
-		}
-		while (( (ThreadPoolExecutor) Global.EXECUTOR ).getQueue().size() > 0) {
-			// Do nothing.
-		}
-		while (( (ThreadPoolExecutor) Global.EXECUTOR ).getActiveCount() > 0) {
+		while (!Global.EXECUTOR.isQuiescent() && Global.EXECUTOR.getActiveThreadCount() > 0) {
 			// Do nothing.
 		}
 
-		statusService.shutdown();
+		//
+		// Remember to shut down the global executors!
+		Global.EXECUTOR.shutdown();
+		Global.SCHEDULED_EXECUTOR.shutdown();
 
 		System.out.println("Writing image to file ...");
 		film.writeImage(new File("render.png"));
-
-		//
-		// Remember to shut down the global executor!
-		Global.EXECUTOR.shutdown();
 
 		System.out.println("Done!");
 	}

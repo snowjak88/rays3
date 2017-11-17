@@ -15,7 +15,7 @@ public class CameraTest {
 	@Before
 	public void setUp() throws Exception {
 
-		camera = new Camera(4d, 4d, new Point(0d, 0d, -5d), new Point(0d, 0d, 0d), Vector.J) {
+		camera = new Camera(100, 100, 4d, 4d, new Point(0d, 0d, -5d), new Point(0d, 0d, 0d), Vector.J) {
 
 			@Override
 			public Ray getRay(double imageU, double imageV, double lensU, double lensV) {
@@ -25,7 +25,7 @@ public class CameraTest {
 			}
 		};
 
-		raisedCamera = new Camera(4d, 4d, new Point(3d, -2d, -5d), new Point(0d, 0d, 0d), Vector.J) {
+		raisedCamera = new Camera(100, 100, 4d, 4d, new Point(3d, -2d, -5d), new Point(0d, 0d, 0d), Vector.J) {
 
 			@Override
 			public Ray getRay(double imageU, double imageV, double lensU, double lensV) {

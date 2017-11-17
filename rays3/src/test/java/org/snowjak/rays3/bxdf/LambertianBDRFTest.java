@@ -35,7 +35,7 @@ public class LambertianBDRFTest {
 		final Texture emissive = new ConstantTexture(new RGBSpectrum());
 		this.bdrf = new LambertianBDRF(texture, emissive, 1.3);
 
-		sample = new Sample(new SimplePseudorandomSampler(16, 16, 1), 8, 8, 8.5, 8.5, 0.5, 0.5);
+		sample = new Sample(new SimplePseudorandomSampler(16, 16, 1), 8.5, 8.5, 0.5, 0.5);
 		primitive = new Primitive(new SphereShape(1.0), bdrf);
 		interaction = new Interaction(new Point(0, 1, 0),
 				new Ray(new Point(-1, 2, 0), new Vector(1, -1, 0).normalize()), new Normal(Vector.J),

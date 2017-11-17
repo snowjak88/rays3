@@ -40,14 +40,6 @@ public class SimplePseudorandomSamplerTest {
 
 			filmLocations[filmX][filmY]++;
 
-			final double imageXFrac = ( (double) sample.getImageX() ) / ( (double) filmLocations.length ),
-					imageYFrac = ( (double) sample.getImageY() ) / ( (double) filmLocations[0].length );
-
-			assertEquals("Image-plane-U is not as expected!", imageXFrac, sample.getImageU(),
-					2d / (double) filmLocations.length);
-			assertEquals("Image-plane-V is not as expected!", imageYFrac, sample.getImageV(),
-					2d / (double) filmLocations[0].length);
-
 			assertTrue("Lens-U is out of bounds!", ( sample.getLensU() >= 0d ) && ( sample.getLensU() <= 1d ));
 			assertTrue("Lens-V is out of bounds!", ( sample.getLensV() >= 0d ) && ( sample.getLensV() <= 1d ));
 

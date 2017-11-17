@@ -15,13 +15,13 @@ public class PinholeCameraTest {
 	@Before
 	public void setUp() throws Exception {
 
-		camera = new PinholeCamera(4d, 4d, new Point(0, 0, -5), new Point(0, 0, 0), Vector.J, 8);
+		camera = new PinholeCamera(100, 100, 4d, 4d, new Point(0, 0, -5), new Point(0, 0, 0), Vector.J, 8);
 	}
 
 	@Test
 	public void testGetRayDoubleDoubleDoubleDouble_center() {
 
-		Ray ray = camera.getRay(0.5d, 0.5d, 0.5d, 0.5d);
+		Ray ray = camera.getRay(50d, 50d, 0.5d, 0.5d);
 
 		assertEquals("Ray origin-X not as expected!", 0d, ray.getOrigin().getX(), 0.00001);
 		assertEquals("Ray origin-Y not as expected!", 0d, ray.getOrigin().getY(), 0.00001);
@@ -35,7 +35,7 @@ public class PinholeCameraTest {
 	@Test
 	public void testGetRayDoubleDoubleDoubleDouble_edge() {
 
-		Ray ray = camera.getRay(1d, 0.5d, 0.5d, 0.5d);
+		Ray ray = camera.getRay(100d, 50d, 0.5d, 0.5d);
 
 		assertEquals("Ray origin-X not as expected!", 2d, ray.getOrigin().getX(), 0.00001);
 		assertEquals("Ray origin-Y not as expected!", 0d, ray.getOrigin().getY(), 0.00001);

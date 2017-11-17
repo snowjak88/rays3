@@ -21,6 +21,7 @@ public abstract class Camera {
 
 	private final Matrix	cameraTwist, cameraTranslate;
 	private final double	imagePlaneSizeX, imagePlaneSizeY;
+	private final double	filmSizeX, filmSizeY;
 
 	/**
 	 * Construct a new Camera located at the given <code>eyePoint</code>,
@@ -41,7 +42,11 @@ public abstract class Camera {
 	 * @param lookAt
 	 * @param up
 	 */
-	public Camera(double imagePlaneSizeX, double imagePlaneSizeY, Point eyePoint, Point lookAt, Vector up) {
+	public Camera(double filmSizeX, double filmSizeY, double imagePlaneSizeX, double imagePlaneSizeY, Point eyePoint,
+			Point lookAt, Vector up) {
+
+		this.filmSizeX = filmSizeX;
+		this.filmSizeY = filmSizeY;
 
 		this.imagePlaneSizeX = imagePlaneSizeX;
 		this.imagePlaneSizeY = imagePlaneSizeY;
@@ -74,7 +79,7 @@ public abstract class Camera {
 	 */
 	public Ray getRay(Sample sample) {
 
-		return getRay(sample.getImageU(), sample.getImageV(), sample.getLensU(), sample.getLensV());
+		return getRay(sample.getImageX(), sample.getImageY(), sample.getLensU(), sample.getLensV());
 	}
 
 	/**
@@ -83,30 +88,31 @@ public abstract class Camera {
 	 * camera's lens is sampled at (0.5,0.5) -- i.e., through the middle of its
 	 * lens-system.
 	 * 
-	 * @param imageU
-	 *            x-coordinate in the image-plane. Clamped to the interval [0.0,
-	 *            1.0]
-	 * @param imageV
-	 *            y-coordinate in the image-plane. Clamped to the interval [0.0,
-	 *            1.0]
+	 * @param imageX
+	 *            x-coordinate in the image-plane. Clamped to the interval
+	 *            [-filmSizeX, +filmSizeX]
+	 * @param imageY
+	 *            y-coordinate in the image-plane. Clamped to the interval
+	 *            [-filmSizeY, +filmSizeY]
 	 */
-	public Ray getRay(double imageU, double imageV) {
+	public Ray getRay(double imageX, double imageY) {
 
-		return getRay(imageU, imageV, 0.5d, 0.5d);
+		return getRay(imageX, imageY, 0.5d, 0.5d);
 	}
 
 	/**
 	 * Translate the given coordinates on the image-plane (each considered in
-	 * the range [0.0 - 1.0] into a Ray in world-space. The Ray is modeled so
-	 * that it passes through the camera's composite-lens at the specified
-	 * <code>lens</code> location (clamped to the interval [0.0 - 1.0]).
+	 * the range <code>+/-[filmSizeX, filmSizeY]</code>) into a Ray in
+	 * world-space. The Ray is modeled so that it passes through the camera's
+	 * composite-lens at the specified <code>lens</code> location (clamped to
+	 * the interval [0.0 - 1.0]).
 	 * 
-	 * @param imageU
-	 *            x-coordinate in the image-plane. Clamped to the interval [0.0,
-	 *            1.0]
-	 * @param imageV
-	 *            y-coordinate in the image-plane. Clamped to the interval [0.0,
-	 *            1.0]
+	 * @param imageX
+	 *            x-coordinate in the image-plane. Clamped to the interval
+	 *            [-filmSizeX, +filmSizeX]
+	 * @param imageY
+	 *            y-coordinate in the image-plane. Clamped to the interval
+	 *            [-filmSizeY, +filmSizeY]
 	 * @param lensU
 	 *            x-coordinate in the lens-plane. Clamped to the interval [0.0,
 	 *            1.0]
@@ -115,7 +121,7 @@ public abstract class Camera {
 	 *            1.0]
 	 * @return
 	 */
-	public abstract Ray getRay(double imageU, double imageV, double lensU, double lensV);
+	public abstract Ray getRay(double imageX, double imageY, double lensU, double lensV);
 
 	/**
 	 * Transform the given {@link Ray} (in camera-coordinates) into a Ray in
@@ -130,6 +136,16 @@ public abstract class Camera {
 		direction = cameraTwist.multiply(direction);
 
 		return new Ray(origin, direction);
+	}
+
+	public double getFilmSizeX() {
+
+		return filmSizeX;
+	}
+
+	public double getFilmSizeY() {
+
+		return filmSizeY;
 	}
 
 	public double getImagePlaneSizeX() {
