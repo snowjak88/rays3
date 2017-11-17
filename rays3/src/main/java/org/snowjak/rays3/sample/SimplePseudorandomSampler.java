@@ -1,8 +1,5 @@
 package org.snowjak.rays3.sample;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-
 import org.snowjak.rays3.Global;
 import org.snowjak.rays3.film.Film;
 import org.snowjak.rays3.spectrum.Spectrum;
@@ -19,8 +16,6 @@ public class SimplePseudorandomSampler extends Sampler {
 	private int							currFilmX, currFilmY;
 	private int							currSamplePerPixel;
 
-	private final BlockingQueue<Sample>	samplesQueue;
-
 	public SimplePseudorandomSampler(int filmSizeX, int filmSizeY, int samplesPerPixel) {
 
 		super(0, 0, filmSizeX - 1, filmSizeY - 1, samplesPerPixel);
@@ -28,36 +23,10 @@ public class SimplePseudorandomSampler extends Sampler {
 		this.currFilmX = this.getMinFilmX();
 		this.currFilmY = this.getMinFilmY();
 		this.currSamplePerPixel = -1;
-
-		this.samplesQueue = new ArrayBlockingQueue<>(Global.EXECUTOR.getParallelism());
-
-		Global.EXECUTOR.submit(() -> {
-			Sample sample;
-			try {
-				while (( sample = generateNextSample() ) != null)
-					samplesQueue.put(sample);
-
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		});
 	}
 
 	@Override
-	public Sample getNextSample() {
-
-		try {
-			return samplesQueue.take();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-
-			return null;
-		}
-	}
-
-	private Sample generateNextSample() {
+	protected Sample generateNextSample() {
 
 		currSamplePerPixel++;
 

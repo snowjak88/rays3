@@ -1,6 +1,8 @@
 package org.snowjak.rays3.sample;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -15,14 +17,13 @@ public class StratifiedSamplerTest {
 	@Before
 	public void setUp() throws Exception {
 
-		this.sampler = new StratifiedSampler(640, 480, 4);
-		this.film = new short[640][480];
+		sampler = new StratifiedSampler(640, 480, 3);
+		film = new short[640][480];
 	}
 
 	public void testPixelSampleCount() {
 
-		StratifiedSampler sampler = new StratifiedSampler(4, 4, 10);
-		assertEquals(16, sampler.getSamplesPerPixel());
+		assertEquals(4, sampler.getSamplesPerPixel());
 	}
 
 	@Test
