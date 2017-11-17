@@ -9,7 +9,7 @@ package org.snowjak.rays3.spectrum;
 public interface Spectrum {
 
 	/**
-	 * @return <code>true</code> if this Spectrum has 0 energy associated with
+	 * @return <code>true</code> if this Spectrum has 0 (or even very close to 0) energy associated with
 	 *         it.
 	 */
 	public boolean isBlack();

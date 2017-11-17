@@ -2,6 +2,7 @@ package org.snowjak.rays3;
 
 import java.io.File;
 import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -65,15 +66,18 @@ public class Main {
 
 		SimpleImageFilm film = new SimpleImageFilm(400, 300);
 
-		Sampler sampler = new StratifiedSampler(400, 300, 4);
+		Sampler sampler = new StratifiedSampler(400, 300, 1);
 
 		AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4);
 
 		ScheduledExecutorService statusService = Executors.newSingleThreadScheduledExecutor();
 		final DateFormat dateFmt = SimpleDateFormat.getTimeInstance();
+		final NumberFormat numFmt = NumberFormat.getIntegerInstance();
 		statusService.scheduleWithFixedDelay(
-				() -> System.out.println("[" + dateFmt.format(new Date()) + "] " + integrator.countSamplesSubmitted()
-						+ " samples submitted, " + film.countSamplesAdded() + " processed out of " + sampler.totalSamples() + " total ..."),
+				() -> System.out.println(
+						"[" + dateFmt.format(new Date()) + "] " + numFmt.format(integrator.countSamplesSubmitted())
+								+ " samples submitted, " + numFmt.format(film.countSamplesAdded())
+								+ " processed out of " + numFmt.format(sampler.totalSamples()) + " total ..."),
 				1, 5, TimeUnit.SECONDS);
 
 		integrator.render(world);
@@ -96,6 +100,8 @@ public class Main {
 		//
 		// Remember to shut down the global executor!
 		Global.EXECUTOR.shutdown();
+
+		System.out.println("Done!");
 	}
 
 }

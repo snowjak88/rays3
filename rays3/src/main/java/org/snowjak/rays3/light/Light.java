@@ -124,10 +124,10 @@ public abstract class Light implements Transformable {
 		if (getUnitRadiance().isBlack())
 			return getUnitRadiance();
 
-		final double cosTheta = n.asVector().dotProduct(sampleLightVector.normalize().negate());
+		final double cosTheta = n.asVector().normalize().dotProduct(sampleLightVector.normalize().negate());
 
 		if (cosTheta < 0d)
-			return new RGBSpectrum();
+			return RGBSpectrum.BLACK;
 
 		final double falloffFraction = getFalloff().calculate(sampleLightVector.getMagnitude());
 
@@ -149,7 +149,7 @@ public abstract class Light implements Transformable {
 
 		final Ray ray = new Ray(pointFrom, new Vector(lightSurfacePoint).subtract(new Vector(pointFrom)).normalize());
 		return world.getPrimitives().stream().filter(p -> p.isInteracting(ray)).allMatch(
-				p -> ( p.getIntersection(ray) ) != null);
+				p -> ( p.getIntersection(ray) ) == null);
 	}
 
 	/**

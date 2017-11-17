@@ -97,6 +97,10 @@ public class LightTest {
 
 		assertFalse("Expected non-visibility is really visible!",
 				Light.isVisibleFrom(world, new Point(2, 0, 0), new Point(2, 4, 0)));
+		assertFalse("Expected non-visibility is really visible!",
+				Light.isVisibleFrom(world, new Point(2, 1, 0), new Point(2, 4, 0)));
+		assertFalse("Expected non-visibility is really visible!",
+				Light.isVisibleFrom(world, new Point(2, 2, 0), new Point(2, 4, 0)));
 		assertTrue("Expected visibility is really not visible!",
 				Light.isVisibleFrom(world, new Point(-2, 4, 0), new Point(2, 4, 0)));
 	}

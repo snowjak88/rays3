@@ -20,11 +20,6 @@ public class Global {
 	 */
 	public static final ThreadPoolExecutor	EXECUTOR			= (ThreadPoolExecutor) Executors
 			.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-	// new ThreadPoolExecutor(
-	// Runtime.getRuntime().availableProcessors(),
-	// Runtime.getRuntime().availableProcessors() * 4, 10,
-	// TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
-	// .newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 	/**
 	 * A pre-initialized pseudo-random number generator.
