@@ -5,12 +5,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.math3.util.Pair;
 import org.snowjak.rays3.Global;
 import org.snowjak.rays3.sample.Sample;
+import org.snowjak.rays3.sample.Sampler;
 import org.snowjak.rays3.spectrum.Spectrum;
 
 /**
@@ -26,7 +26,7 @@ public class SamplesExtractFilm implements Film {
 
 	private FileWriter									fileWriter	= null;
 
-	public SamplesExtractFilm(File extractFile) {
+	public SamplesExtractFilm(File extractFile, Sampler sampler) {
 
 		results = new LinkedBlockingQueue<>();
 		samplesAdded = new AtomicInteger(0);
@@ -40,20 +40,24 @@ public class SamplesExtractFilm implements Film {
 		}
 
 		if (fileWriter != null)
-			Global.EXECUTOR.submit(new ResultAppendingRunnable(fileWriter, results));
+			Global.EXECUTOR.submit(
+					new ResultAppendingRunnable(fileWriter, results, samplesAdded, sampler.totalSamples()));
 	}
 
 	private static class ResultAppendingRunnable implements Runnable {
 
 		private final FileWriter							fileWriter;
 		private final BlockingQueue<Pair<Sample, Spectrum>>	results;
-		private int samplesWritten;
+		private final int									samplesToExpect;
+		private final AtomicInteger							samplesAdded;
 
-		public ResultAppendingRunnable(FileWriter fileWriter, BlockingQueue<Pair<Sample, Spectrum>> results) {
+		public ResultAppendingRunnable(FileWriter fileWriter, BlockingQueue<Pair<Sample, Spectrum>> results,
+				AtomicInteger samplesAdded, int samplesToExpect) {
 
 			this.fileWriter = fileWriter;
 			this.results = results;
-			this.samplesWritten = 0;
+			this.samplesAdded = samplesAdded;
+			this.samplesToExpect = samplesToExpect;
 		}
 
 		@Override
@@ -64,8 +68,6 @@ public class SamplesExtractFilm implements Film {
 				try {
 					result = results.take();
 
-					samplesWritten++;
-					
 					fileWriter.write(String.format("%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
 							Film.convertContinuousToDiscrete(result.getFirst().getImageX()),
 							Film.convertContinuousToDiscrete(result.getFirst().getImageY()),
@@ -81,7 +83,17 @@ public class SamplesExtractFilm implements Film {
 					e.printStackTrace();
 				}
 
-			} while (samplesWritten < result.getFirst().getSampler().totalSamples());
+				samplesAdded.incrementAndGet();
+
+			} while (samplesAdded.get() < samplesToExpect);
+			
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
 	}
@@ -96,7 +108,6 @@ public class SamplesExtractFilm implements Film {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		samplesAdded.incrementAndGet();
 	}
 
 	@Override
