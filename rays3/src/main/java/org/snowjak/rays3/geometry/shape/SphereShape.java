@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.math3.util.FastMath;
+import org.snowjak.rays3.Global;
 import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Point2D;
@@ -123,12 +124,12 @@ public class SphereShape extends AbstractShape {
 				return t1;
 		}
 
-		if (t0 < 0 && t1 < 0)
+		if (t0 < Global.DOUBLE_TOLERANCE && t1 < Global.DOUBLE_TOLERANCE)
 			return null;
 
-		if (t0 < 0 && t1 >= 0)
+		if (t0 < Global.DOUBLE_TOLERANCE)
 			return t1;
-		else if (t0 >= 0 && t1 < 0)
+		else if (t1 < Global.DOUBLE_TOLERANCE)
 			return t0;
 		else if (t0 < t1)
 			return t0;

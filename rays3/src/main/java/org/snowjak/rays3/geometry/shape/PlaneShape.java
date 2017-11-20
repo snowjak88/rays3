@@ -1,5 +1,6 @@
 package org.snowjak.rays3.geometry.shape;
 
+import java.lang.Double;
 import java.util.Collections;
 import java.util.List;
 
@@ -72,7 +73,7 @@ public class PlaneShape extends AbstractShape {
 
 		final double t = -ray.getOrigin().getY() / ray.getDirection().getY();
 
-		if (t < 0d || Global.isNear(t, 0d))
+		if (t < Global.DOUBLE_TOLERANCE || Double.isNaN(t) || Global.isNear(t, 0d))
 			return null;
 
 		Ray intersectingRay = new Ray(ray.getOrigin(), ray.getDirection(), ray.getDepth(), t, t, t);
