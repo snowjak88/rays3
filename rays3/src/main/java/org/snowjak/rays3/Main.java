@@ -63,14 +63,13 @@ public class Main {
 		SimpleWhittedIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4);
 
 		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(
-				() -> System.out.println(String.format("[%TT] (%,12d) --> [%,12d] --> (%,12d) {%,12d} --> (%,12d)",
-						new Date(), sampler.totalSamples(), sampler.samplesReady(),
-						Global.EXECUTOR.getQueuedSubmissionCount(), integrator.countSamplesCurrentlyRendering(),
-						film.countSamplesAdded())),
+				() -> System.out.println(String.format("[%TT] (%,12d) --> [%,12d] --> {%,12d} --> (%,12d)", new Date(),
+						sampler.totalSamples(), Global.EXECUTOR.getQueuedSubmissionCount(),
+						integrator.countSamplesCurrentlyRendering(), film.countSamplesAdded())),
 				1, 1, TimeUnit.SECONDS);
 		Global.SCHEDULED_EXECUTOR.scheduleAtFixedRate(
-				() -> System.out.println(
-						"[  TIME  ] ( TOT SAMPLE ) --> [ SAMPLE RDY ] --> ( RENDR WAIT ) { RENDR ACTV } --> ( RESULT SAV )"),
+				() -> System.out
+						.println("[  TIME  ] ( TOT SAMPLE ) --> [ RENDR WAIT ] --> { RENDR ACTV } --> ( RESULT SAV )"),
 				0, 60, TimeUnit.SECONDS);
 
 		integrator.render(world);
