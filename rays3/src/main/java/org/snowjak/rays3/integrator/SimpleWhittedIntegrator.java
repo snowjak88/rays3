@@ -228,10 +228,8 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				if (ray.getDepth() >= maxRayDepth) {
 					//
 					// To bypass the reflection and transmission ray-following,
-					// we can
-					// simply treat them as already solved, with final
-					// radiance-values
-					// of BLACK.
+					// we can simply treat them as already solved, with final
+					// radiance-values of BLACK.
 					incidentRadiance_reflection = new ConstantResultTask(RGBSpectrum.BLACK).fork();
 					incidentRadiance_transmission = new ConstantResultTask(RGBSpectrum.BLACK).fork();
 				} else {
@@ -244,30 +242,26 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 					//
 					// Notice that we have only the Future objects here. We will
 					// not try to access these Futures until we actually need
-					// them,
-					// right at the end of this method (when we total up all
-					// radiances).
+					// them, right at the end of this method (when we total up
+					// all radiances).
 					//
 					incidentRadiance_reflection = new FollowRayRecursiveTask(reflectedRay, world, maxRayDepth, sample)
 							.fork();
 					//
 					// Remember that transmission will only take place if this
-					// is NOT a case of
-					// Total Internal Reflection.
+					// is NOT a case of Total Internal Reflection.
 					//
 					if (!fresnel.isTotalInternalReflection()) {
+
 						final Ray transmittedRay = new Ray(point, transmittedVector, ray);
 						incidentRadiance_transmission = new FollowRayRecursiveTask(transmittedRay, world, maxRayDepth,
 								sample).fork();
 					} else
 						//
 						// Given that this is a case of Total Internal
-						// Reflection,
-						// we don't have a transmission-direction. As such, we
-						// can
-						// treat the final "transmission" radiance as BLACK --
-						// i.e.,
-						// nothing.
+						// Reflection, we don't have a transmission-direction.
+						// As such, we can treat the final "transmission"
+						// radiance as BLACK -- i.e., nothing.
 						incidentRadiance_transmission = new ConstantResultTask(RGBSpectrum.BLACK).fork();
 				}
 

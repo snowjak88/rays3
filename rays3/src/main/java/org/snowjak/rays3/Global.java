@@ -1,6 +1,5 @@
 package org.snowjak.rays3;
 
-import java.lang.Runtime;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
@@ -14,7 +13,7 @@ public class Global {
 	 * Defines the margin by which two double values may be said to be "near"
 	 * one another.
 	 */
-	public static final double						DOUBLE_TOLERANCE	= 1e-20;
+	public static final double						DOUBLE_TOLERANCE	= 1e-12;
 
 	/**
 	 * The central thread-executor. Whenever possible, submit your threads to
