@@ -66,15 +66,29 @@ public class ScaleTransform implements Transform {
 	@Override
 	public Ray worldToLocal(Ray ray) {
 
-		return new Ray(worldToLocal(ray.getOrigin()), worldToLocal(ray.getDirection()), ray.getDepth(), ray.getCurrT(),
-				ray.getMinT(), ray.getMaxT());
+		final double transformedCurrT = worldToLocal(ray.getDirection().normalize().multiply(ray.getCurrT()))
+				.getMagnitude();
+		final double transformedMinT = worldToLocal(ray.getDirection().normalize().multiply(ray.getMinT()))
+				.getMagnitude();
+		final double transformedMaxT = worldToLocal(ray.getDirection().normalize().multiply(ray.getMaxT()))
+				.getMagnitude();
+
+		return new Ray(worldToLocal(ray.getOrigin()), worldToLocal(ray.getDirection()), ray.getDepth(),
+				transformedCurrT, transformedMinT, transformedMaxT);
 	}
 
 	@Override
 	public Ray localToWorld(Ray ray) {
 
-		return new Ray(localToWorld(ray.getOrigin()), localToWorld(ray.getDirection()), ray.getDepth(), ray.getCurrT(),
-				ray.getMinT(), ray.getMaxT());
+		final double transformedCurrT = localToWorld(ray.getDirection().normalize().multiply(ray.getCurrT()))
+				.getMagnitude();
+		final double transformedMinT = localToWorld(ray.getDirection().normalize().multiply(ray.getMinT()))
+				.getMagnitude();
+		final double transformedMaxT = localToWorld(ray.getDirection().normalize().multiply(ray.getMaxT()))
+				.getMagnitude();
+
+		return new Ray(localToWorld(ray.getOrigin()), localToWorld(ray.getDirection()), ray.getDepth(),
+				transformedCurrT, transformedMinT, transformedMaxT);
 	}
 
 	@Override
