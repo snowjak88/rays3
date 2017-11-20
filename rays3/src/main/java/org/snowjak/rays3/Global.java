@@ -1,5 +1,6 @@
 package org.snowjak.rays3;
 
+import java.lang.Runtime;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;

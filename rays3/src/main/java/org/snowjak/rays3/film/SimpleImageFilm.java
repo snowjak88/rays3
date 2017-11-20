@@ -3,15 +3,13 @@ package org.snowjak.rays3.film;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.imageio.ImageIO;
 
 import org.apache.commons.math3.util.FastMath;
-import org.apache.commons.math3.util.Pair;
-import org.snowjak.rays3.Global;
 import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.sample.Sampler;
 import org.snowjak.rays3.spectrum.RGB;
@@ -25,16 +23,16 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class SimpleImageFilm implements Film {
 
-	private final AtomicInteger							samplesAdded;
-	private final BlockingQueue<Pair<int[], Spectrum>>	resultsQueue;
+	private final AtomicInteger	samplesAdded;
+	private final Lock			filmLock;
 
-	private final double[][][]							film;
-	private final boolean[][]							filmUpdated;
+	private final double[][][]	film;
+	private final boolean[][]	filmUpdated;
 
 	public SimpleImageFilm(int imageWidth, int imageHeight, Sampler sampler) {
 
 		this.samplesAdded = new AtomicInteger(0);
-		this.resultsQueue = new LinkedBlockingQueue<>();
+		this.filmLock = new ReentrantLock();
 
 		this.film = new double[imageWidth][imageHeight][3];
 		this.filmUpdated = new boolean[imageWidth][imageHeight];
@@ -47,55 +45,6 @@ public class SimpleImageFilm implements Film {
 					film[i][j][k] = 0d;
 			}
 
-		Global.EXECUTOR
-				.submit(new FilmUpdaterRunnable(resultsQueue, film, filmUpdated, sampler.totalSamples(), samplesAdded));
-
-	}
-
-	private static class FilmUpdaterRunnable implements Runnable {
-
-		private final BlockingQueue<Pair<int[], Spectrum>>	resultsQueue;
-		private final double[][][]							film;
-		private final boolean[][]							filmUpdated;
-		private final int									samplesExpected;
-		private final AtomicInteger							samplesAdded;
-
-		public FilmUpdaterRunnable(BlockingQueue<Pair<int[], Spectrum>> resultsQueue, double[][][] film,
-				boolean[][] filmUpdated, int samplesExpected, AtomicInteger samplesAdded) {
-
-			this.resultsQueue = resultsQueue;
-			this.film = film;
-			this.filmUpdated = filmUpdated;
-			this.samplesExpected = samplesExpected;
-			this.samplesAdded = samplesAdded;
-		}
-
-		@Override
-		public void run() {
-
-			Pair<int[], Spectrum> result;
-			while (samplesAdded.get() < samplesExpected) {
-				try {
-					result = resultsQueue.take();
-
-					final int filmX = result.getFirst()[0];
-					final int filmY = result.getFirst()[1];
-
-					filmUpdated[filmX][filmY] = true;
-
-					final RGB rgb = result.getSecond().toRGB();
-					film[filmX][filmY][0] += rgb.getRed();
-					film[filmX][filmY][1] += rgb.getGreen();
-					film[filmX][filmY][2] += rgb.getBlue();
-
-					samplesAdded.incrementAndGet();
-
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-
 	}
 
 	@Override
@@ -104,13 +53,18 @@ public class SimpleImageFilm implements Film {
 		final int filmX = Film.convertContinuousToDiscrete(sample.getImageX());
 		final int filmY = Film.convertContinuousToDiscrete(sample.getImageY());
 
-		try {
-			resultsQueue.put(new Pair<>(new int[] { filmX, filmY }, radiance));
+		filmLock.lock();
 
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		filmUpdated[filmX][filmY] = true;
+
+		final RGB rgb = radiance.toRGB();
+		film[filmX][filmY][0] += rgb.getRed();
+		film[filmX][filmY][1] += rgb.getGreen();
+		film[filmX][filmY][2] += rgb.getBlue();
+
+		samplesAdded.incrementAndGet();
+
+		filmLock.unlock();
 
 	}
 

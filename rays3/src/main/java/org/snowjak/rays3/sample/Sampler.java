@@ -1,8 +1,8 @@
 package org.snowjak.rays3.sample;
 
 import java.util.Optional;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.snowjak.rays3.Global;
@@ -28,9 +28,9 @@ public abstract class Sampler {
 		this.maxFilmY = maxFilmY;
 		this.samplesPerPixel = samplesPerPixel;
 
-		this.sampleQueue = new LinkedBlockingQueue<>();
+		this.sampleQueue = new ArrayBlockingQueue<>(65535);
 
-		Global.SCHEDULED_EXECUTOR.schedule(() -> Global.EXECUTOR.execute(new SamplePusher(this, sampleQueue)), 100,
+		Global.SCHEDULED_EXECUTOR.schedule(() -> Global.EXECUTOR.execute(new SamplePusher(this, sampleQueue)), 1000,
 				TimeUnit.MILLISECONDS);
 
 		// Global.EXECUTOR.execute(new SamplePusher(this, sampleQueue));
@@ -109,6 +109,15 @@ public abstract class Sampler {
 	public int totalSamples() {
 
 		return getFilmSizeX() * getFilmSizeY() * samplesPerPixel;
+	}
+
+	/**
+	 * @return the total count of {@link Sample}s ready to be used (i.e., those
+	 *         already generated and waiting to be picked up)
+	 */
+	public int samplesReady() {
+
+		return sampleQueue.size();
 	}
 
 	/**

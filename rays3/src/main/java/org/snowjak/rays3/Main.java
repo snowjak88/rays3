@@ -1,9 +1,6 @@
 package org.snowjak.rays3;
 
 import java.io.File;
-import java.text.DateFormat;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -18,7 +15,6 @@ import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.geometry.shape.PlaneShape;
 import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.geometry.shape.SphereShape;
-import org.snowjak.rays3.integrator.AbstractIntegrator;
 import org.snowjak.rays3.integrator.SimpleWhittedIntegrator;
 import org.snowjak.rays3.light.Light;
 import org.snowjak.rays3.light.PointLight;
@@ -43,7 +39,7 @@ public class Main {
 
 				Primitive sphere = new Primitive(
 						new SphereShape(0.4, Arrays.asList(new TranslationTransform(x, 0d, z))), new LambertianBDRF(
-								new ConstantTexture(new RGBSpectrum(RGB.fromHSL(hue, saturation, 0.5d))), 1.3d));
+								new ConstantTexture(new RGBSpectrum(RGB.fromHSL(hue, saturation, 0.5d))), 2d));
 				world.getPrimitives().add(sphere);
 			}
 		}
@@ -58,42 +54,46 @@ public class Main {
 
 		world.getLights().add(light);
 
-		Camera camera = new PinholeCamera(400, 300, 4d, 3d, new Point(0, 1.5, -8), new Point(0, 0, 0), Vector.J, 5d);
+		Sampler sampler = new StratifiedSampler(800, 600, 1);
 
-		SimpleImageFilm film = new SimpleImageFilm(400, 300);
+		Camera camera = new PinholeCamera(800, 600, 4d, 3d, new Point(0, 1.5, -8), new Point(0, 0, 0), Vector.J, 5d);
 
-		Sampler sampler = new StratifiedSampler(400, 300, 8);
+		SimpleImageFilm film = new SimpleImageFilm(800, 600, sampler);
 
-		AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4);
+		SimpleWhittedIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4);
 
-		final DateFormat dateFmt = SimpleDateFormat.getTimeInstance();
-		final NumberFormat numFmt = NumberFormat.getIntegerInstance();
 		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(
+				() -> System.out.println(String.format("[%TT] (%,12d) --> [%,12d] --> (%,12d) {%,12d} --> (%,12d)",
+						new Date(), sampler.totalSamples(), sampler.samplesReady(),
+						Global.EXECUTOR.getQueuedSubmissionCount(), integrator.countSamplesCurrentlyRendering(),
+						film.countSamplesAdded())),
+				1, 1, TimeUnit.SECONDS);
+		Global.SCHEDULED_EXECUTOR.scheduleAtFixedRate(
 				() -> System.out.println(
-						"[" + dateFmt.format(new Date()) + "] " + numFmt.format(integrator.countSamplesSubmitted())
-								+ " samples submitted, " + numFmt.format(film.countSamplesAdded())
-								+ " processed out of " + numFmt.format(sampler.totalSamples()) + " total ..."),
-				1, 5, TimeUnit.SECONDS);
+						"[  TIME  ] ( TOT SAMPLE ) --> [ SAMPLE RDY ] --> ( RENDR WAIT ) { RENDR ACTV } --> ( RESULT SAV )"),
+				0, 60, TimeUnit.SECONDS);
 
 		integrator.render(world);
 
-		while (integrator.countSamplesSubmitted() < sampler.totalSamples()) {
-			// Do nothing.
-		}
 		while (film.countSamplesAdded() < sampler.totalSamples()) {
 			// Do nothing.
 		}
 
 		//
-		// Remember to shut down the global executors!
-		System.out.println("Shutting down worker threads ...");
-		Global.EXECUTOR.shutdown();
-		Global.SCHEDULED_EXECUTOR.shutdown();
+		// Wait a bit for everything to empty out ...
+		//
+		Global.SCHEDULED_EXECUTOR.schedule(() -> {
+			//
+			// Remember to shut down the global executors!
+			System.out.println("Shutting down worker threads ...");
+			// Global.EXECUTOR.shutdown();
+			Global.SCHEDULED_EXECUTOR.shutdown();
 
-		System.out.println("Writing image to file ...");
-		film.writeImage(new File("render.png"));
+			System.out.println("Writing image to file ...");
+			film.writeImage(new File("render.png"));
 
-		System.out.println("Done!");
+			System.out.println("Done!");
+		}, 3, TimeUnit.SECONDS);
 	}
 
 }
