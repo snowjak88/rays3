@@ -125,7 +125,7 @@ public abstract class Light implements Transformable {
 		if (getUnitRadiance().isBlack())
 			return getUnitRadiance();
 
-		final double cosTheta = n.asVector().normalize().dotProduct(sampleLightVector.normalize().negate());
+		final double cosTheta = n.asVector().normalize().dotProduct(sampleLightVector.negate().normalize());
 
 		if (cosTheta < 0d)
 			return RGBSpectrum.BLACK;
@@ -156,7 +156,8 @@ public abstract class Light implements Transformable {
 					.filter(p -> p.isInteracting(ray))
 					.map(p -> p.getIntersection(ray))
 					.filter(i -> i != null)
-					.allMatch(i -> Global.isNear(i.getInteractingRay().getCurrT(), 0d));
+					.allMatch(i -> i.getInteractingRay().getCurrT() < 0d
+							|| Global.isNear(i.getInteractingRay().getCurrT(), 0d));
 	}
 
 	/**

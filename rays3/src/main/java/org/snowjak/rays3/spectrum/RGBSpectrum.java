@@ -1,7 +1,5 @@
 package org.snowjak.rays3.spectrum;
 
-import org.snowjak.rays3.Global;
-
 /**
  * Represents a {@link Spectrum} using a simple RGB trio.
  * 
@@ -35,8 +33,8 @@ public class RGBSpectrum implements Spectrum {
 	@Override
 	public boolean isBlack() {
 
-		return ( this.rgb == RGB.BLACK ) || ( Global.isNear(this.rgb.getRed(), 0d)
-				&& Global.isNear(this.rgb.getGreen(), 0d) && Global.isNear(this.rgb.getBlue(), 0d) );
+		return ( this.rgb == RGB.BLACK )
+				|| ( this.rgb.getRed() <= 0d && this.rgb.getGreen() <= 0d && this.rgb.getBlue() <= 0d );
 	}
 
 	@Override

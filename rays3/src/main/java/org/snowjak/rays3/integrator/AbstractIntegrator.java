@@ -40,6 +40,8 @@ public abstract class AbstractIntegrator {
 
 	public abstract boolean isFinishedGettingSamples();
 	
+	public abstract boolean isFinishedRenderingSamples();
+	
 	public abstract int countSamplesSubmitted();
 
 	public Camera getCamera() {
