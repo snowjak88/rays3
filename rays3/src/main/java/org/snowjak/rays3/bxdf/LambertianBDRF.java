@@ -122,8 +122,8 @@ public class LambertianBDRF extends BDSF {
 			// from the hemisphere pointing along N -- and so we only want to go
 			// along N.
 			//
-			Supplier<Double> reflectionISampler = sample.getAdditionalSingleSampleSupplier();
-			Supplier<Point2D> reflectionJKSampler = sample.getAdditionalTwinSample();
+			Supplier<Double> reflectionISampler = sample.getAdditionalSingleSampleSupplier("Lambert-reflect");
+			Supplier<Point2D> reflectionJKSampler = sample.getAdditionalTwinSample("Lambert-reflect");
 
 			final double i = reflectionISampler.get();
 			final Point2D jk = reflectionJKSampler.get();

@@ -279,8 +279,8 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 					//
 
 					for (int i = 0; i < sample.getSampler().getSamplesPerPixel(); i++) {
-						final Vector sampledLightVector = l.sampleLightVector(point);
-						final double sampledLightProb = l.probabilitySampleVector(point, sampledLightVector);
+						final Vector sampledLightVector = l.sampleLightVector(point, sample);
+						final double sampledLightProb = l.probabilitySampleVector(point, sampledLightVector, sample);
 
 						final Spectrum radianceFromLight = l.getRadianceAt(sampledLightVector, relativeNormal).multiply(
 								sampledLightProb / sample.getSampler().getSamplesPerPixel());

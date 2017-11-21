@@ -14,6 +14,7 @@ import org.snowjak.rays3.geometry.shape.PlaneShape;
 import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.geometry.shape.SphereShape;
 import org.snowjak.rays3.light.Light.FalloffType;
+import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.spectrum.RGB;
 import org.snowjak.rays3.spectrum.RGBSpectrum;
 import org.snowjak.rays3.spectrum.Spectrum;
@@ -27,14 +28,14 @@ public class LightTest {
 		final Light light = new Light(new RGBSpectrum(RGB.GREEN), Collections.emptyList()) {
 
 			@Override
-			public Vector sampleLightVector(Point towards) {
+			public Vector sampleLightVector(Point towards, Sample sample) {
 
 				// don't care about this for this test
 				return null;
 			}
 
 			@Override
-			public double probabilitySampleVector(Point towards, Vector sampledVector) {
+			public double probabilitySampleVector(Point towards, Vector sampledVector, Sample sample) {
 
 				// don't care about this for this test
 				return 0;
@@ -54,14 +55,14 @@ public class LightTest {
 		final Light light = new Light(new RGBSpectrum(RGB.WHITE), Arrays.asList(new TranslationTransform(3d, 1d, 3d))) {
 
 			@Override
-			public Vector sampleLightVector(Point towards) {
+			public Vector sampleLightVector(Point towards, Sample sample) {
 
 				// don't care about this for this test
 				return null;
 			}
 
 			@Override
-			public double probabilitySampleVector(Point towards, Vector sampledVector) {
+			public double probabilitySampleVector(Point towards, Vector sampledVector, Sample sample) {
 
 				// don't care about this for this test
 				return 0;

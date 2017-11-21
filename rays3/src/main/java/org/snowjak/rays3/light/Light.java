@@ -13,6 +13,7 @@ import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.intersect.Interaction;
+import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.spectrum.RGBSpectrum;
 import org.snowjak.rays3.spectrum.Spectrum;
 import org.snowjak.rays3.transform.Transform;
@@ -89,9 +90,10 @@ public abstract class Light implements Transformable {
 	 * </p>
 	 * 
 	 * @param towards
+	 * @param sample
 	 * @return
 	 */
-	public abstract Vector sampleLightVector(Point towards);
+	public abstract Vector sampleLightVector(Point towards, Sample sample);
 
 	/**
 	 * Given a {@link Point} <code>towards</code> and a {@link Vector} we
@@ -100,9 +102,10 @@ public abstract class Light implements Transformable {
 	 * 
 	 * @param towards
 	 * @param sampledVector
+	 * @param sample
 	 * @return
 	 */
-	public abstract double probabilitySampleVector(Point towards, Vector sampledVector);
+	public abstract double probabilitySampleVector(Point towards, Vector sampledVector, Sample sample);
 
 	/**
 	 * Given a surface-point with a corresponding surface-normal <code>n</code>,

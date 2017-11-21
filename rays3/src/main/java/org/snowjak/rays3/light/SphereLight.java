@@ -1,10 +1,15 @@
 package org.snowjak.rays3.light;
 
+import static org.apache.commons.math3.util.FastMath.PI;
+import static org.apache.commons.math3.util.FastMath.cos;
+import static org.apache.commons.math3.util.FastMath.sin;
+
 import java.util.List;
 
-import org.snowjak.rays3.Global;
 import org.snowjak.rays3.geometry.Point;
+import org.snowjak.rays3.geometry.Point2D;
 import org.snowjak.rays3.geometry.Vector;
+import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.spectrum.Spectrum;
 import org.snowjak.rays3.transform.Transform;
 
@@ -40,7 +45,7 @@ public class SphereLight extends Light {
 	}
 
 	@Override
-	public Vector sampleLightVector(Point towards) {
+	public Vector sampleLightVector(Point towards, Sample sample) {
 
 		//
 		// We want to sample a point on the hemisphere nearest to the given
@@ -49,8 +54,8 @@ public class SphereLight extends Light {
 		// Accordingly:
 		// 1) construct a coordinate system I,J,K, where J points from the light
 		// toward the point
-		// 2) select a trio of factors x,y,z, where x,z are both in (-1,1) and y
-		// in (0,1).
+		// 2) select a pair of surface angles, phi and theta, and convert them
+		// to (x,y,z) surface coordinates on a sphere
 		// 3) construct a Vector pointing toward (xI,yJ,zK)
 		// 4) find the Point along the Vector, distance of "radius"
 		// 5) trace a Vector from that Point to the "towards" Point
@@ -61,19 +66,23 @@ public class SphereLight extends Light {
 		final Vector I = J.orthogonal();
 		final Vector K = I.crossProduct(J);
 
-		final double x = 2d * Global.RND.nextDouble() - 1d;
-		final double z = 2d * Global.RND.nextDouble() - 1d;
-		final double y = Global.RND.nextDouble();
+		final Point2D sphericalPoint = sample.getAdditionalTwinSample("SphereLight").get();
 
-		final Point samplePoint_local = new Point(
-				I.multiply(x).add(J.multiply(y)).add(K.multiply(z)).normalize().multiply(radius));
-		final Point samplePoint = localToWorld(samplePoint_local);
+		final double theta = sphericalPoint.getX() * PI / 2d;
+		final double phi = sphericalPoint.getY() * 2d * PI;
+
+		final double x = sin(theta) * cos(phi);
+		final double z = sin(theta) * sin(phi);
+		final double y = cos(theta);
+
+		final Vector samplePoint_local = I.multiply(x).add(J.multiply(y)).add(K.multiply(z)).multiply(radius);
+		final Point samplePoint = localToWorld(new Point(samplePoint_local));
 
 		return new Vector(towards).subtract(new Vector(samplePoint));
 	}
 
 	@Override
-	public double probabilitySampleVector(Point towards, Vector sampledVector) {
+	public double probabilitySampleVector(Point towards, Vector sampledVector, Sample sample) {
 
 		return 1d;
 	}

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Vector;
+import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.spectrum.Spectrum;
 import org.snowjak.rays3.transform.Transform;
 
@@ -15,19 +16,27 @@ import org.snowjak.rays3.transform.Transform;
  */
 public class InfiniteLight extends Light {
 
+	/**
+	 * Construct a new InfiniteLight, oriented to point along -{@link Vector#J}.
+	 * For purposes of strength, an InfiniteLight is always reckoned as being 1
+	 * unit's distance away -- therefore, the assigned <code>unitRadiance</code>
+	 * is <strong>not</strong> subject to falloff.
+	 * 
+	 * @param unitRadiance
+	 * @param worldToLocal
+	 */
 	public InfiniteLight(Spectrum unitRadiance, List<Transform> worldToLocal) {
 		super(unitRadiance, FalloffType.CONSTANT, worldToLocal);
 	}
 
 	@Override
-	public Vector sampleLightVector(Point towards) {
+	public Vector sampleLightVector(Point towards, Sample sample) {
 
-		final Vector lightLocation = new Vector(this.getObjectZero());
-		return new Vector(towards).subtract(lightLocation);
+		return localToWorld(Vector.J.negate()).normalize();
 	}
 
 	@Override
-	public double probabilitySampleVector(Point towards, Vector sampledVector) {
+	public double probabilitySampleVector(Point towards, Vector sampledVector, Sample sample) {
 
 		return 1d;
 	}

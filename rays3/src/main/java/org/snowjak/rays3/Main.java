@@ -32,6 +32,18 @@ public class Main {
 
 	public static void main(String[] args) {
 
+		final Sampler sampler = new StratifiedSampler(800, 600, 4);
+
+		final Camera camera = new PinholeCamera(800, 600, 4d, 3d, new Point(2, 2.1, -8), new Point(0, 0, 0), Vector.J,
+				5d);
+
+		final SimpleImageFilm film = new SimpleImageFilm(800, 600, sampler);
+
+		final AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 9);
+
+		//
+		//
+		//
 		final World world = new World();
 
 		for (double x = -5d; x <= 5d; x += 1d) {
@@ -46,7 +58,7 @@ public class Main {
 			}
 		}
 
-		Primitive plane = new Primitive(new PlaneShape(Arrays.asList(new TranslationTransform(0d, -3d, 0d))),
+		Primitive plane = new Primitive(new PlaneShape(Arrays.asList(new TranslationTransform(0d, -1d, 0d))),
 				new LambertianBDRF(new CheckerboardTexture(new ConstantTexture(new RGBSpectrum(RGB.RED)),
 						new ConstantTexture(new RGBSpectrum(RGB.WHITE).multiply(0.05))), 1000d));
 		world.getPrimitives().add(plane);
@@ -55,15 +67,9 @@ public class Main {
 				Arrays.asList(new TranslationTransform(0d, 5d, 0d)));
 		world.getLights().add(light);
 
-		final Sampler sampler = new StratifiedSampler(800, 600, 4);
-
-		final Camera camera = new PinholeCamera(800, 600, 4d, 3d, new Point(0, 1.5, -8), new Point(0, 0, 0), Vector.J,
-				5d);
-
-		final SimpleImageFilm film = new SimpleImageFilm(800, 600, sampler);
-
-		final AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4);
-
+		//
+		//
+		//
 		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(
 				() -> System.out.println(String.format("[%TT] (%,12d) --> [%,12d] --> {%,12d} --> (%,12d)", new Date(),
 						sampler.totalSamples(), integrator.countSamplesWaitingToRender(),
