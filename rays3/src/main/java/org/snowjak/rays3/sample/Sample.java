@@ -1,5 +1,7 @@
 package org.snowjak.rays3.sample;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import org.snowjak.rays3.Global;
@@ -23,15 +25,17 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class Sample {
 
-	private Sampler								sampler;
+	private Sampler									sampler;
 
-	private final double						imageX, imageY;
-	private final double						lensU, lensV;
-	private final double						t;
-	private final Spectrum						wavelength;
+	private final double							imageX, imageY;
+	private final double							lensU, lensV;
+	private final double							t;
+	private final Spectrum							wavelength;
 
-	private final Supplier<Supplier<Double>>	singleSampleSupplier;
-	private final Supplier<Supplier<Point2D>>	twinSampleSupplier;
+	private final Supplier<Supplier<Double>>		singleSampleSupplier;
+	private final Supplier<Supplier<Point2D>>		twinSampleSupplier;
+	private final Map<String, Supplier<Double>>		singleSampleSupplierMap;
+	private final Map<String, Supplier<Point2D>>	twinSampleSupplierMap;
 
 	/**
 	 * Construct a new Sample.
@@ -163,6 +167,8 @@ public class Sample {
 		this.wavelength = wavelength;
 		this.singleSampleSupplier = singleSampleSupplier;
 		this.twinSampleSupplier = twinSampleSupplier;
+		this.singleSampleSupplierMap = new HashMap<>();
+		this.twinSampleSupplierMap = new HashMap<>();
 	}
 
 	/**
@@ -224,20 +230,26 @@ public class Sample {
 
 	/**
 	 * @return a {@link Supplier} of additional single (i.e.,
-	 *         <code>double</code>) samples
+	 *         <code>double</code>) samples corresponding to the given name
 	 */
-	public Supplier<Double> getAdditionalSingleSampleSupplier() {
+	public Supplier<Double> getAdditionalSingleSampleSupplier(String name) {
 
-		return singleSampleSupplier.get();
+		if (!singleSampleSupplierMap.containsKey(name))
+			singleSampleSupplierMap.put(name, singleSampleSupplier.get());
+
+		return singleSampleSupplierMap.get(name);
 	}
 
 	/**
 	 * @return a {@link Supplier} of additional twin (i.e., {@link Point2D})
-	 *         samples
+	 *         samples corresponding to the given name
 	 */
-	public Supplier<Point2D> getAdditionalTwinSample() {
+	public Supplier<Point2D> getAdditionalTwinSample(String name) {
 
-		return twinSampleSupplier.get();
+		if (!twinSampleSupplierMap.containsKey(name))
+			twinSampleSupplierMap.put(name, twinSampleSupplier.get());
+
+		return twinSampleSupplierMap.get(name);
 	}
 
 }
