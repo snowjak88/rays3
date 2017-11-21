@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.snowjak.rays3.Global;
@@ -44,13 +45,44 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 	private final AtomicInteger	samplesWaitingToRender;
 	private final AtomicInteger	samplesCurrentlyRenderingCount;
 
+	private final Semaphore		currentlyRenderingSemaphore;
+
+	/**
+	 * Construct a new {@link SimpleWhittedIntegrator}, allowing an unlimited
+	 * number of {@link Sample}s to be actively rendering at any point in time.
+	 * 
+	 * @param camera
+	 * @param film
+	 * @param sampler
+	 * @param maxRayDepth
+	 */
 	public SimpleWhittedIntegrator(Camera camera, Film film, Sampler sampler, int maxRayDepth) {
+		this(camera, film, sampler, maxRayDepth, 0);
+	}
+
+	/**
+	 * Construct a new {@link SimpleWhittedIntegrator}, allowing only, at most,
+	 * <code>limitConcurrentRenderingSamples</code> to be actively rendering.
+	 * 
+	 * @param camera
+	 * @param film
+	 * @param sampler
+	 * @param maxRayDepth
+	 * @param limitConcurrentRenderingSamples
+	 */
+	public SimpleWhittedIntegrator(Camera camera, Film film, Sampler sampler, int maxRayDepth,
+			int limitConcurrentRenderingSamples) {
 		super(camera, film, sampler);
 
 		this.maxRayDepth = maxRayDepth;
 		this.finishedGettingSamples = false;
 		this.samplesWaitingToRender = new AtomicInteger(0);
 		this.samplesCurrentlyRenderingCount = new AtomicInteger(0);
+
+		if (limitConcurrentRenderingSamples > 0)
+			this.currentlyRenderingSemaphore = new Semaphore(limitConcurrentRenderingSamples);
+		else
+			this.currentlyRenderingSemaphore = null;
 	}
 
 	@Override
@@ -63,7 +95,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 			samplesWaitingToRender.incrementAndGet();
 
 			Global.EXECUTOR.execute(new RenderSampleTask(world, currentSample, getCamera(), getFilm(), maxRayDepth,
-					samplesWaitingToRender, samplesCurrentlyRenderingCount));
+					samplesWaitingToRender, samplesCurrentlyRenderingCount, currentlyRenderingSemaphore));
 		}
 
 		this.finishedGettingSamples = true;
@@ -106,9 +138,12 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 		private final int			maxRayDepth;
 		private final AtomicInteger	samplesWaitingToRender;
 		private final AtomicInteger	samplesCurrentlyRenderingCount;
+		private final Semaphore		currentlyRenderingSemaphore;
+		private final boolean		isLimitCurrentlyRendering;
 
 		public RenderSampleTask(World world, Sample sample, Camera camera, Film film, int maxRayDepth,
-				AtomicInteger samplesWaitingToRender, AtomicInteger samplesCurrentlyRenderingCount) {
+				AtomicInteger samplesWaitingToRender, AtomicInteger samplesCurrentlyRenderingCount,
+				Semaphore currentlyRenderingSemaphore) {
 
 			super();
 			this.world = world;
@@ -118,10 +153,20 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 			this.maxRayDepth = maxRayDepth;
 			this.samplesWaitingToRender = samplesWaitingToRender;
 			this.samplesCurrentlyRenderingCount = samplesCurrentlyRenderingCount;
+			this.currentlyRenderingSemaphore = currentlyRenderingSemaphore;
+			this.isLimitCurrentlyRendering = ( currentlyRenderingSemaphore != null );
 		}
 
 		@Override
 		protected void compute() {
+
+			if (isLimitCurrentlyRendering)
+				try {
+					currentlyRenderingSemaphore.acquire();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 
 			this.samplesWaitingToRender.decrementAndGet();
 			this.samplesCurrentlyRenderingCount.incrementAndGet();
@@ -143,6 +188,9 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				film.addSample(sample, spectrum);
 
 			this.samplesCurrentlyRenderingCount.decrementAndGet();
+
+			if (isLimitCurrentlyRendering)
+				this.currentlyRenderingSemaphore.release();
 		}
 
 	}

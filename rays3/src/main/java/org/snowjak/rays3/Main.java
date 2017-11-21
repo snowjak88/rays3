@@ -32,7 +32,7 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		World world = new World();
+		final World world = new World();
 
 		for (double x = -5d; x <= 5d; x += 1d) {
 			for (double z = -5d; z <= 5d; z += 1d) {
@@ -63,13 +63,14 @@ public class Main {
 				Arrays.asList(new TranslationTransform(+5d, 5d, 0d)));
 		world.getLights().add(light);
 
-		Sampler sampler = new StratifiedSampler(800, 600, 4);
+		final Sampler sampler = new StratifiedSampler(800, 600, 4);
 
-		Camera camera = new PinholeCamera(800, 600, 4d, 3d, new Point(0, 1.5, -8), new Point(0, 0, 0), Vector.J, 5d);
+		final Camera camera = new PinholeCamera(800, 600, 4d, 3d, new Point(0, 1.5, -8), new Point(0, 0, 0), Vector.J,
+				5d);
 
-		SimpleImageFilm film = new SimpleImageFilm(800, 600, sampler);
+		final SimpleImageFilm film = new SimpleImageFilm(800, 600, sampler);
 
-		AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4);
+		final AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4, 128);
 
 		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(
 				() -> System.out.println(String.format("[%TT] (%,12d) --> [%,12d] --> {%,12d} --> (%,12d)", new Date(),
