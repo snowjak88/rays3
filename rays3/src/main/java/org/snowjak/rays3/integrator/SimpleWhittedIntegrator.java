@@ -1,17 +1,11 @@
 package org.snowjak.rays3.integrator;
 
-import java.util.LinkedList;
 import java.util.Optional;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.RecursiveTask;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import org.apache.commons.math3.distribution.EnumeratedDistribution;
-import org.apache.commons.math3.util.Pair;
 import org.snowjak.rays3.Global;
 import org.snowjak.rays3.World;
 import org.snowjak.rays3.bxdf.BDSF;
@@ -50,11 +44,8 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 	private final AtomicInteger	samplesWaitingToRender;
 	private final AtomicInteger	samplesCurrentlyRenderingCount;
 
-	private final Semaphore		currentlyRenderingSemaphore;
-
 	/**
-	 * Construct a new {@link SimpleWhittedIntegrator}, allowing an unlimited
-	 * number of {@link Sample}s to be actively rendering at any point in time.
+	 * Construct a new {@link SimpleWhittedIntegrator}.
 	 * 
 	 * @param camera
 	 * @param film
@@ -62,32 +53,12 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 	 * @param maxRayDepth
 	 */
 	public SimpleWhittedIntegrator(Camera camera, Film film, Sampler sampler, int maxRayDepth) {
-		this(camera, film, sampler, maxRayDepth, 0);
-	}
-
-	/**
-	 * Construct a new {@link SimpleWhittedIntegrator}, allowing only, at most,
-	 * <code>limitConcurrentRenderingSamples</code> to be actively rendering.
-	 * 
-	 * @param camera
-	 * @param film
-	 * @param sampler
-	 * @param maxRayDepth
-	 * @param limitConcurrentRenderingSamples
-	 */
-	public SimpleWhittedIntegrator(Camera camera, Film film, Sampler sampler, int maxRayDepth,
-			int limitConcurrentRenderingSamples) {
 		super(camera, film, sampler);
 
 		this.maxRayDepth = maxRayDepth;
 		this.finishedGettingSamples = false;
 		this.samplesWaitingToRender = new AtomicInteger(0);
 		this.samplesCurrentlyRenderingCount = new AtomicInteger(0);
-
-		if (limitConcurrentRenderingSamples > 0)
-			this.currentlyRenderingSemaphore = new Semaphore(limitConcurrentRenderingSamples);
-		else
-			this.currentlyRenderingSemaphore = null;
 	}
 
 	@Override
@@ -100,7 +71,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 			samplesWaitingToRender.incrementAndGet();
 
 			Global.EXECUTOR.execute(new RenderSampleTask(world, currentSample, getCamera(), getFilm(), maxRayDepth,
-					samplesWaitingToRender, samplesCurrentlyRenderingCount, currentlyRenderingSemaphore));
+					samplesWaitingToRender, samplesCurrentlyRenderingCount));
 		}
 
 		this.finishedGettingSamples = true;
@@ -143,12 +114,9 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 		private final int			maxRayDepth;
 		private final AtomicInteger	samplesWaitingToRender;
 		private final AtomicInteger	samplesCurrentlyRenderingCount;
-		private final Semaphore		currentlyRenderingSemaphore;
-		private final boolean		isLimitCurrentlyRendering;
 
 		public RenderSampleTask(World world, Sample sample, Camera camera, Film film, int maxRayDepth,
-				AtomicInteger samplesWaitingToRender, AtomicInteger samplesCurrentlyRenderingCount,
-				Semaphore currentlyRenderingSemaphore) {
+				AtomicInteger samplesWaitingToRender, AtomicInteger samplesCurrentlyRenderingCount) {
 
 			super();
 			this.world = world;
@@ -158,20 +126,10 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 			this.maxRayDepth = maxRayDepth;
 			this.samplesWaitingToRender = samplesWaitingToRender;
 			this.samplesCurrentlyRenderingCount = samplesCurrentlyRenderingCount;
-			this.currentlyRenderingSemaphore = currentlyRenderingSemaphore;
-			this.isLimitCurrentlyRendering = ( currentlyRenderingSemaphore != null );
 		}
 
 		@Override
 		protected void compute() {
-
-			if (isLimitCurrentlyRendering)
-				try {
-					currentlyRenderingSemaphore.acquire();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
 
 			this.samplesWaitingToRender.decrementAndGet();
 			this.samplesCurrentlyRenderingCount.incrementAndGet();
@@ -193,9 +151,6 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				film.addSample(sample, spectrum);
 
 			this.samplesCurrentlyRenderingCount.decrementAndGet();
-
-			if (isLimitCurrentlyRendering)
-				this.currentlyRenderingSemaphore.release();
 		}
 
 	}
@@ -286,8 +241,8 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 					// To bypass the reflection and transmission ray-following,
 					// we can simply treat them as already solved, with final
 					// radiance-values of BLACK.
-					incidentRadiance_reflection = new ConstantResultTask(RGBSpectrum.BLACK).fork();
-					incidentRadiance_transmission = new ConstantResultTask(RGBSpectrum.BLACK).fork();
+					incidentRadiance_reflection = new ConstantResultTask(RGBSpectrum.BLACK);
+					incidentRadiance_transmission = new ConstantResultTask(RGBSpectrum.BLACK);
 				} else {
 					//
 					// Follow both the reflected and transmitted rays.
@@ -296,13 +251,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 					// Construct both the reflected and transmitted rays.
 
 					//
-					// Notice that we have only the Future objects here. We will
-					// not try to access these Futures until we actually need
-					// them, right at the end of this method (when we total up
-					// all radiances).
-					//
-					incidentRadiance_reflection = new FollowRayRecursiveTask(reflectedRay, world, maxRayDepth, sample)
-							.fork();
+					incidentRadiance_reflection = new FollowRayRecursiveTask(reflectedRay, world, maxRayDepth, sample);
 					//
 					// Remember that transmission will only take place if this
 					// is NOT a case of Total Internal Reflection.
@@ -311,14 +260,14 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 
 						final Ray transmittedRay = new Ray(point, transmittedVector, ray);
 						incidentRadiance_transmission = new FollowRayRecursiveTask(transmittedRay, world, maxRayDepth,
-								sample).fork();
+								sample);
 					} else
 						//
 						// Given that this is a case of Total Internal
 						// Reflection, we don't have a transmission-direction.
 						// As such, we can treat the final "transmission"
 						// radiance as BLACK -- i.e., nothing.
-						incidentRadiance_transmission = new ConstantResultTask(RGBSpectrum.BLACK).fork();
+						incidentRadiance_transmission = new ConstantResultTask(RGBSpectrum.BLACK);
 				}
 
 				//
@@ -328,22 +277,21 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 
 					//
 					//
-					final EnumeratedDistribution<Vector> sampleLightVectorDistribution = new EnumeratedDistribution<>(
-							IntStream
-									.rangeClosed(1, sample.getSampler().getSamplesPerPixel())
-										.mapToObj(i -> l.sampleLightVector(point))
-										.map(v -> new Pair<>(v, l.probabilitySampleVector(point, v)))
-										.collect(Collectors.toCollection(LinkedList::new)));
-					final Vector sampledLightVector = sampleLightVectorDistribution.sample();
-					final double sampledLightProb = l.probabilitySampleVector(point, sampledLightVector);
 
-					final Spectrum radianceFromLight = l.getRadianceAt(sampledLightVector, relativeNormal).multiply(
-							sampledLightProb / sample.getSampler().getSamplesPerPixel());
-					if (!radianceFromLight.isBlack()) {
+					for (int i = 0; i < sample.getSampler().getSamplesPerPixel(); i++) {
+						final Vector sampledLightVector = l.sampleLightVector(point);
+						final double sampledLightProb = l.probabilitySampleVector(point, sampledLightVector);
 
-						if (Light.isVisibleFrom(world, point, Light.getLightSurfacePoint(point, sampledLightVector)))
+						final Spectrum radianceFromLight = l.getRadianceAt(sampledLightVector, relativeNormal).multiply(
+								sampledLightProb / sample.getSampler().getSamplesPerPixel());
 
-							totalLightRadiance = totalLightRadiance.add(radianceFromLight);
+						if (!radianceFromLight.isBlack()) {
+
+							if (Light.isVisibleFrom(world, point,
+									Light.getLightSurfacePoint(point, sampledLightVector)))
+
+								totalLightRadiance = totalLightRadiance.add(radianceFromLight);
+						}
 					}
 				}
 
@@ -361,9 +309,9 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				final Spectrum result = emissiveRadiance
 						.add(surfaceIrradiance)
 							.multiply(fresnel.getReflectance())
-							.add(incidentRadiance_reflection.join().multiply(fresnel.getReflectance()).multiply(
+							.add(incidentRadiance_reflection.invoke().multiply(fresnel.getReflectance()).multiply(
 									reflectedRay.getDirection().dotProduct(relativeNormal.asVector().normalize())))
-							.add(incidentRadiance_transmission.join().multiply(fresnel
+							.add(incidentRadiance_transmission.invoke().multiply(fresnel
 									.getTransmittance()));
 
 				return result;

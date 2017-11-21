@@ -19,7 +19,7 @@ import org.snowjak.rays3.geometry.shape.SphereShape;
 import org.snowjak.rays3.integrator.AbstractIntegrator;
 import org.snowjak.rays3.integrator.SimpleWhittedIntegrator;
 import org.snowjak.rays3.light.Light;
-import org.snowjak.rays3.light.PointLight;
+import org.snowjak.rays3.light.SphereLight;
 import org.snowjak.rays3.sample.Sampler;
 import org.snowjak.rays3.sample.StratifiedSampler;
 import org.snowjak.rays3.spectrum.RGB;
@@ -51,16 +51,8 @@ public class Main {
 						new ConstantTexture(new RGBSpectrum(RGB.WHITE).multiply(0.05))), 1000d));
 		world.getPrimitives().add(plane);
 
-		Light light = new PointLight(new RGBSpectrum(RGB.WHITE.multiply(64d)),
+		Light light = new SphereLight(new RGBSpectrum(RGB.WHITE.multiply(64d)),
 				Arrays.asList(new TranslationTransform(0d, 5d, 0d)));
-		world.getLights().add(light);
-
-		light = new PointLight(new RGBSpectrum(RGB.WHITE.multiply(64d)),
-				Arrays.asList(new TranslationTransform(-5d, 5d, 0d)));
-		world.getLights().add(light);
-
-		light = new PointLight(new RGBSpectrum(RGB.WHITE.multiply(64d)),
-				Arrays.asList(new TranslationTransform(+5d, 5d, 0d)));
 		world.getLights().add(light);
 
 		final Sampler sampler = new StratifiedSampler(800, 600, 4);
@@ -70,7 +62,7 @@ public class Main {
 
 		final SimpleImageFilm film = new SimpleImageFilm(800, 600, sampler);
 
-		final AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4, 128);
+		final AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4);
 
 		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(
 				() -> System.out.println(String.format("[%TT] (%,12d) --> [%,12d] --> {%,12d} --> (%,12d)", new Date(),
