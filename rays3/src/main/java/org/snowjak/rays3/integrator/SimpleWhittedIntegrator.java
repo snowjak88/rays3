@@ -1,12 +1,17 @@
 package org.snowjak.rays3.integrator;
 
+import java.util.LinkedList;
 import java.util.Optional;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import org.apache.commons.math3.distribution.EnumeratedDistribution;
+import org.apache.commons.math3.util.Pair;
 import org.snowjak.rays3.Global;
 import org.snowjak.rays3.World;
 import org.snowjak.rays3.bxdf.BDSF;
@@ -320,8 +325,20 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				//
 				Spectrum totalLightRadiance = new RGBSpectrum();
 				for (Light l : world.getLights()) {
-					final Vector sampledLightVector = l.sampleLightVector(point);
-					final Spectrum radianceFromLight = l.getRadianceAt(sampledLightVector, relativeNormal);
+
+					//
+					//
+					final EnumeratedDistribution<Vector> sampleLightVectorDistribution = new EnumeratedDistribution<>(
+							IntStream
+									.rangeClosed(1, sample.getSampler().getSamplesPerPixel())
+										.mapToObj(i -> l.sampleLightVector(point))
+										.map(v -> new Pair<>(v, l.probabilitySampleVector(point, v)))
+										.collect(Collectors.toCollection(LinkedList::new)));
+					final Vector sampledLightVector = sampleLightVectorDistribution.sample();
+					final double sampledLightProb = l.probabilitySampleVector(point, sampledLightVector);
+
+					final Spectrum radianceFromLight = l.getRadianceAt(sampledLightVector, relativeNormal).multiply(
+							sampledLightProb / sample.getSampler().getSamplesPerPixel());
 					if (!radianceFromLight.isBlack()) {
 
 						if (Light.isVisibleFrom(world, point, Light.getLightSurfacePoint(point, sampledLightVector)))
