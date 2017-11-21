@@ -39,6 +39,7 @@ import org.snowjak.rays3.spectrum.Spectrum;
 public class SimpleWhittedIntegrator extends AbstractIntegrator {
 
 	private final AtomicInteger	samplesSubmitted;
+	private final AtomicInteger	samplesWaitingToRender;
 	private final AtomicInteger	samplesCurrentlyRenderingCount;
 
 	private final int			maxRayDepth;
@@ -49,6 +50,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 		super(camera, film, sampler);
 
 		this.samplesSubmitted = new AtomicInteger(0);
+		this.samplesWaitingToRender = new AtomicInteger(0);
 		this.samplesCurrentlyRenderingCount = new AtomicInteger(0);
 		this.maxRayDepth = maxRayDepth;
 		this.finishedGettingSamples = false;
@@ -61,8 +63,10 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 
 		while (( currentSample = getSampler().getNextSample() ) != null) {
 
+			samplesWaitingToRender.incrementAndGet();
+
 			Global.EXECUTOR.execute(new RenderSampleTask(world, currentSample, getCamera(), getFilm(), maxRayDepth,
-					samplesCurrentlyRenderingCount));
+					samplesWaitingToRender, samplesCurrentlyRenderingCount));
 
 			samplesSubmitted.incrementAndGet();
 		}
@@ -74,6 +78,11 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 	public boolean isFinishedGettingSamples() {
 
 		return finishedGettingSamples;
+	}
+
+	public int countSamplesWaitingToRender() {
+
+		return samplesWaitingToRender.get();
 	}
 
 	public int countSamplesCurrentlyRendering() {
@@ -104,10 +113,11 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 		private final Camera		camera;
 		private final Film			film;
 		private final int			maxRayDepth;
+		private final AtomicInteger	samplesWaitingToRender;
 		private final AtomicInteger	samplesCurrentlyRenderingCount;
 
 		public RenderSampleTask(World world, Sample sample, Camera camera, Film film, int maxRayDepth,
-				AtomicInteger samplesCurrentlyRenderingCount) {
+				AtomicInteger samplesWaitingToRender, AtomicInteger samplesCurrentlyRenderingCount) {
 
 			super();
 			this.world = world;
@@ -115,12 +125,14 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 			this.camera = camera;
 			this.film = film;
 			this.maxRayDepth = maxRayDepth;
+			this.samplesWaitingToRender = samplesWaitingToRender;
 			this.samplesCurrentlyRenderingCount = samplesCurrentlyRenderingCount;
 		}
 
 		@Override
 		protected void compute() {
 
+			this.samplesWaitingToRender.decrementAndGet();
 			this.samplesCurrentlyRenderingCount.incrementAndGet();
 
 			//

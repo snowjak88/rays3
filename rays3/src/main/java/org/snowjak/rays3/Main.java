@@ -51,10 +51,17 @@ public class Main {
 
 		Light light = new PointLight(new RGBSpectrum(RGB.WHITE.multiply(64d)),
 				Arrays.asList(new TranslationTransform(0d, 5d, 0d)));
-
 		world.getLights().add(light);
 
-		Sampler sampler = new StratifiedSampler(800, 600, 1);
+		light = new PointLight(new RGBSpectrum(RGB.WHITE.multiply(64d)),
+				Arrays.asList(new TranslationTransform(-5d, 5d, 0d)));
+		world.getLights().add(light);
+
+		light = new PointLight(new RGBSpectrum(RGB.WHITE.multiply(64d)),
+				Arrays.asList(new TranslationTransform(+5d, 5d, 0d)));
+		world.getLights().add(light);
+
+		Sampler sampler = new StratifiedSampler(800, 600, 4);
 
 		Camera camera = new PinholeCamera(800, 600, 4d, 3d, new Point(0, 1.5, -8), new Point(0, 0, 0), Vector.J, 5d);
 
@@ -64,7 +71,7 @@ public class Main {
 
 		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(
 				() -> System.out.println(String.format("[%TT] (%,12d) --> [%,12d] --> {%,12d} --> (%,12d)", new Date(),
-						sampler.totalSamples(), Global.EXECUTOR.getQueuedSubmissionCount(),
+						sampler.totalSamples(), integrator.countSamplesWaitingToRender(),
 						integrator.countSamplesCurrentlyRendering(), film.countSamplesAdded())),
 				1, 1, TimeUnit.SECONDS);
 		Global.SCHEDULED_EXECUTOR.scheduleAtFixedRate(
