@@ -3,6 +3,7 @@ package org.snowjak.rays3;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.math3.util.FastMath;
@@ -82,8 +83,29 @@ public class Main {
 
 		integrator.render(world);
 
-		while (film.countSamplesAdded() < sampler.totalSamples()) {
-			// Do nothing.
+		//
+		//
+		// Use a CountDownLatch, coupled with a scheduled checker-thread, to
+		// wait this main thread until rendering is complete.
+		//
+		final CountDownLatch awaitUntilDone = new CountDownLatch(1);
+		//
+		// This is the scheduled checker-thread. It will signal the
+		// CountDownLatch when the given condition is reached.
+		//
+		Global.SCHEDULED_EXECUTOR.scheduleAtFixedRate(() -> {
+			if (film.countSamplesAdded() >= sampler.totalSamples())
+				awaitUntilDone.countDown();
+		}, 1, 1, TimeUnit.SECONDS);
+
+		//
+		// And here we wait until that Latch is signaled.
+		//
+		try {
+			awaitUntilDone.await();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
 		//
@@ -93,7 +115,13 @@ public class Main {
 			//
 			// Remember to shut down the global executors!
 			System.out.println("Shutting down worker threads ...");
-			// Global.EXECUTOR.shutdown();
+			//
+			// We need not explicitly shut down the batch-oriented EXECUTOR, a
+			// ForkJoinPool; those threads hosted by a ForkJoinPool are, as per
+			// the documentation, daemon threads, and are automatically stopped
+			// when the main thread exits.
+			//
+			// So we need only shut down the SCHEDULED_EXECUTOR.
 			Global.SCHEDULED_EXECUTOR.shutdown();
 
 			System.out.println("Writing image to file ...");
