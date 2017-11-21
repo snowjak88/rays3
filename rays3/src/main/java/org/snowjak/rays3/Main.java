@@ -15,6 +15,7 @@ import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.geometry.shape.PlaneShape;
 import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.geometry.shape.SphereShape;
+import org.snowjak.rays3.integrator.AbstractIntegrator;
 import org.snowjak.rays3.integrator.SimpleWhittedIntegrator;
 import org.snowjak.rays3.light.Light;
 import org.snowjak.rays3.light.PointLight;
@@ -67,7 +68,7 @@ public class Main {
 
 		SimpleImageFilm film = new SimpleImageFilm(800, 600, sampler);
 
-		SimpleWhittedIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4);
+		AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4);
 
 		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(
 				() -> System.out.println(String.format("[%TT] (%,12d) --> [%,12d] --> {%,12d} --> (%,12d)", new Date(),

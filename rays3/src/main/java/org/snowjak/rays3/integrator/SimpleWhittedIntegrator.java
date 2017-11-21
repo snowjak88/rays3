@@ -38,22 +38,19 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class SimpleWhittedIntegrator extends AbstractIntegrator {
 
-	private final AtomicInteger	samplesSubmitted;
+	private final int			maxRayDepth;
+	private boolean				finishedGettingSamples;
+
 	private final AtomicInteger	samplesWaitingToRender;
 	private final AtomicInteger	samplesCurrentlyRenderingCount;
-
-	private final int			maxRayDepth;
-
-	private boolean				finishedGettingSamples;
 
 	public SimpleWhittedIntegrator(Camera camera, Film film, Sampler sampler, int maxRayDepth) {
 		super(camera, film, sampler);
 
-		this.samplesSubmitted = new AtomicInteger(0);
-		this.samplesWaitingToRender = new AtomicInteger(0);
-		this.samplesCurrentlyRenderingCount = new AtomicInteger(0);
 		this.maxRayDepth = maxRayDepth;
 		this.finishedGettingSamples = false;
+		this.samplesWaitingToRender = new AtomicInteger(0);
+		this.samplesCurrentlyRenderingCount = new AtomicInteger(0);
 	}
 
 	@Override
@@ -67,8 +64,6 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 
 			Global.EXECUTOR.execute(new RenderSampleTask(world, currentSample, getCamera(), getFilm(), maxRayDepth,
 					samplesWaitingToRender, samplesCurrentlyRenderingCount));
-
-			samplesSubmitted.incrementAndGet();
 		}
 
 		this.finishedGettingSamples = true;
@@ -80,16 +75,6 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 		return finishedGettingSamples;
 	}
 
-	public int countSamplesWaitingToRender() {
-
-		return samplesWaitingToRender.get();
-	}
-
-	public int countSamplesCurrentlyRendering() {
-
-		return samplesCurrentlyRenderingCount.get();
-	}
-
 	@Override
 	public boolean isFinishedRenderingSamples() {
 
@@ -97,9 +82,15 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 	}
 
 	@Override
-	public int countSamplesSubmitted() {
+	public int countSamplesWaitingToRender() {
 
-		return samplesSubmitted.get();
+		return samplesWaitingToRender.get();
+	}
+
+	@Override
+	public int countSamplesCurrentlyRendering() {
+
+		return samplesCurrentlyRenderingCount.get();
 	}
 
 	public static class RenderSampleTask extends RecursiveAction {

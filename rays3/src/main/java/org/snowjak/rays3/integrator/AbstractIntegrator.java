@@ -38,11 +38,17 @@ public abstract class AbstractIntegrator {
 
 	public abstract void render(World world);
 
+	/**
+	 * @return <code>true</code> if the configured Sampler has no more
+	 *         {@link Sample}s to pick up
+	 */
 	public abstract boolean isFinishedGettingSamples();
-	
+
+	/**
+	 * @return <code>true</code> if this Integrator has finished rendering all
+	 *         {@link Sample}s
+	 */
 	public abstract boolean isFinishedRenderingSamples();
-	
-	public abstract int countSamplesSubmitted();
 
 	public Camera getCamera() {
 
@@ -58,4 +64,20 @@ public abstract class AbstractIntegrator {
 
 		return sampler;
 	}
+
+	/**
+	 * Count the number of Samples which this Integrator has picked up from its
+	 * {@link Sampler} and not yet begun processing.
+	 * 
+	 * @return
+	 */
+	public abstract int countSamplesWaitingToRender();
+
+	/**
+	 * Count the number of {@link Sample}s currently being rendered by this
+	 * Integrator.
+	 * 
+	 * @return
+	 */
+	public abstract int countSamplesCurrentlyRendering();
 }
