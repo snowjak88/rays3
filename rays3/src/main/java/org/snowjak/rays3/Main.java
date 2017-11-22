@@ -59,9 +59,9 @@ public class Main {
 			}
 		}
 
-		Primitive plane = new Primitive(new PlaneShape(Arrays.asList(new TranslationTransform(0d, -1d, 0d))),
+		Primitive plane = new Primitive(new PlaneShape(Arrays.asList(new TranslationTransform(0d, -0.5d, 0d))),
 				new LambertianBDRF(new CheckerboardTexture(new ConstantTexture(new RGBSpectrum(RGB.RED)),
-						new ConstantTexture(new RGBSpectrum(RGB.WHITE).multiply(0.05))), 1000d));
+						new ConstantTexture(new RGBSpectrum(RGB.WHITE).multiply(0.1))), 1000d));
 		world.getPrimitives().add(plane);
 
 		Light light = new SphereLight(new RGBSpectrum(RGB.WHITE.multiply(64d)),
