@@ -7,7 +7,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.math3.util.FastMath;
-import org.snowjak.rays3.bxdf.LambertianBDRF;
+import org.snowjak.rays3.bxdf.LambertianBRDF;
 import org.snowjak.rays3.camera.Camera;
 import org.snowjak.rays3.camera.PinholeCamera;
 import org.snowjak.rays3.film.SimpleImageFilm;
@@ -53,14 +53,14 @@ public class Main {
 
 				Primitive sphere = new Primitive(
 						new SphereShape(0.4, Arrays.asList(new TranslationTransform(x, 0d, z))),
-						new LambertianBDRF(new ConstantTexture(new RGBSpectrum(RGB.fromHSL(hue, saturation, 0.5d))), 2d,
+						new LambertianBRDF(new ConstantTexture(new RGBSpectrum(RGB.fromHSL(hue, saturation, 0.5d))), 10d,
 								FastMath.sqrt(x * x + z * z) <= 3d ? true : false));
 				world.getPrimitives().add(sphere);
 			}
 		}
 
 		Primitive plane = new Primitive(new PlaneShape(Arrays.asList(new TranslationTransform(0d, -0.5d, 0d))),
-				new LambertianBDRF(new CheckerboardTexture(new ConstantTexture(new RGBSpectrum(RGB.RED)),
+				new LambertianBRDF(new CheckerboardTexture(new ConstantTexture(new RGBSpectrum(RGB.RED)),
 						new ConstantTexture(new RGBSpectrum(RGB.WHITE).multiply(0.1))), 1000d));
 		world.getPrimitives().add(plane);
 

@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.snowjak.rays3.bxdf.BDSF.ReflectType;
+import org.snowjak.rays3.bxdf.BSDF.ReflectType;
 import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Point2D;
@@ -24,7 +24,7 @@ import org.snowjak.rays3.texture.Texture;
 
 public class LambertianBDRFTest {
 
-	private LambertianBDRF	bdrf;
+	private LambertianBRDF	bdrf;
 	private Primitive		primitive;
 	private Interaction		interaction;
 	private Sample			sample;
@@ -34,7 +34,7 @@ public class LambertianBDRFTest {
 
 		final Texture texture = new ConstantTexture(new RGBSpectrum(RGB.RED));
 		final Texture emissive = new ConstantTexture(new RGBSpectrum());
-		this.bdrf = new LambertianBDRF(texture, emissive, 1.3, false);
+		this.bdrf = new LambertianBRDF(texture, emissive, 1.3, false);
 
 		sample = new Sample(new SimplePseudorandomSampler(16, 16, 1), 8.5, 8.5, 0.5, 0.5);
 		primitive = new Primitive(new SphereShape(1.0), bdrf);

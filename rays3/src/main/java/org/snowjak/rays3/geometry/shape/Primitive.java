@@ -3,7 +3,7 @@ package org.snowjak.rays3.geometry.shape;
 import java.awt.Shape;
 import java.util.List;
 
-import org.snowjak.rays3.bxdf.BDSF;
+import org.snowjak.rays3.bxdf.BSDF;
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.intersect.Interactable;
 import org.snowjak.rays3.intersect.Interaction;
@@ -11,7 +11,7 @@ import org.snowjak.rays3.transform.Transform;
 import org.snowjak.rays3.transform.Transformable;
 
 /**
- * A Primitive encompasses both a {@link Shape} and a {@link BDSF}. While a
+ * A Primitive encompasses both a {@link Shape} and a {@link BSDF}. While a
  * Shape merely defines geometry, a Primitive gives that geometry color etc.
  * 
  * @author snowjak88
@@ -19,11 +19,11 @@ import org.snowjak.rays3.transform.Transformable;
 public class Primitive implements Interactable, Transformable {
 
 	private final AbstractShape	shape;
-	private final BDSF			bdsf;
+	private final BSDF			bsdf;
 
-	public Primitive(AbstractShape shape, BDSF bdsf) {
+	public Primitive(AbstractShape shape, BSDF bsdf) {
 		this.shape = shape;
-		this.bdsf = bdsf;
+		this.bsdf = bsdf;
 	}
 
 	public AbstractShape getShape() {
@@ -31,9 +31,9 @@ public class Primitive implements Interactable, Transformable {
 		return shape;
 	}
 
-	public BDSF getBdsf() {
+	public BSDF getBdsf() {
 
-		return bdsf;
+		return bsdf;
 	}
 
 	@Override

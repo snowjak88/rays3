@@ -1,6 +1,6 @@
 package org.snowjak.rays3.intersect;
 
-import org.snowjak.rays3.bxdf.BDSF;
+import org.snowjak.rays3.bxdf.BSDF;
 import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Point2D;
@@ -37,10 +37,10 @@ public class Interaction extends SurfaceDescriptor {
 	}
 
 	/**
-	 * @return the {@link BDSF} associated with the interacting point on the
+	 * @return the {@link BSDF} associated with the interacting point on the
 	 *         object
 	 */
-	public BDSF getBdsf() {
+	public BSDF getBdsf() {
 
 		return primitive.getBdsf();
 	}

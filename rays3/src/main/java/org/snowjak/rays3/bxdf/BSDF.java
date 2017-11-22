@@ -17,36 +17,36 @@ import org.snowjak.rays3.texture.Texture;
  * 
  * @author snowjak88
  */
-public abstract class BDSF {
+public abstract class BSDF {
 
 	private final double		indexOfRefraction;
 	private final Set<Property>	properties;
 
 	/**
-	 * Create a new {@link BDSF} with the given list of {@link Property} and the
+	 * Create a new {@link BSDF} with the given list of {@link Property} and the
 	 * default index-of-refraction of 1.0
 	 * 
 	 * @param properties
 	 */
-	public BDSF(Set<Property> properties) {
+	public BSDF(Set<Property> properties) {
 		this(properties, 1.0);
 	}
 
 	/**
-	 * Create a new {@link BDSF} with the given list of {@link Property} and
+	 * Create a new {@link BSDF} with the given list of {@link Property} and
 	 * index-of-refraction.
 	 * 
 	 * @param properties
 	 * @param indexOfRefraction
 	 */
-	public BDSF(Set<Property> properties, double indexOfRefraction) {
+	public BSDF(Set<Property> properties, double indexOfRefraction) {
 
 		this.properties = new HashSet<>(properties);
 		this.indexOfRefraction = indexOfRefraction;
 	}
 
 	/**
-	 * @return <code>true</code> if this {@link BDSF} is configured with the
+	 * @return <code>true</code> if this {@link BSDF} is configured with the
 	 *         given {@link Property}
 	 */
 	public boolean hasProperty(Property property) {
@@ -110,14 +110,14 @@ public abstract class BDSF {
 	 * Indicates that the given surface is capable of emitting radiance itself,
 	 * and should be considered as a light-source.
 	 * 
-	 * @return <code>true</code> if the given BDSF can possibly emit radiance
+	 * @return <code>true</code> if the given BSDF can possibly emit radiance
 	 */
 	public abstract boolean hasEmissiveRadiance();
 
 	/**
 	 * Given an intersection point <code>x</code>, an eye-vector
 	 * <code>w_e</code>, and a surface-normal <code>n</code>, create a
-	 * reflection vector within this BDSF's bounds. Implementations may opt to
+	 * reflection vector within this BSDF's bounds. Implementations may opt to
 	 * use importance sampling when selecting these samples.
 	 * 
 	 * @param x
@@ -151,12 +151,12 @@ public abstract class BDSF {
 	 * @param n
 	 *            the surface-normal at the point
 	 * @return the probability that the given reflection-vector lies within this
-	 *         BDSF
+	 *         BSDF
 	 */
 	public abstract double reflectionPDF(Point x, Vector w_e, Vector w_r, Normal n, ReflectType reflectType);
 
 	/**
-	 * @return this BDSF's index-of-refraction at the given point
+	 * @return this BSDF's index-of-refraction at the given point
 	 */
 	public double getIndexOfRefraction() {
 
@@ -164,7 +164,7 @@ public abstract class BDSF {
 	}
 
 	/**
-	 * Enumeration describing the various properties a {@link BDSF} instance can
+	 * Enumeration describing the various properties a {@link BSDF} instance can
 	 * have (and which will affect how the active {@link AbstractIntegrator}
 	 * will treat it).
 	 * 
@@ -172,27 +172,27 @@ public abstract class BDSF {
 	 */
 	public enum Property {
 		/**
-		 * Indicates that the given {@link BDSF} should be sampled for specular
+		 * Indicates that the given {@link BSDF} should be sampled for specular
 		 * reflection.
 		 */
 		REFLECT_SPECULAR,
 		/**
-		 * Indicates that the given {@link BDSF} should be sampled for diffuse
+		 * Indicates that the given {@link BSDF} should be sampled for diffuse
 		 * reflection.
 		 */
 		REFLECT_DIFFUSE,
 		/**
-		 * Indicates that the given {@link BDSF} should be sampled for
+		 * Indicates that the given {@link BSDF} should be sampled for
 		 * transmittance.
 		 */
 		TRANSMIT,
 		/**
-		 * Indicates that the given {@link BDSF} behaves like a dialetric
+		 * Indicates that the given {@link BSDF} behaves like a dialetric
 		 * material -- i.e., specularly-reflected light is tinted
 		 */
 		DIALECTRIC,
 		/**
-		 * Indicates that the given {@link BDSF} should be sampled for glossy
+		 * Indicates that the given {@link BSDF} should be sampled for glossy
 		 * reflection, when sampling for specular reflection
 		 */
 		GLOSSY

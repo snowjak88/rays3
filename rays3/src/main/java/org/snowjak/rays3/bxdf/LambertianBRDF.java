@@ -24,7 +24,7 @@ import org.snowjak.rays3.texture.Texture;
  * 
  * @author snowjak88
  */
-public class LambertianBDRF extends BDSF {
+public class LambertianBRDF extends BSDF {
 
 	private final Texture	texture;
 	private final Texture	emissive;
@@ -35,7 +35,7 @@ public class LambertianBDRF extends BDSF {
 	 * @param texture
 	 * @param indexOfRefraction
 	 */
-	public LambertianBDRF(Texture texture, double indexOfRefraction) {
+	public LambertianBRDF(Texture texture, double indexOfRefraction) {
 		this(texture, null, indexOfRefraction, true);
 	}
 
@@ -46,7 +46,7 @@ public class LambertianBDRF extends BDSF {
 	 * @param indexOfRefraction
 	 * @param allowsTransmittance
 	 */
-	public LambertianBDRF(Texture texture, double indexOfRefraction, boolean allowsTransmittance) {
+	public LambertianBRDF(Texture texture, double indexOfRefraction, boolean allowsTransmittance) {
 		this(texture, null, indexOfRefraction, allowsTransmittance);
 	}
 
@@ -59,7 +59,7 @@ public class LambertianBDRF extends BDSF {
 	 * @param indexOfRefraction
 	 * @param allowsTransmittance
 	 */
-	public LambertianBDRF(Texture texture, Texture emissive, double indexOfRefraction, boolean allowsTransmittance) {
+	public LambertianBRDF(Texture texture, Texture emissive, double indexOfRefraction, boolean allowsTransmittance) {
 		super(new HashSet<>(allowsTransmittance
 				? Arrays.asList(Property.REFLECT_DIFFUSE, Property.REFLECT_SPECULAR, Property.TRANSMIT)
 				: Arrays.asList(Property.REFLECT_DIFFUSE, Property.REFLECT_SPECULAR)), indexOfRefraction);
@@ -110,7 +110,7 @@ public class LambertianBDRF extends BDSF {
 		case DIFFUSE:
 			return sampleDiffuseReflectionVector(x, w_e, n, sample);
 		case SPECULAR:
-			return BDSF.getPerfectSpecularReflectionVector(w_e, n);
+			return BSDF.getPerfectSpecularReflectionVector(w_e, n);
 		default:
 			return null;
 		}
@@ -220,7 +220,7 @@ public class LambertianBDRF extends BDSF {
 		// reflection-vector being selected is 1 if that reflection-vector is
 		// perfectly specular, and 0 otherwise.
 		//
-		final Vector perfectSpecular = BDSF.getPerfectSpecularReflectionVector(w_e, n).normalize();
+		final Vector perfectSpecular = BSDF.getPerfectSpecularReflectionVector(w_e, n).normalize();
 		final Vector w_rn = w_r.normalize();
 
 		if (Global.isNear(w_rn.getX(), perfectSpecular.getX()) && Global.isNear(w_rn.getY(), perfectSpecular.getY())

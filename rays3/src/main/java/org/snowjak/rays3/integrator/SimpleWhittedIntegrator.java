@@ -4,9 +4,9 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 import org.snowjak.rays3.World;
-import org.snowjak.rays3.bxdf.BDSF;
-import org.snowjak.rays3.bxdf.BDSF.Property;
-import org.snowjak.rays3.bxdf.BDSF.ReflectType;
+import org.snowjak.rays3.bxdf.BSDF;
+import org.snowjak.rays3.bxdf.BSDF.Property;
+import org.snowjak.rays3.bxdf.BSDF.ReflectType;
 import org.snowjak.rays3.bxdf.FresnelApproximation;
 import org.snowjak.rays3.camera.Camera;
 import org.snowjak.rays3.film.Film;
@@ -58,7 +58,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 			final Point point = interaction.getPoint();
 			final Vector w_e = interaction.getInteractingRay().getDirection().negate();
 			final Normal n = interaction.getNormal();
-			final BDSF bdsf = interaction.getBdsf();
+			final BSDF bsdf = interaction.getBdsf();
 
 			final double n1;
 			final double n2;
@@ -113,9 +113,9 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 			//
 			// Determine the total radiance due to diffuse reflection.
 			final Spectrum diffuseRadiance;
-			if (bdsf.hasProperty(Property.REFLECT_DIFFUSE)) {
+			if (bsdf.hasProperty(Property.REFLECT_DIFFUSE)) {
 
-				final Spectrum surfaceColoration = bdsf.getReflectiveColoration(interaction, sample.getWavelength(),
+				final Spectrum surfaceColoration = bsdf.getReflectiveColoration(interaction, sample.getWavelength(),
 						sample.getT());
 
 				diffuseRadiance = totalLightRadiance.multiply(surfaceColoration).multiply(fresnel.getReflectance());
@@ -127,19 +127,19 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 			//
 			// Determine the total radiance due to specular reflection.
 			final Spectrum specularRadiance;
-			if (bdsf.hasProperty(Property.REFLECT_SPECULAR)) {
+			if (bsdf.hasProperty(Property.REFLECT_SPECULAR)) {
 
 				if (ray.getDepth() >= getMaxRayDepth())
 					specularRadiance = RGBSpectrum.BLACK;
 
 				else {
-					final Vector specularVector = bdsf.sampleReflectionVector(point, w_e, relativeNormal, sample,
+					final Vector specularVector = bsdf.sampleReflectionVector(point, w_e, relativeNormal, sample,
 							ReflectType.SPECULAR);
 					final Ray specularRay = new Ray(point, specularVector, ray);
 
 					final Spectrum specularTint;
-					if (bdsf.hasProperty(Property.DIALECTRIC))
-						specularTint = bdsf.getReflectiveColoration(interaction, sample.getWavelength(), sample.getT());
+					if (bsdf.hasProperty(Property.DIALECTRIC))
+						specularTint = bsdf.getReflectiveColoration(interaction, sample.getWavelength(), sample.getT());
 					else
 						specularTint = RGBSpectrum.WHITE;
 
@@ -156,7 +156,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 			//
 			// Determine the total radiance due to transmission.
 			final Spectrum transmitRadiance;
-			if (bdsf.hasProperty(Property.TRANSMIT)) {
+			if (bsdf.hasProperty(Property.TRANSMIT)) {
 
 				if (ray.getDepth() >= getMaxRayDepth())
 					transmitRadiance = RGBSpectrum.BLACK;
@@ -180,7 +180,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 			//
 			//
 			// Determine the total emissive radiance.
-			final Spectrum emissiveRadiance = bdsf.getEmissiveRadiance(interaction, sample.getWavelength(),
+			final Spectrum emissiveRadiance = bsdf.getEmissiveRadiance(interaction, sample.getWavelength(),
 					sample.getT());
 
 			//
