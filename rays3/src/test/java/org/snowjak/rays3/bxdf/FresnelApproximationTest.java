@@ -8,11 +8,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.snowjak.rays3.bxdf.BDSF.FresnelResult;
 import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Vector;
 
-public class BDSFTest {
+public class FresnelApproximationTest {
 
 	@Test
 	public void testFresnelResult() {
@@ -25,7 +24,7 @@ public class BDSFTest {
 		final Vector wt_1 = new Vector(cos(( 90d - 32.95 ) * PI / 180d), -sin(( 90 - 32.95 ) * PI / 180d), 0)
 				.normalize();
 		final double reflectance_1 = ( 0.04556 + 0.002075 ) / 2d;
-		final FresnelResult result1 = BDSF.calculateFresnel(we_1, n, n1, n2);
+		final FresnelApproximation result1 = new FresnelApproximation(we_1, n, n1, n2);
 
 		assertEquals("Result #1-reflectance not as expected", reflectance_1, result1.getReflectance(), 0.0001);
 		assertEquals("Result #1-transmittance not as expected", 1d - reflectance_1, result1.getTransmittance(), 0.0001);
@@ -47,7 +46,7 @@ public class BDSFTest {
 
 		final Vector we_2 = new Vector(-cos(( 75d ) * PI / 180d), sin(( 75d ) * PI / 180d), 0).normalize();
 		final Vector wr_2 = new Vector(-we_2.getX(), +we_2.getY(), +we_2.getZ()).normalize();
-		final FresnelResult result2 = BDSF.calculateFresnel(we_2, n, 5, 1);
+		final FresnelApproximation result2 = new FresnelApproximation(we_2, n, 5, 1);
 
 		assertEquals("Result #2-reflectance not as expected", 1d, result2.getReflectance(), 0.00001);
 		assertEquals("Result #2-transmittance not as expected", 0d, result2.getTransmittance(), 0.00001);

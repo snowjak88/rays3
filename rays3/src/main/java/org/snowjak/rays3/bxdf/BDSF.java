@@ -1,6 +1,5 @@
 package org.snowjak.rays3.bxdf;
 
-import static org.apache.commons.math3.util.FastMath.*;
 import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Vector;
@@ -147,12 +146,12 @@ public abstract class BDSF {
 	public abstract double reflectionPDF(Point x, Vector w_e, Vector w_r, Normal n);
 
 	/**
-	 * Calculate a {@link FresnelResult}, giving the relative fractions of
+	 * Calculate a {@link FresnelApproximation}, giving the relative fractions of
 	 * reflectance and transmittance that go into contributing to the total
 	 * incident light.
 	 * <p>
 	 * <strong>Note</strong> that this method merely calls the
-	 * {@link FresnelResult} constructor.
+	 * {@link FresnelApproximation} constructor.
 	 * </p>
 	 * 
 	 * @param w_e
@@ -167,10 +166,10 @@ public abstract class BDSF {
 	 *            <strong>w</strong><sub>e</sub> toward the surface)
 	 * @return a FresnelResult
 	 */
-	public static FresnelResult calculateFresnel(Vector w_e, Normal n, double leavingIndexOfRefraction,
+	public static FresnelApproximation calculateFresnel(Vector w_e, Normal n, double leavingIndexOfRefraction,
 			double enteringIndexOfRefraction) {
 
-		return new FresnelResult(w_e, n, leavingIndexOfRefraction, enteringIndexOfRefraction);
+		return new FresnelApproximation(w_e, n, leavingIndexOfRefraction, enteringIndexOfRefraction);
 	}
 
 	/**
@@ -179,141 +178,5 @@ public abstract class BDSF {
 	public double getIndexOfRefraction() {
 
 		return indexOfRefraction;
-	}
-
-	/**
-	 * Calculates and stores Schlick's approximation for reflection and
-	 * transmittance.
-	 * 
-	 * @author snowjak88
-	 */
-	public static class FresnelResult {
-
-		private final double	reflectance, transmittance;
-		private final Vector	reflectedDirection, transmittedDirection;
-
-		public FresnelResult(Vector w_e, Normal n, double leavingIndexOfRefraction, double enteringIndexOfRefraction) {
-
-			//
-			// Source:
-			// http://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
-			//
-			this.reflectance = calculateReflectance(w_e, n, leavingIndexOfRefraction, enteringIndexOfRefraction);
-			this.transmittance = 1d - this.reflectance;
-
-			this.reflectedDirection = getW_r(w_e, n);
-			this.transmittedDirection = getW_t(w_e, n, leavingIndexOfRefraction, enteringIndexOfRefraction);
-		}
-
-		/**
-		 * For a given eye-vector and surface-normal, compute the resulting
-		 * reflected vector (assuming perfect specular reflection).
-		 * 
-		 * @param w_e
-		 * @param n
-		 * @return
-		 */
-		private Vector getW_r(Vector w_e, Normal n) {
-
-			final Vector nv = n.asVector().normalize();
-			final Vector i = w_e.normalize();
-
-			final double cos_i = nv.dotProduct(i);
-			return i.negate().add(nv.multiply(2d * cos_i)).normalize();
-		}
-
-		/**
-		 * For a given eye-vector, surface-normal, and pair of
-		 * indices-of-refraction, compute the resulting transmitted vector (or
-		 * <code>null</code> if this is a case of Total Internal Reflection).
-		 * 
-		 * @param w_e
-		 * @param normal
-		 * @param n1
-		 * @param n2
-		 * @return
-		 */
-		private Vector getW_t(Vector w_e, Normal normal, double n1, double n2) {
-
-			final Vector normalv = normal.asVector().normalize();
-			final Vector i = w_e.normalize();
-
-			final double n = n1 / n2;
-			final double cos_i = normalv.dotProduct(i);
-			final double sin2_t = n * n * ( 1d - cos_i * cos_i );
-
-			if (sin2_t > 1d)
-				// This is a case of Total Internal Reflection -- so nothing is
-				// transmitted!
-				return null;
-
-			final double cos_t = sqrt(1d - sin2_t);
-			return i.negate().multiply(n).add(normalv.multiply(n * cos_i - cos_t)).normalize();
-		}
-
-		private double calculateReflectance(Vector w_e, Normal normal, double n1, double n2) {
-
-			final Vector normalv = normal.asVector().normalize();
-			final Vector i = w_e.normalize();
-
-			/*
-			 * final double r0 = pow(( n1 - n2 ) / ( n1 + n2 ), 2); final double
-			 * cos_x;
-			 * 
-			 * if (n1 > n2) { final double n = n1 / n2; final double cos_i =
-			 * normalv.dotProduct(i); final double sin2_t = n * n * ( 1d - cos_i
-			 * * cos_i ); if (sin2_t > 1d) // A case of Total Internal
-			 * Reflection return 1d;
-			 * 
-			 * cos_x = sqrt(1d - sin2_t);
-			 * 
-			 * } else {
-			 * 
-			 * cos_x = normalv.dotProduct(i); }
-			 * 
-			 * final double x = 1d - cos_x;
-			 * 
-			 * return r0 + ( 1d - r0 ) * pow(x, 5);
-			 */
-
-			final double n = n1 / n2;
-			final double cos_i = normalv.dotProduct(i);
-			final double sin2_t = n * n * ( 1d - cos_i * cos_i );
-
-			if (sin2_t > 1d)
-				// This is a case of Total Internal Reflection.
-				return 1d;
-
-			final double cos_t = sqrt(1d - sin2_t);
-			final double r0_rth = ( n1 * cos_i - n2 * cos_t ) / ( n1 * cos_i + n2 * cos_t );
-			final double r_par = ( n2 * cos_i - n1 * cos_t ) / ( n2 * cos_i + n1 * cos_t );
-			return min(max(( ( r0_rth * r0_rth + r_par * r_par ) / 2d ), 0d), 1d);
-
-		}
-
-		public Vector getReflectedDirection() {
-
-			return reflectedDirection;
-		}
-
-		public Vector getTransmittedDirection() {
-
-			return transmittedDirection;
-		}
-
-		public double getReflectance() {
-
-			return reflectance;
-		}
-
-		public double getTransmittance() {
-
-			return transmittance;
-		}
-
-		public boolean isTotalInternalReflection() {
-
-			return ( transmittedDirection == null );
-		}
 	}
 }
