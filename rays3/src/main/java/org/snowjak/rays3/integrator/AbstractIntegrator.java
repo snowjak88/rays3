@@ -126,7 +126,7 @@ public abstract class AbstractIntegrator {
 	 */
 	public boolean isFinishedRenderingSamples() {
 
-		return samplesCurrentlyRenderingCount.get() == 0;
+		return finishedGettingSamples && samplesWaitingToRender.get() == 0 && samplesCurrentlyRenderingCount.get() == 0;
 	}
 
 	/**
