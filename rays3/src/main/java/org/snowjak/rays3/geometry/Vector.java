@@ -88,7 +88,7 @@ public class Vector {
 
 	public Vector negate() {
 
-		return new Vector(-x, -y, -z);
+		return new Vector(-x, -y, -z, getMagnitude(), getMagnitudeSquared());
 	}
 
 	public Vector add(Vector addend) {

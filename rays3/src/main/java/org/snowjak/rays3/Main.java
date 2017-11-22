@@ -39,7 +39,7 @@ public class Main {
 
 		final SimpleImageFilm film = new SimpleImageFilm(800, 600, sampler);
 
-		final AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 9);
+		final AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4);
 
 		//
 		//
@@ -71,13 +71,13 @@ public class Main {
 		//
 		//
 		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(
-				() -> System.out.println(String.format("[%TT] (%,12d) --> [%,12d] --> {%,12d} --> (%,12d)", new Date(),
+				() -> System.out.println(String.format("[%TT] (%,12d) --> [%,12d] --> {%,6d} --> (%,12d)", new Date(),
 						sampler.totalSamples(), integrator.countSamplesWaitingToRender(),
 						integrator.countSamplesCurrentlyRendering(), film.countSamplesAdded())),
 				1, 1, TimeUnit.SECONDS);
 		Global.SCHEDULED_EXECUTOR.scheduleAtFixedRate(
 				() -> System.out
-						.println("[  TIME  ] ( TOT SAMPLE ) --> [ RENDR WAIT ] --> { RENDR ACTV } --> ( RESULT SAV )"),
+						.println("[  TIME  ] ( TOT SAMPLE ) --> [ RENDR WAIT ] --> { ACTV } --> ( RESULT SAV )"),
 				0, 60, TimeUnit.SECONDS);
 
 		integrator.render(world);
@@ -93,7 +93,7 @@ public class Main {
 		// CountDownLatch when the given condition is reached.
 		//
 		Global.SCHEDULED_EXECUTOR.scheduleAtFixedRate(() -> {
-			if (film.countSamplesAdded() >= sampler.totalSamples())
+			if (integrator.isFinishedRenderingSamples())
 				awaitUntilDone.countDown();
 		}, 1, 1, TimeUnit.SECONDS);
 

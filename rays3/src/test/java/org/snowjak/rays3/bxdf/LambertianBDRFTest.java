@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.snowjak.rays3.bxdf.BDSF.ReflectType;
 import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Point2D;
@@ -45,7 +46,7 @@ public class LambertianBDRFTest {
 	@Test
 	public void testGetReflectedRadiance() {
 
-		final Spectrum reflected = bdrf.getReflectableRadiance(interaction, new Vector(1, 1, 0).normalize(), null, 0.5);
+		final Spectrum reflected = bdrf.getReflectiveColoration(interaction, null, 0.5);
 
 		assertEquals("Reflected-Red was not as expected!", 1d, reflected.toRGB().getRed(), 0.00001);
 		assertEquals("Reflected-Green was not as expected!", 0d, reflected.toRGB().getGreen(), 0.00001);
@@ -63,12 +64,13 @@ public class LambertianBDRFTest {
 	}
 
 	@Test
-	public void testSampleReflectionVector() {
+	public void testSampleReflectionVector_diffuse() {
 
 		for (int i = 0; i < 32; i++) {
 
 			final Vector sampledReflection = bdrf.sampleReflectionVector(interaction.getPoint(),
-					interaction.getInteractingRay().getDirection().negate(), interaction.getNormal(), sample);
+					interaction.getInteractingRay().getDirection().negate(), interaction.getNormal(), sample,
+					ReflectType.DIFFUSE);
 			final double dotProduct = sampledReflection
 					.normalize()
 						.dotProduct(interaction.getNormal().asVector().normalize());
@@ -78,21 +80,59 @@ public class LambertianBDRFTest {
 	}
 
 	@Test
-	public void testReflectionPDF() {
+	public void testSampleReflectionVector_specular() {
+
+		final Vector sampledReflection = bdrf.sampleReflectionVector(interaction.getPoint(),
+				interaction.getInteractingRay().getDirection().negate(), interaction.getNormal(), sample,
+				ReflectType.SPECULAR);
+		final Vector expectedReflection = new Vector(1, 1, 0).normalize();
+
+		assertEquals("Specular reflection-X is not as expected!", expectedReflection.getX(), sampledReflection.getX(),
+				0.00001);
+		assertEquals("Specular reflection-Y is not as expected!", expectedReflection.getY(), sampledReflection.getY(),
+				0.00001);
+		assertEquals("Specular reflection-Z is not as expected!", expectedReflection.getZ(), sampledReflection.getZ(),
+				0.00001);
+
+	}
+
+	@Test
+	public void testReflectionPDF_diffuse() {
 
 		for (int i = 0; i < 32; i++) {
 
 			final Vector sampledReflection = bdrf.sampleReflectionVector(interaction.getPoint(),
-					interaction.getInteractingRay().getDirection().negate(), interaction.getNormal(), sample);
+					interaction.getInteractingRay().getDirection().negate(), interaction.getNormal(), sample,
+					ReflectType.DIFFUSE);
 			final double dotProduct = sampledReflection
 					.normalize()
 						.dotProduct(interaction.getNormal().asVector().normalize());
 
 			assertEquals("Reflection PDF is not as expected!", dotProduct / 2d,
 					bdrf.reflectionPDF(interaction.getPoint(), interaction.getInteractingRay().getDirection().negate(),
-							sampledReflection, interaction.getNormal()),
+							sampledReflection, interaction.getNormal(), ReflectType.DIFFUSE),
 					0.00001);
 		}
+	}
+
+	@Test
+	public void testReflectionPDF_specular() {
+
+		final Vector sampledReflection_specular = bdrf.sampleReflectionVector(interaction.getPoint(),
+				interaction.getInteractingRay().getDirection().negate(), interaction.getNormal(), sample,
+				ReflectType.SPECULAR);
+
+		assertEquals("Reflection PDF is not as expected!", 1d,
+				bdrf.reflectionPDF(interaction.getPoint(), interaction.getInteractingRay().getDirection().negate(),
+						sampledReflection_specular, interaction.getNormal(), ReflectType.SPECULAR),
+				0.00001);
+
+		final Vector sampledReflection_other = interaction.getInteractingRay().getDirection().negate();
+		
+		assertEquals("Reflection PDF is not as expected!", 0d,
+				bdrf.reflectionPDF(interaction.getPoint(), interaction.getInteractingRay().getDirection().negate(),
+						sampledReflection_other, interaction.getNormal(), ReflectType.SPECULAR),
+				0.00001);
 	}
 
 }

@@ -1,13 +1,16 @@
 package org.snowjak.rays3.integrator;
 
 import java.util.Optional;
-import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import org.snowjak.rays3.Global;
 import org.snowjak.rays3.World;
+import org.snowjak.rays3.bxdf.BDSF;
+import org.snowjak.rays3.bxdf.BDSF.Property;
+import org.snowjak.rays3.bxdf.BDSF.ReflectType;
 import org.snowjak.rays3.bxdf.FresnelApproximation;
 import org.snowjak.rays3.camera.Camera;
 import org.snowjak.rays3.film.Film;
@@ -69,7 +72,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 
 			samplesWaitingToRender.incrementAndGet();
 
-			Global.EXECUTOR.execute(new RenderSampleTask(world, currentSample, getCamera(), getFilm(), maxRayDepth,
+			Global.RENDER_EXECUTOR.execute(new RenderSampleTask(world, currentSample, getCamera(), getFilm(), maxRayDepth,
 					samplesWaitingToRender, samplesCurrentlyRenderingCount));
 		}
 
@@ -146,10 +149,10 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 					.invoke()
 						.multiply(1d / sample.getSampler().getSamplesPerPixel());
 
+			this.samplesCurrentlyRenderingCount.decrementAndGet();
+
 			if (sample.getSampler().isSampleAcceptable(sample, spectrum))
 				film.addSample(sample, spectrum);
-
-			this.samplesCurrentlyRenderingCount.decrementAndGet();
 		}
 
 	}
@@ -178,14 +181,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 		protected Spectrum compute() {
 
 			final Optional<Interaction> op_interaction = world
-					.getPrimitives()
-						.parallelStream()
-						.filter(p -> p.isInteracting(ray))
-						.map(p -> p.getIntersection(ray))
-						.filter(p -> p != null)
-						.sorted((i1, i2) -> Double.compare(i1.getInteractingRay().getCurrT(),
-								i2.getInteractingRay().getCurrT()))
-						.findFirst();
+					.getClosestInteraction(ray);
 
 			if (op_interaction.isPresent()) {
 
@@ -193,6 +189,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				final Point point = interaction.getPoint();
 				final Vector w_e = interaction.getInteractingRay().getDirection().negate();
 				final Normal n = interaction.getNormal();
+				final BDSF bdsf = interaction.getBdsf();
 
 				final double n1;
 				final double n2;
@@ -214,70 +211,18 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				}
 
 				//
-				// Start compiling total radiance emanating from this point by
-				// including emissive radiance.
 				//
-				final Spectrum emissiveRadiance = interaction.getBdsf().getEmissiveRadiance(interaction,
-						sample.getWavelength(), sample.getT());
-
+				// Allocate the Fresnel approximation.
 				final FresnelApproximation fresnel = new FresnelApproximation(w_e, relativeNormal, n1, n2);
-				final Vector reflectedVector = fresnel.getReflectedDirection();
-				final Vector transmittedVector = fresnel.getTransmittedDirection();
-
-				final Ray reflectedRay = new Ray(point, reflectedVector, ray);
 
 				//
 				//
-				// Should we follow the transmission and reflection rays?
-				// Or should we bypass them because we're at the maximum-allowed
-				// ray-depth?
-				//
-				final ForkJoinTask<Spectrum> incidentRadiance_reflection;
-				final ForkJoinTask<Spectrum> incidentRadiance_transmission;
-				//
-				if (ray.getDepth() >= maxRayDepth) {
-					//
-					// To bypass the reflection and transmission ray-following,
-					// we can simply treat them as already solved, with final
-					// radiance-values of BLACK.
-					incidentRadiance_reflection = new ConstantResultTask(RGBSpectrum.BLACK);
-					incidentRadiance_transmission = new ConstantResultTask(RGBSpectrum.BLACK);
-				} else {
-					//
-					// Follow both the reflected and transmitted rays.
-					//
-					//
-					// Construct both the reflected and transmitted rays.
+				// Calculate the total light radiance present at the given
+				// point.
+				final Spectrum totalLightRadiance = world.getLights().stream().map(l -> {
 
-					//
-					incidentRadiance_reflection = new FollowRayRecursiveTask(reflectedRay, world, maxRayDepth, sample);
-					//
-					// Remember that transmission will only take place if this
-					// is NOT a case of Total Internal Reflection.
-					//
-					if (!fresnel.isTotalInternalReflection()) {
+					return IntStream.range(0, sample.getSampler().getSamplesPerPixel()).mapToObj(i -> {
 
-						final Ray transmittedRay = new Ray(point, transmittedVector, ray);
-						incidentRadiance_transmission = new FollowRayRecursiveTask(transmittedRay, world, maxRayDepth,
-								sample);
-					} else
-						//
-						// Given that this is a case of Total Internal
-						// Reflection, we don't have a transmission-direction.
-						// As such, we can treat the final "transmission"
-						// radiance as BLACK -- i.e., nothing.
-						incidentRadiance_transmission = new ConstantResultTask(RGBSpectrum.BLACK);
-				}
-
-				//
-				//
-				Spectrum totalLightRadiance = new RGBSpectrum();
-				for (Light l : world.getLights()) {
-
-					//
-					//
-
-					for (int i = 0; i < sample.getSampler().getSamplesPerPixel(); i++) {
 						final Vector sampledLightVector = l.sampleLightVector(point, sample);
 						final double sampledLightProb = l.probabilitySampleVector(point, sampledLightVector, sample);
 
@@ -288,62 +233,99 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 
 							if (Light.isVisibleFrom(world, point,
 									Light.getLightSurfacePoint(point, sampledLightVector)))
-
-								totalLightRadiance = totalLightRadiance.add(radianceFromLight);
+								return radianceFromLight;
 						}
-					}
+						return RGBSpectrum.BLACK;
+
+					}).reduce(RGBSpectrum.BLACK, (s1, s2) -> s1.add(s2));
+
+				}).reduce(RGBSpectrum.BLACK, (s1, s2) -> s1.add(s2));
+
+				//
+				//
+				// Determine the total radiance due to diffuse reflection.
+				final Spectrum diffuseRadiance;
+				if (bdsf.hasProperty(Property.REFLECT_DIFFUSE)) {
+
+					final Spectrum surfaceColoration = bdsf.getReflectiveColoration(interaction, sample.getWavelength(),
+							sample.getT());
+
+					diffuseRadiance = totalLightRadiance.multiply(surfaceColoration).multiply(fresnel.getReflectance());
+				} else {
+					diffuseRadiance = RGBSpectrum.BLACK;
 				}
 
 				//
 				//
-				final Spectrum surfaceIrradiance = interaction
-						.getBdsf()
-							.getReflectableRadiance(interaction, reflectedVector, null, sample.getT())
-							.multiply(totalLightRadiance);
+				// Determine the total radiance due to specular reflection.
+				final Spectrum specularRadiance;
+				if (bdsf.hasProperty(Property.REFLECT_SPECULAR)) {
+
+					if (ray.getDepth() >= this.maxRayDepth)
+						specularRadiance = RGBSpectrum.BLACK;
+
+					else {
+						final Vector specularVector = bdsf.sampleReflectionVector(point, w_e, relativeNormal, sample,
+								ReflectType.SPECULAR);
+						final Ray specularRay = new Ray(point, specularVector, ray);
+
+						final Spectrum specularTint;
+						if (bdsf.hasProperty(Property.DIALECTRIC))
+							specularTint = bdsf.getReflectiveColoration(interaction, sample.getWavelength(),
+									sample.getT());
+						else
+							specularTint = RGBSpectrum.WHITE;
+
+						specularRadiance = new FollowRayRecursiveTask(specularRay, world, maxRayDepth, sample)
+								.invoke()
+									.multiply(fresnel.getReflectance())
+									.multiply(specularTint);
+
+					}
+				} else {
+					specularRadiance = RGBSpectrum.BLACK;
+				}
 
 				//
-				// Add together all incident radiances: emissive + (surface
-				// irradiance)
-				// + ( reflective * cos(angle of reflection) ) + transmitted
-				final Spectrum result = emissiveRadiance
-						.add(surfaceIrradiance)
-							.multiply(fresnel.getReflectance())
-							.add(incidentRadiance_reflection.invoke().multiply(fresnel.getReflectance()).multiply(
-									reflectedRay.getDirection().dotProduct(relativeNormal.asVector().normalize())))
-							.add(incidentRadiance_transmission.invoke().multiply(fresnel
-									.getTransmittance()));
+				//
+				// Determine the total radiance due to transmission.
+				final Spectrum transmitRadiance;
+				if (bdsf.hasProperty(Property.TRANSMIT)) {
 
-				return result;
+					if (ray.getDepth() >= this.maxRayDepth)
+						transmitRadiance = RGBSpectrum.BLACK;
+
+					else {
+
+						if (!fresnel.isTotalInternalReflection()) {
+
+							final Vector transmitVector = fresnel.getTransmittedDirection();
+							final Ray transmitRay = new Ray(point, transmitVector, ray);
+							transmitRadiance = new FollowRayRecursiveTask(transmitRay, world, maxRayDepth, sample)
+									.invoke()
+										.multiply(fresnel.getTransmittance());
+
+						} else {
+							transmitRadiance = RGBSpectrum.BLACK;
+						}
+					}
+				} else {
+					transmitRadiance = RGBSpectrum.BLACK;
+				}
+
+				//
+				//
+				// Determine the total emissive radiance.
+				final Spectrum emissiveRadiance = bdsf.getEmissiveRadiance(interaction, sample.getWavelength(),
+						sample.getT());
+
+				//
+				// And compile total radiance.
+				return emissiveRadiance.add(diffuseRadiance).add(specularRadiance).add(transmitRadiance);
 
 			} else {
 				return RGBSpectrum.BLACK;
 			}
-		}
-
-	}
-
-	/**
-	 * Used in place of a full-on {@link FollowRayRecursiveTask} when we already
-	 * know the result -- e.g., when it's a case of Total Internal Reflection
-	 * and we already know that no energy will be transmitted.
-	 * 
-	 * @author snowjak88
-	 */
-	private static class ConstantResultTask extends RecursiveTask<Spectrum> {
-
-		private static final long	serialVersionUID	= 5147703859633559447L;
-		private final Spectrum		result;
-
-		public ConstantResultTask(Spectrum result) {
-
-			super();
-			this.result = result;
-		}
-
-		@Override
-		protected Spectrum compute() {
-
-			return result;
 		}
 
 	}

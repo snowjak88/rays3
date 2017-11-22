@@ -16,10 +16,9 @@ public class Global {
 	public static final double						DOUBLE_TOLERANCE	= 1e-12;
 
 	/**
-	 * The central thread-executor. Whenever possible, submit your threads to
-	 * this executor.
+	 * The main rendering thread executor.
 	 */
-	public static final ForkJoinPool				EXECUTOR			= new ForkJoinPool();
+	public static final ForkJoinPool				RENDER_EXECUTOR		= new ForkJoinPool();
 
 	/**
 	 * A single thread allocated to execute periodic tasks. Note that there is

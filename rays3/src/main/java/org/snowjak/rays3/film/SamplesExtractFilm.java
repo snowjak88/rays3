@@ -40,7 +40,7 @@ public class SamplesExtractFilm implements Film {
 		}
 
 		if (fileWriter != null)
-			Global.EXECUTOR.submit(
+			Global.RENDER_EXECUTOR.submit(
 					new ResultAppendingRunnable(fileWriter, results, samplesAdded, sampler.totalSamples()));
 	}
 
