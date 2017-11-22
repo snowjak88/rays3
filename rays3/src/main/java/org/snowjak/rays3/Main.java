@@ -52,8 +52,9 @@ public class Main {
 				final double saturation = FastMath.sqrt(( x * x ) + ( z * z )) / FastMath.sqrt(5 * 5 + 5 * 5);
 
 				Primitive sphere = new Primitive(
-						new SphereShape(0.4, Arrays.asList(new TranslationTransform(x, 0d, z))), new LambertianBDRF(
-								new ConstantTexture(new RGBSpectrum(RGB.fromHSL(hue, saturation, 0.5d))), 2d));
+						new SphereShape(0.4, Arrays.asList(new TranslationTransform(x, 0d, z))),
+						new LambertianBDRF(new ConstantTexture(new RGBSpectrum(RGB.fromHSL(hue, saturation, 0.5d))), 2d,
+								FastMath.sqrt(x * x + z * z) <= 3d ? true : false));
 				world.getPrimitives().add(sphere);
 			}
 		}

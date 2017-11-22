@@ -34,7 +34,7 @@ public class LambertianBDRFTest {
 
 		final Texture texture = new ConstantTexture(new RGBSpectrum(RGB.RED));
 		final Texture emissive = new ConstantTexture(new RGBSpectrum());
-		this.bdrf = new LambertianBDRF(texture, emissive, 1.3);
+		this.bdrf = new LambertianBDRF(texture, emissive, 1.3, false);
 
 		sample = new Sample(new SimplePseudorandomSampler(16, 16, 1), 8.5, 8.5, 0.5, 0.5);
 		primitive = new Primitive(new SphereShape(1.0), bdrf);
@@ -128,7 +128,7 @@ public class LambertianBDRFTest {
 				0.00001);
 
 		final Vector sampledReflection_other = interaction.getInteractingRay().getDirection().negate();
-		
+
 		assertEquals("Reflection PDF is not as expected!", 0d,
 				bdrf.reflectionPDF(interaction.getPoint(), interaction.getInteractingRay().getDirection().negate(),
 						sampledReflection_other, interaction.getNormal(), ReflectType.SPECULAR),

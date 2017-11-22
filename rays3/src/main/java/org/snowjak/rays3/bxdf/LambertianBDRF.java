@@ -30,13 +30,24 @@ public class LambertianBDRF extends BDSF {
 	private final Texture	emissive;
 
 	/**
-	 * Construct a new Lambertian-style BDRF.
+	 * Construct a new Lambertian-style BDRF which allows transmittance.
 	 * 
 	 * @param texture
 	 * @param indexOfRefraction
 	 */
 	public LambertianBDRF(Texture texture, double indexOfRefraction) {
-		this(texture, null, indexOfRefraction);
+		this(texture, null, indexOfRefraction, true);
+	}
+
+	/**
+	 * Construct a new Lambertian-style BDRF.
+	 * 
+	 * @param texture
+	 * @param indexOfRefraction
+	 * @param allowsTransmittance
+	 */
+	public LambertianBDRF(Texture texture, double indexOfRefraction, boolean allowsTransmittance) {
+		this(texture, null, indexOfRefraction, allowsTransmittance);
 	}
 
 	/**
@@ -46,9 +57,12 @@ public class LambertianBDRF extends BDSF {
 	 * @param emissive
 	 *            <code>null</code> if this BDRF does not emit any radiance
 	 * @param indexOfRefraction
+	 * @param allowsTransmittance
 	 */
-	public LambertianBDRF(Texture texture, Texture emissive, double indexOfRefraction) {
-		super(new HashSet<>(Arrays.asList(Property.REFLECT_DIFFUSE, Property.REFLECT_SPECULAR, Property.TRANSMIT)), indexOfRefraction);
+	public LambertianBDRF(Texture texture, Texture emissive, double indexOfRefraction, boolean allowsTransmittance) {
+		super(new HashSet<>(allowsTransmittance
+				? Arrays.asList(Property.REFLECT_DIFFUSE, Property.REFLECT_SPECULAR, Property.TRANSMIT)
+				: Arrays.asList(Property.REFLECT_DIFFUSE, Property.REFLECT_SPECULAR)), indexOfRefraction);
 
 		this.texture = texture;
 		this.emissive = emissive;
