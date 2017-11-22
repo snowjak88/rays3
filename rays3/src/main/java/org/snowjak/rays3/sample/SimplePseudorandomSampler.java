@@ -13,8 +13,8 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class SimplePseudorandomSampler extends Sampler {
 
-	private int							currFilmX, currFilmY;
-	private int							currSamplePerPixel;
+	private int	currFilmX, currFilmY;
+	private int	currSamplePerPixel;
 
 	public SimplePseudorandomSampler(int filmSizeX, int filmSizeY, int samplesPerPixel) {
 
@@ -51,6 +51,14 @@ public class SimplePseudorandomSampler extends Sampler {
 		final double imageX_scattered = currImageX + imageXScatter, imageY_scattered = currImageY + imageYScatter;
 
 		return new Sample(this, imageX_scattered, imageY_scattered, Global.RND.nextDouble(), Global.RND.nextDouble());
+	}
+
+	@Override
+	public void reset() {
+
+		this.currFilmX = this.getMinFilmX();
+		this.currFilmY = this.getMinFilmY();
+		this.currSamplePerPixel = -1;
 	}
 
 	@Override

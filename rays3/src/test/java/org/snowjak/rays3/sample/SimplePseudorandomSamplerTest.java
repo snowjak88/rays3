@@ -53,6 +53,28 @@ public class SimplePseudorandomSamplerTest {
 	}
 
 	@Test
+	public void testReset() {
+
+		final Sample sample1 = sampler.getNextSample();
+		final Sample sample2 = sampler.getNextSample();
+
+		sampler.reset();
+
+		final Sample sample3 = sampler.getNextSample();
+		final Sample sample4 = sampler.getNextSample();
+
+		assertEquals("Sample-1-image-X != sample-3-image-X!", Film.convertContinuousToDiscrete(sample1.getImageX()),
+				Film.convertContinuousToDiscrete(sample3.getImageX()), 0.001);
+		assertEquals("Sample-1-image-Y != sample-3-image-Y!", Film.convertContinuousToDiscrete(sample1.getImageY()),
+				Film.convertContinuousToDiscrete(sample3.getImageY()), 0.001);
+		
+		assertEquals("Sample-2-image-X != sample-4-image-X!", Film.convertContinuousToDiscrete(sample2.getImageX()),
+				Film.convertContinuousToDiscrete(sample4.getImageX()), 0.001);
+		assertEquals("Sample-2-image-Y != sample-4-image-Y!", Film.convertContinuousToDiscrete(sample2.getImageY()),
+				Film.convertContinuousToDiscrete(sample4.getImageY()), 0.001);
+	}
+
+	@Test
 	public void testIsSampleAcceptable() {
 
 		assertTrue("Sample should be always acceptable for Simple Samplers", sampler.isSampleAcceptable(null, null));

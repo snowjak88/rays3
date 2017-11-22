@@ -27,11 +27,11 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class StratifiedSampler extends Sampler {
 
-	private int						currFilmX, currFilmY, currPixelSample;
+	private int					currFilmX, currFilmY, currPixelSample;
+	private final int			gridSideSize;
 
-	private final Supplier<Point2D>	imageSamples, lensSamples;
-	private final Supplier<Double>	timeSamples;
-	private final int				gridSideSize;
+	private Supplier<Point2D>	imageSamples, lensSamples;
+	private Supplier<Double>	timeSamples;
 
 	/**
 	 * Create a new StratifiedSampler.
@@ -98,6 +98,18 @@ public class StratifiedSampler extends Sampler {
 					}
 
 				});
+	}
+
+	@Override
+	public void reset() {
+
+		currFilmX = 0;
+		currFilmY = 0;
+		currPixelSample = -1;
+
+		imageSamples = new Stratified2DSupplier(gridSideSize);
+		lensSamples = new Stratified2DSupplier(gridSideSize);
+		timeSamples = new Stratified1DSupplier(gridSideSize);
 	}
 
 	@Override

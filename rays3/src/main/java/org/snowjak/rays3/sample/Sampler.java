@@ -56,6 +56,12 @@ public abstract class Sampler {
 	protected abstract Sample generateNextSample();
 
 	/**
+	 * Reset this {@link Sampler} to a virginal state, effectively re-filling
+	 * the {@link Sample}s available via {@link #getNextSample()}.
+	 */
+	public abstract void reset();
+
+	/**
 	 * @return the total count of {@link Sample}s this Sampler is expected to
 	 *         create
 	 */
