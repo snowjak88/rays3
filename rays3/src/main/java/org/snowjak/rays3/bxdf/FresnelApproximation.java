@@ -19,7 +19,7 @@ public class FresnelApproximation {
 	private final Normal	n;
 	private final double	n1, n2;
 
-	private double			reflectance					= -1d;
+	private Double			reflectance					= null;
 	private Vector			reflectedDirection			= null, transmittedDirection = null;
 
 	private Boolean			isTotalInternalReflection	= null;
@@ -94,7 +94,7 @@ public class FresnelApproximation {
 
 	public double getReflectance() {
 
-		if (reflectance < 0d)
+		if (reflectance != null)
 			return reflectance;
 
 		final Vector normalv = n.asVector().normalize();
