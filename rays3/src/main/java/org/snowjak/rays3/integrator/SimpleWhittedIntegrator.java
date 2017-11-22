@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.snowjak.rays3.Global;
 import org.snowjak.rays3.World;
-import org.snowjak.rays3.bxdf.BDSF;
 import org.snowjak.rays3.bxdf.FresnelApproximation;
 import org.snowjak.rays3.camera.Camera;
 import org.snowjak.rays3.film.Film;
@@ -221,7 +220,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 				final Spectrum emissiveRadiance = interaction.getBdsf().getEmissiveRadiance(interaction,
 						sample.getWavelength(), sample.getT());
 
-				final FresnelApproximation fresnel = BDSF.calculateFresnel(w_e, relativeNormal, n1, n2);
+				final FresnelApproximation fresnel = new FresnelApproximation(w_e, relativeNormal, n1, n2);
 				final Vector reflectedVector = fresnel.getReflectedDirection();
 				final Vector transmittedVector = fresnel.getTransmittedDirection();
 

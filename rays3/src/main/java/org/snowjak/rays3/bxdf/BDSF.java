@@ -146,33 +146,6 @@ public abstract class BDSF {
 	public abstract double reflectionPDF(Point x, Vector w_e, Vector w_r, Normal n);
 
 	/**
-	 * Calculate a {@link FresnelApproximation}, giving the relative fractions of
-	 * reflectance and transmittance that go into contributing to the total
-	 * incident light.
-	 * <p>
-	 * <strong>Note</strong> that this method merely calls the
-	 * {@link FresnelApproximation} constructor.
-	 * </p>
-	 * 
-	 * @param w_e
-	 *            vector from the surface toward the eye
-	 * @param n
-	 *            surface-normal at the point of interaction
-	 * @param leavingIndexOfRefraction
-	 *            index-of-refraction of the material light is coming from
-	 *            (along <strong>w</strong><sub>e</sub> toward the surface)
-	 * @param enteringIndexOfRefraction
-	 *            index-of-refraction of the material light is entering (along
-	 *            <strong>w</strong><sub>e</sub> toward the surface)
-	 * @return a FresnelResult
-	 */
-	public static FresnelApproximation calculateFresnel(Vector w_e, Normal n, double leavingIndexOfRefraction,
-			double enteringIndexOfRefraction) {
-
-		return new FresnelApproximation(w_e, n, leavingIndexOfRefraction, enteringIndexOfRefraction);
-	}
-
-	/**
 	 * @return this BDSF's index-of-refraction at the given point
 	 */
 	public double getIndexOfRefraction() {
