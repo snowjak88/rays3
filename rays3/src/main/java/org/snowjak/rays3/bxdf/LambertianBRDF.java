@@ -1,16 +1,13 @@
 package org.snowjak.rays3.bxdf;
 
+import static org.apache.commons.math3.util.FastMath.PI;
+import static org.apache.commons.math3.util.FastMath.cos;
+import static org.apache.commons.math3.util.FastMath.sin;
+import static org.apache.commons.math3.util.FastMath.sqrt;
+
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.function.Supplier;
 
-import org.apache.commons.math3.distribution.EnumeratedDistribution;
-import org.apache.commons.math3.util.Pair;
-import org.snowjak.rays3.Global;
-import org.snowjak.rays3.geometry.Normal;
-import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Point2D;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.intersect.Interaction;
@@ -36,18 +33,7 @@ public class LambertianBRDF extends BSDF {
 	 * @param indexOfRefraction
 	 */
 	public LambertianBRDF(Texture texture, double indexOfRefraction) {
-		this(texture, null, indexOfRefraction, true);
-	}
-
-	/**
-	 * Construct a new Lambertian-style BDRF.
-	 * 
-	 * @param texture
-	 * @param indexOfRefraction
-	 * @param allowsTransmittance
-	 */
-	public LambertianBRDF(Texture texture, double indexOfRefraction, boolean allowsTransmittance) {
-		this(texture, null, indexOfRefraction, allowsTransmittance);
+		this(texture, null, indexOfRefraction);
 	}
 
 	/**
@@ -57,177 +43,73 @@ public class LambertianBRDF extends BSDF {
 	 * @param emissive
 	 *            <code>null</code> if this BDRF does not emit any radiance
 	 * @param indexOfRefraction
-	 * @param allowsTransmittance
 	 */
-	public LambertianBRDF(Texture texture, Texture emissive, double indexOfRefraction, boolean allowsTransmittance) {
-		super(new HashSet<>(allowsTransmittance
-				? Arrays.asList(Property.REFLECT_DIFFUSE, Property.REFLECT_SPECULAR, Property.TRANSMIT)
-				: Arrays.asList(Property.REFLECT_DIFFUSE, Property.REFLECT_SPECULAR)), indexOfRefraction);
+	public LambertianBRDF(Texture texture, Texture emissive, double indexOfRefraction) {
+		super(new HashSet<>(Arrays.asList(Property.REFLECT_DIFFUSE)), indexOfRefraction);
 
 		this.texture = texture;
 		this.emissive = emissive;
 	}
 
 	@Override
-	public Spectrum getReflectiveColoration(Interaction interaction, Spectrum lambda, double t) {
+	public Spectrum sampleL_e(Interaction interaction, Sample sample) {
 
-		Spectrum irradiance = texture.evaluate(interaction);
+		if (this.emissive == null)
+			return RGBSpectrum.BLACK;
 
-		// Ensure that we're selecting only the desired
-		// energy-wavelengths (if that parameter is supplied).
-		if (lambda != null)
-			irradiance = irradiance.multiply(lambda);
+		if (sample.getWavelength() == null)
+			return this.emissive.evaluate(interaction);
 
-		return irradiance;
+		return this.emissive.evaluate(interaction).multiply(sample.getWavelength());
 	}
 
 	@Override
-	public Spectrum getEmissiveRadiance(Interaction interaction, Spectrum lambda, double t) {
+	public Vector sampleW_o(Interaction interaction, Sample sample) {
 
-		Spectrum radiance;
+		//
+		//
+		// For a simple Lambertian BRDF, we can simply choose any direction in
+		// the hemisphere centered around the surface normal.
+		//
+		final Point2D sampledPoint = sample.getAdditionalTwinSample("Lambert-W_o").get();
 
-		if (emissive == null)
-			radiance = new RGBSpectrum();
-		else
-			radiance = emissive.evaluate(interaction);
+		final double sin2_theta = sampledPoint.getX(); // the uniform random
+														 // number is equal to
+														 // sin^2(theta)
+		final double cos2_theta = 1d - sin2_theta; // cos^2(x) + sin^2(x) = 1
+		final double sin_theta = sqrt(sin2_theta);
+		final double cos_theta = sqrt(cos2_theta);
+		final double orientation = sampledPoint.getY() * 2d * PI;
+		//
+		//
+		//
+		final double x = sin_theta * cos(orientation);
+		final double y = cos_theta;
+		final double z = sin_theta * sin(orientation);
 
-		if (lambda != null)
-			radiance = radiance.multiply(lambda);
-
-		return radiance;
+		//
+		//
+		// Construct a coordinate system centered around the surface-normal.
+		final Vector j = interaction.getNormal().asVector().normalize();
+		final Vector i = j.orthogonal();
+		final Vector k = i.crossProduct(j);
+		//
+		//
+		// Convert the Cartesian coordinates to a Vector in the constructed
+		// coordinate system.
+		return i.multiply(x).add(j.multiply(y)).add(k.multiply(z)).normalize();
 	}
 
 	@Override
-	public boolean hasEmissiveRadiance() {
-
-		return ( emissive != null );
-	}
-
-	@Override
-	public Vector sampleReflectionVector(Point x, Vector w_e, Normal n, Sample sample, ReflectType reflectType) {
-
-		switch (reflectType) {
-		case DIFFUSE:
-			return sampleDiffuseReflectionVector(x, w_e, n, sample);
-		case SPECULAR:
-			return BSDF.getPerfectSpecularReflectionVector(w_e, n);
-		default:
-			return null;
-		}
-	}
-
-	private Vector sampleDiffuseReflectionVector(Point x, Vector w_e, Normal n, Sample sample) {
+	public Spectrum f_r(Interaction interaction, Sample sample, Vector w_o) {
 
 		//
-		// For a perfectly-diffuse BDRF, reflection vectors may be selected
-		// from the hemisphere centered on the surface-point, with its zenith at
-		// the surface-normal.
 		//
+		final double cos_i = interaction.getNormal().asVector().normalize().dotProduct(w_o.normalize());
+		if (cos_i < 0d)
+			return RGBSpectrum.BLACK;
 
-		//
-		// Let's construct a coordinate system about n -- call it Nv, Pv, Qv.
-		final Vector nv = n.asVector().normalize();
-		final Vector pv = nv.orthogonal().normalize();
-		final Vector qv = nv.crossProduct(pv).normalize();
-
-		//
-		// Now compile a distribution of candidate reflection-vectors, and
-		// select one of them.
-		//
-		List<Pair<Vector, Double>> reflectionVectors = new LinkedList<>();
-		for (int c = 0; c < sample.getSampler().getSamplesPerPixel(); c++) {
-
-			//
-			// Select 3 factors, one for each of the new basis-vectors.
-			// i --> N, j --> P, k --> Q
-			//
-			// Note that i is not scaled onto the interval [-1,1]. We want to
-			// select
-			// from the hemisphere pointing along N -- and so we only want to go
-			// along N.
-			//
-			Supplier<Double> reflectionISampler = sample.getAdditionalSingleSampleSupplier("Lambert-diffuse-reflect");
-			Supplier<Point2D> reflectionJKSampler = sample.getAdditionalTwinSample("Lambert-diffuse-reflect");
-
-			final double i = reflectionISampler.get();
-			final Point2D jk = reflectionJKSampler.get();
-
-			double j = ( 2d * jk.getX() ) - 1d;
-			double k = ( 2d * jk.getY() ) - 1d;
-			//
-			// Assemble the new reflection vector.
-			//
-			// @formatter:off
-			Vector reflection = nv.multiply(i)
-								.add(pv.multiply(j))
-								.add(qv.multiply(k))
-								.normalize();
-			// @formatter:on
-			//
-			reflectionVectors.add(new Pair<>(reflection, reflection.dotProduct(nv)));
-		}
-		//
-		//
-		EnumeratedDistribution<Vector> reflectionDistribution = new EnumeratedDistribution<>(reflectionVectors);
-
-		return reflectionDistribution.sample();
-	}
-
-	@Override
-	public double reflectionPDF(Point x, Vector w_e, Vector w_r, Normal n, ReflectType reflectType) {
-
-		switch (reflectType) {
-		case DIFFUSE:
-			return reflectionPDF_diffuse(x, w_e, w_r, n);
-		case SPECULAR:
-			return reflectionPDF_specular(x, w_e, w_r, n);
-		default:
-			return 0d;
-		}
-	}
-
-	private double reflectionPDF_diffuse(Point x, Vector w_e, Vector w_r, Normal n) {
-
-		//
-		// For a Lambertian (perfectly-diffuse) BDRF, the probability of a
-		// given diffuse reflection-vector being chosen is directly proportional
-		// to the cosine of the angle between it and the surface-normal.
-		//
-		// Of course, if the dot-product is negative, the probability of
-		// this reflection-vector arising is 0.
-		//
-		double dotProduct = w_r.normalize().dotProduct(n.asVector().normalize());
-		if (dotProduct < 0d)
-			return 0;
-		//
-		// We cannot simply return the dot-product of w_r and n, however.
-		// Remember that the integral of the PDF across its whole range must
-		// equal 1.
-		// We therefore need to normalize the particular dot-product by dividing
-		// it by that integral.
-		//
-		// And according to Wolfram Alpha, the integral of cos(x),
-		// for x = -pi/2..+pi/2,
-		// is 2.
-		//
-		return dotProduct / 2d;
-	}
-
-	private double reflectionPDF_specular(Point x, Vector w_e, Vector w_r, Normal n) {
-
-		//
-		// For a Lambertian BDRF, the probability of a given specular
-		// reflection-vector being selected is 1 if that reflection-vector is
-		// perfectly specular, and 0 otherwise.
-		//
-		final Vector perfectSpecular = BSDF.getPerfectSpecularReflectionVector(w_e, n).normalize();
-		final Vector w_rn = w_r.normalize();
-
-		if (Global.isNear(w_rn.getX(), perfectSpecular.getX()) && Global.isNear(w_rn.getY(), perfectSpecular.getY())
-				&& Global.isNear(w_rn.getZ(), perfectSpecular.getZ()))
-			return 1d;
-		else
-			return 0d;
+		return texture.evaluate(interaction).multiply(cos_i);
 	}
 
 	public Texture getTexture() {

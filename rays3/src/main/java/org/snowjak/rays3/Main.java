@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.math3.util.FastMath;
+import static org.apache.commons.math3.util.FastMath.*;
 import org.snowjak.rays3.bxdf.LambertianBRDF;
 import org.snowjak.rays3.camera.Camera;
 import org.snowjak.rays3.camera.PinholeCamera;
@@ -17,13 +17,14 @@ import org.snowjak.rays3.geometry.shape.PlaneShape;
 import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.geometry.shape.SphereShape;
 import org.snowjak.rays3.integrator.AbstractIntegrator;
-import org.snowjak.rays3.integrator.SimpleWhittedIntegrator;
+import org.snowjak.rays3.integrator.SimplePathTracingIntegrator;
 import org.snowjak.rays3.light.Light;
 import org.snowjak.rays3.light.SphereLight;
 import org.snowjak.rays3.sample.Sampler;
 import org.snowjak.rays3.sample.StratifiedSampler;
 import org.snowjak.rays3.spectrum.RGB;
 import org.snowjak.rays3.spectrum.RGBSpectrum;
+import org.snowjak.rays3.spectrum.Spectrum;
 import org.snowjak.rays3.texture.CheckerboardTexture;
 import org.snowjak.rays3.texture.ConstantTexture;
 import org.snowjak.rays3.transform.TranslationTransform;
@@ -32,14 +33,14 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		final Sampler sampler = new StratifiedSampler(800, 600, 4);
+		final Sampler sampler = new StratifiedSampler(800, 600, 64);
 
 		final Camera camera = new PinholeCamera(800, 600, 4d, 3d, new Point(2, 2.1, -8), new Point(0, 0, 0), Vector.J,
 				5d);
 
 		final SimpleImageFilm film = new SimpleImageFilm(800, 600, sampler);
 
-		final AbstractIntegrator integrator = new SimpleWhittedIntegrator(camera, film, sampler, 4);
+		final AbstractIntegrator integrator = new SimplePathTracingIntegrator(camera, film, sampler, 4);
 
 		//
 		//
@@ -48,19 +49,21 @@ public class Main {
 
 		for (double x = -5d; x <= 5d; x += 1d) {
 			for (double z = -5d; z <= 5d; z += 1d) {
-				final double hue = FastMath.atan2(z, x) * 180d / FastMath.PI + 180d;
-				final double saturation = FastMath.sqrt(( x * x ) + ( z * z )) / FastMath.sqrt(5 * 5 + 5 * 5);
+				final double hue = atan2(z, x) * 180d / PI + 180d;
+				final double saturation = sqrt(( x * x ) + ( z * z )) / 5;
+				final double y = 2d - sin(sqrt(x * x + z * z) / 5);
+				final Spectrum color = new RGBSpectrum(RGB.fromHSL(hue, saturation, 0.5d));
 
-				Primitive sphere = new Primitive(
-						new SphereShape(0.4, Arrays.asList(new TranslationTransform(x, 0d, z))), new LambertianBRDF(
-								new ConstantTexture(new RGBSpectrum(RGB.fromHSL(hue, saturation, 0.5d))), 6d));
+				Primitive sphere = new Primitive(new SphereShape(0.4, Arrays.asList(new TranslationTransform(x, y, z))),
+						new LambertianBRDF(new ConstantTexture(color),
+								new ConstantTexture(color.multiply(2d - sqrt(x * x + z * z) / 2.5)), 6d));
 				world.getPrimitives().add(sphere);
 			}
 		}
 
 		Primitive plane = new Primitive(new PlaneShape(Arrays.asList(new TranslationTransform(0d, -0.5d, 0d))),
-				new LambertianBRDF(new CheckerboardTexture(new ConstantTexture(new RGBSpectrum(RGB.RED)),
-						new ConstantTexture(new RGBSpectrum(RGB.WHITE).multiply(0.1))), 1000d));
+				new LambertianBRDF(new CheckerboardTexture(new ConstantTexture(RGBSpectrum.BLACK),
+						new ConstantTexture(new RGBSpectrum(RGB.WHITE))), 1000d));
 		world.getPrimitives().add(plane);
 
 		Light light = new SphereLight(new RGBSpectrum(RGB.WHITE.multiply(64d)),

@@ -10,7 +10,6 @@ import org.snowjak.rays3.integrator.AbstractIntegrator;
 import org.snowjak.rays3.intersect.Interaction;
 import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.spectrum.Spectrum;
-import org.snowjak.rays3.texture.Texture;
 
 /**
  * Represents a Bi-Directional Scattering Function.
@@ -55,105 +54,33 @@ public abstract class BSDF {
 	}
 
 	/**
-	 * Sample the coloration available to potentially tint radiance reflected
-	 * from the given {@link Interaction}. Usually, this is backed by a static
-	 * {@link Texture}, but more complex implementations are certainly possible.
+	 * Sample the radiant energy emitted from the given interaction.
 	 * 
 	 * @param interaction
-	 *            description of the surface-interaction
-	 * @param lambda
-	 *            wavelength(s) to sample (or <code>null</code> if no wavelength
-	 *            in particular)
-	 * @param t
-	 *            time at moment of sample
-	 * @return a {@link Spectrum} representing the coloration potentially
-	 *         affecting reflected radiance from the surface
-	 */
-	public abstract Spectrum getReflectiveColoration(Interaction interaction, Spectrum lambda, double t);
-
-	/**
-	 * Sample the radiant energy emitted from the given point.
-	 * <p>
-	 * Specifically, calculates:
-	 * 
-	 * <pre>
-	 * f<sub>e</sub> ( <strong>x</strong>, <strong>w</strong><sub>e</sub>, &#x03BB;, t )
-	 * </pre>
-	 * 
-	 * where
-	 * 
-	 * <pre>
-	 * f<sub>r</sub> := radiant energy from <strong>w</strong><sub>r</sub> that's reflected along <strong>w</strong><sub>e</sub>
-	 * <strong>x</strong> := point of reflection on surface
-	 * <strong>w</strong><sub>e</sub> := "eye" vector, from point toward the eye
-	 * &#x03BB; := Spectrum denoting the specific wavelength we want to sample
-	 * t := specific time we want to sample
-	 * </pre>
-	 * 
-	 * All of these quantities are either given as parameters directly, or else
-	 * derived from the specified {@link Interaction}.
-	 * </p>
-	 * </p>
-	 * 
-	 * @param interaction
-	 *            description of the surface-interaction
-	 * @param lambda
-	 *            wavelength(s) to sample (or <code>null</code> if no wavelength
-	 *            in particular)
-	 * @param t
-	 *            time at moment of sample
-	 * @return the radiance of the given Spectrum emitted along the eye-vector
-	 */
-	public abstract Spectrum getEmissiveRadiance(Interaction interaction, Spectrum lambda, double t);
-
-	/**
-	 * Indicates that the given surface is capable of emitting radiance itself,
-	 * and should be considered as a light-source.
-	 * 
-	 * @return <code>true</code> if the given BSDF can possibly emit radiance
-	 */
-	public abstract boolean hasEmissiveRadiance();
-
-	/**
-	 * Given an intersection point <code>x</code>, an eye-vector
-	 * <code>w_e</code>, and a surface-normal <code>n</code>, create a
-	 * reflection vector within this BSDF's bounds. Implementations may opt to
-	 * use importance sampling when selecting these samples.
-	 * 
-	 * @param x
-	 *            point of surface-interaction
-	 * @param w_e
-	 *            vector from the surface-point to the eye
-	 * @param n
-	 *            the surface-normal at the point
 	 * @param sample
-	 *            the {@link Sample} currently being processed
-	 * @param reflectType
-	 *            the type of reflection being sampled for
-	 * @return a reflection vector, or <code>null</code> if the given
-	 *         ReflectType is inappropriate
+	 * @return
 	 */
-	public abstract Vector sampleReflectionVector(Point x, Vector w_e, Normal n, Sample sample,
-			ReflectType reflectType);
+	public abstract Spectrum sampleL_e(Interaction interaction, Sample sample);
 
 	/**
-	 * Given an intersection point <code>x</code>, an eye-vector
-	 * <code>w_e</code>, a surface-normal <code>n</code>, and a
-	 * reflection-vector <code>w_r</code>, compute the Probability Distribution
-	 * Function value that this reflection-vector should have been chosen.
+	 * Sample an outbound vector from the given interaction.
 	 * 
-	 * @param x
-	 *            point of surface-interaction
-	 * @param w_e
-	 *            vector from the surface-point to the eye
-	 * @param w_r
-	 *            vector reflected from the surface-point
-	 * @param n
-	 *            the surface-normal at the point
-	 * @return the probability that the given reflection-vector lies within this
-	 *         BSDF
+	 * @param interaction
+	 * @param sample
+	 * @return
 	 */
-	public abstract double reflectionPDF(Point x, Vector w_e, Vector w_r, Normal n, ReflectType reflectType);
+	public abstract Vector sampleW_o(Interaction interaction, Sample sample);
+
+	/**
+	 * Compute the fraction of energy (for each wavelength) that's reflected
+	 * from the given vector <code>w<sub>o</sub></code>.
+	 * 
+	 * @param interaction
+	 * @param sample
+	 * @param w_o
+	 * @return
+	 */
+	public abstract Spectrum f_r(Interaction interaction, Sample sample, Vector w_o);
 
 	/**
 	 * @return this BSDF's index-of-refraction at the given point

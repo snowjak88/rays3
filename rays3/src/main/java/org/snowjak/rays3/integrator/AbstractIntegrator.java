@@ -2,6 +2,7 @@ package org.snowjak.rays3.integrator;
 
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.snowjak.rays3.Global;
@@ -33,6 +34,12 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public abstract class AbstractIntegrator {
 
+	/**
+	 * The number of {@link RenderSampleTask}s that are allowed to be queued up
+	 * and not started in the {@link Global#RENDER_EXECUTOR}.
+	 */
+	public final static int		MAX_WAITING_SAMPLES	= 8192;
+
 	private Camera				camera;
 	private Film				film;
 	private Sampler				sampler;
@@ -40,7 +47,7 @@ public abstract class AbstractIntegrator {
 	private final int			maxRayDepth;
 	private boolean				finishedGettingSamples;
 
-	private final AtomicInteger	samplesWaitingToRender;
+	private final Semaphore		samplesWaitingToRender;
 	private final AtomicInteger	samplesCurrentlyRenderingCount;
 
 	/**
@@ -59,7 +66,7 @@ public abstract class AbstractIntegrator {
 		this.maxRayDepth = maxRayDepth;
 
 		this.finishedGettingSamples = false;
-		this.samplesWaitingToRender = new AtomicInteger(0);
+		this.samplesWaitingToRender = new Semaphore(MAX_WAITING_SAMPLES);
 		this.samplesCurrentlyRenderingCount = new AtomicInteger(0);
 	}
 
@@ -76,12 +83,18 @@ public abstract class AbstractIntegrator {
 
 		Sample currentSample;
 
-		while (( currentSample = getSampler().getNextSample() ) != null) {
+		try {
 
-			samplesWaitingToRender.incrementAndGet();
+			while (( currentSample = getSampler().getNextSample() ) != null) {
 
-			Global.RENDER_EXECUTOR.execute(new RenderSampleTask(this, world, currentSample, getCamera(), getFilm(),
-					samplesWaitingToRender, samplesCurrentlyRenderingCount));
+				samplesWaitingToRender.acquire();
+
+				Global.RENDER_EXECUTOR.execute(new RenderSampleTask(this, world, currentSample, getCamera(), getFilm(),
+						samplesWaitingToRender, samplesCurrentlyRenderingCount));
+			}
+
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 
 		this.finishedGettingSamples = true;
@@ -126,7 +139,7 @@ public abstract class AbstractIntegrator {
 	 */
 	public boolean isFinishedRenderingSamples() {
 
-		return finishedGettingSamples && samplesWaitingToRender.get() == 0 && samplesCurrentlyRenderingCount.get() == 0;
+		return finishedGettingSamples && countSamplesWaitingToRender() == 0 && countSamplesCurrentlyRendering() == 0;
 	}
 
 	/**
@@ -137,7 +150,7 @@ public abstract class AbstractIntegrator {
 	 */
 	public int countSamplesWaitingToRender() {
 
-		return samplesWaitingToRender.get();
+		return MAX_WAITING_SAMPLES - samplesWaitingToRender.availablePermits();
 	}
 
 	/**
@@ -191,11 +204,11 @@ public abstract class AbstractIntegrator {
 		private final Sample				sample;
 		private final Camera				camera;
 		private final Film					film;
-		private final AtomicInteger			samplesWaitingToRender;
+		private final Semaphore				samplesWaitingToRender;
 		private final AtomicInteger			samplesCurrentlyRenderingCount;
 
 		public RenderSampleTask(AbstractIntegrator integrator, World world, Sample sample, Camera camera, Film film,
-				AtomicInteger samplesWaitingToRender, AtomicInteger samplesCurrentlyRenderingCount) {
+				Semaphore samplesWaitingToRender, AtomicInteger samplesCurrentlyRenderingCount) {
 
 			super();
 			this.integrator = integrator;
@@ -210,7 +223,7 @@ public abstract class AbstractIntegrator {
 		@Override
 		protected void compute() {
 
-			this.samplesWaitingToRender.decrementAndGet();
+			this.samplesWaitingToRender.release();
 			this.samplesCurrentlyRenderingCount.incrementAndGet();
 
 			//
@@ -222,10 +235,9 @@ public abstract class AbstractIntegrator {
 			//
 			// (notice that the initial ray-follow, at least, is kept on this
 			// same thread)
-			final Spectrum spectrum = new FollowRayRecursiveTask(integrator,
-												ray, world, sample)
-										.invoke()
-										.multiply(1d / sample.getSampler().getSamplesPerPixel());
+			final Spectrum spectrum = new FollowRayRecursiveTask(integrator, ray, world, sample)
+					.invoke()
+						.multiply(1d / sample.getSampler().getSamplesPerPixel());
 
 			this.samplesCurrentlyRenderingCount.decrementAndGet();
 
