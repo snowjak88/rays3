@@ -55,34 +55,31 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 		if (op_interaction.isPresent()) {
 
 			final Interaction interaction = op_interaction.get();
-			final Point point = interaction.getPoint();
-			final Vector w_e = interaction.getInteractingRay().getDirection().negate();
-			final Normal n = interaction.getNormal();
-			final BSDF bsdf = interaction.getBdsf();
-
-			final double n1;
-			final double n2;
-			final Normal relativeNormal;
 
 			//
 			// If the interacting ray is on the opposite side of the surface
 			// from its normal, then swap the two indices of refraction.
-			if (w_e.normalize().dotProduct(n.asVector().normalize()) < 0d) {
-				n1 = interaction.getBdsf().getIndexOfRefraction();
-				n2 = 1d;
-				relativeNormal = n.negate();
+			final Interaction relativeInteraction;
+			if (interaction.getW_e().normalize().dotProduct(interaction.getNormal().asVector().normalize()) < 0d) {
+				relativeInteraction = new Interaction(interaction, true);
 
 			} else {
 				// Nope -- the eye-vector is on the same side as the normal.
-				n1 = 1d;
-				n2 = interaction.getBdsf().getIndexOfRefraction();
-				relativeNormal = n;
+				relativeInteraction = interaction;
 			}
 
 			//
 			//
+			//
+			final Point point = relativeInteraction.getPoint();
+			final Vector w_e = relativeInteraction.getW_e();
+			final Normal n = relativeInteraction.getNormal();
+			final BSDF bsdf = relativeInteraction.getBdsf();
+
+			//
+			//
 			// Allocate the Fresnel approximation.
-			final FresnelApproximation fresnel = new FresnelApproximation(w_e, relativeNormal, n1, n2);
+			final FresnelApproximation fresnel = relativeInteraction.getFresnel();
 
 			//
 			//
@@ -95,7 +92,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 					final Vector sampledLightVector = l.sampleLightVector(point, sample);
 					final double sampledLightProb = l.probabilitySampleVector(point, sampledLightVector, sample);
 
-					final Spectrum radianceFromLight = l.getRadianceAt(sampledLightVector, relativeNormal).multiply(
+					final Spectrum radianceFromLight = l.getRadianceAt(sampledLightVector, n).multiply(
 							sampledLightProb / sample.getSampler().getSamplesPerPixel());
 
 					if (!radianceFromLight.isBlack()) {
@@ -129,11 +126,10 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 			final Spectrum specularRadiance;
 			if (bsdf.hasProperty(Property.REFLECT_SPECULAR)) {
 
-				if (ray.getDepth() >= getMaxRayDepth())
+				if (ray.getDepth() >= getMaxRayDepth()) {
 					specularRadiance = RGBSpectrum.BLACK;
-
-				else {
-					final Vector specularVector = bsdf.sampleReflectionVector(point, w_e, relativeNormal, sample,
+				} else {
+					final Vector specularVector = bsdf.sampleReflectionVector(point, w_e, n, sample,
 							ReflectType.SPECULAR);
 					final Ray specularRay = new Ray(point, specularVector, ray);
 
@@ -148,6 +144,7 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 								.multiply(specularTint);
 
 				}
+
 			} else {
 				specularRadiance = RGBSpectrum.BLACK;
 			}
@@ -158,10 +155,9 @@ public class SimpleWhittedIntegrator extends AbstractIntegrator {
 			final Spectrum transmitRadiance;
 			if (bsdf.hasProperty(Property.TRANSMIT)) {
 
-				if (ray.getDepth() >= getMaxRayDepth())
+				if (ray.getDepth() >= getMaxRayDepth()) {
 					transmitRadiance = RGBSpectrum.BLACK;
-
-				else {
+				} else {
 
 					if (!fresnel.isTotalInternalReflection()) {
 

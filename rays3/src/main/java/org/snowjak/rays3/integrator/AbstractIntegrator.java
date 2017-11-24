@@ -222,9 +222,10 @@ public abstract class AbstractIntegrator {
 			//
 			// (notice that the initial ray-follow, at least, is kept on this
 			// same thread)
-			final Spectrum spectrum = // new FollowRayRecursiveTask(integrator,
-										 // ray, world, sample).invoke()
-					integrator.followRay(ray, world, sample).multiply(1d / sample.getSampler().getSamplesPerPixel());
+			final Spectrum spectrum = new FollowRayRecursiveTask(integrator,
+												ray, world, sample)
+										.invoke()
+										.multiply(1d / sample.getSampler().getSamplesPerPixel());
 
 			this.samplesCurrentlyRenderingCount.decrementAndGet();
 
