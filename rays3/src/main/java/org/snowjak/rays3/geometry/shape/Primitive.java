@@ -74,8 +74,7 @@ public class Primitive implements Interactable, Transformable {
 		if (interaction == null)
 			return null;
 
-		return new Interaction(interaction.getPoint(), interaction.getInteractingRay(), interaction.getNormal(),
-				interaction.getParam(), this);
+		return new Interaction(interaction, this);
 	}
 
 	@Override

@@ -69,7 +69,7 @@ public class LambertianBDRFTest {
 		for (int i = 0; i < 32; i++) {
 
 			final Vector sampledReflection = bdrf.sampleReflectionVector(interaction.getPoint(),
-					interaction.getInteractingRay().getDirection().negate(), interaction.getNormal(), sample,
+					interaction.getW_e(), interaction.getNormal(), sample,
 					ReflectType.DIFFUSE);
 			final double dotProduct = sampledReflection
 					.normalize()
@@ -83,7 +83,7 @@ public class LambertianBDRFTest {
 	public void testSampleReflectionVector_specular() {
 
 		final Vector sampledReflection = bdrf.sampleReflectionVector(interaction.getPoint(),
-				interaction.getInteractingRay().getDirection().negate(), interaction.getNormal(), sample,
+				interaction.getW_e(), interaction.getNormal(), sample,
 				ReflectType.SPECULAR);
 		final Vector expectedReflection = new Vector(1, 1, 0).normalize();
 
@@ -109,7 +109,7 @@ public class LambertianBDRFTest {
 						.dotProduct(interaction.getNormal().asVector().normalize());
 
 			assertEquals("Reflection PDF is not as expected!", dotProduct / 2d,
-					bdrf.reflectionPDF(interaction.getPoint(), interaction.getInteractingRay().getDirection().negate(),
+					bdrf.reflectionPDF(interaction.getPoint(), interaction.getW_e(),
 							sampledReflection, interaction.getNormal(), ReflectType.DIFFUSE),
 					0.00001);
 		}
@@ -123,14 +123,14 @@ public class LambertianBDRFTest {
 				ReflectType.SPECULAR);
 
 		assertEquals("Reflection PDF is not as expected!", 1d,
-				bdrf.reflectionPDF(interaction.getPoint(), interaction.getInteractingRay().getDirection().negate(),
+				bdrf.reflectionPDF(interaction.getPoint(), interaction.getW_e(),
 						sampledReflection_specular, interaction.getNormal(), ReflectType.SPECULAR),
 				0.00001);
 
-		final Vector sampledReflection_other = interaction.getInteractingRay().getDirection().negate();
+		final Vector sampledReflection_other = interaction.getW_e();
 
 		assertEquals("Reflection PDF is not as expected!", 0d,
-				bdrf.reflectionPDF(interaction.getPoint(), interaction.getInteractingRay().getDirection().negate(),
+				bdrf.reflectionPDF(interaction.getPoint(), interaction.getW_e(),
 						sampledReflection_other, interaction.getNormal(), ReflectType.SPECULAR),
 				0.00001);
 	}
