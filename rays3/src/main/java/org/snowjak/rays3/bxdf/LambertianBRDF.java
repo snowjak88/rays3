@@ -118,11 +118,7 @@ public class LambertianBRDF extends BSDF {
 
 		//
 		//
-		final double cos_i = interaction.getNormal().asVector().normalize().dotProduct(w_o.normalize());
-		if (cos_i < 0d)
-			return RGBSpectrum.BLACK;
-
-		return texture.evaluate(interaction).multiply(cos_i);
+		return texture.evaluate(interaction);
 	}
 
 	public Texture getTexture() {

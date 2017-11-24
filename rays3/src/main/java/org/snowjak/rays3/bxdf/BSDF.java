@@ -94,6 +94,20 @@ public abstract class BSDF {
 	public abstract Spectrum f_r(Interaction interaction, Sample sample, Vector w_o);
 
 	/**
+	 * Compute the cosine term for each BSDF interaction -- i.e., the
+	 * dot-product of the outbound direction <code>w<sub>o</sub></code> and the
+	 * surface-normal <code>n</code>
+	 * 
+	 * @param interaction
+	 * @param w_o
+	 * @return
+	 */
+	public double cos_i(Interaction interaction, Vector w_o) {
+
+		return interaction.getNormal().asVector().normalize().dotProduct(w_o.normalize());
+	}
+
+	/**
 	 * @return this BSDF's index-of-refraction at the given point
 	 */
 	public double getIndexOfRefraction() {

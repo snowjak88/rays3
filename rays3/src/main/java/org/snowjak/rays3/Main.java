@@ -1,12 +1,16 @@
 package org.snowjak.rays3;
 
+import static org.apache.commons.math3.util.FastMath.PI;
+import static org.apache.commons.math3.util.FastMath.atan2;
+import static org.apache.commons.math3.util.FastMath.sin;
+import static org.apache.commons.math3.util.FastMath.sqrt;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.commons.math3.util.FastMath.*;
 import org.snowjak.rays3.bxdf.LambertianBRDF;
 import org.snowjak.rays3.camera.Camera;
 import org.snowjak.rays3.camera.PinholeCamera;
@@ -17,7 +21,7 @@ import org.snowjak.rays3.geometry.shape.PlaneShape;
 import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.geometry.shape.SphereShape;
 import org.snowjak.rays3.integrator.AbstractIntegrator;
-import org.snowjak.rays3.integrator.SimplePathTracingIntegrator;
+import org.snowjak.rays3.integrator.MonteCarloImportanceIntegrator;
 import org.snowjak.rays3.light.Light;
 import org.snowjak.rays3.light.SphereLight;
 import org.snowjak.rays3.sample.Sampler;
@@ -33,14 +37,20 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		final Sampler sampler = new StratifiedSampler(800, 600, 64);
+		final int imageSizeX = 400;
+		final int imageSizeY = 300;
 
-		final Camera camera = new PinholeCamera(800, 600, 4d, 3d, new Point(2, 2.1, -8), new Point(0, 0, 0), Vector.J,
-				5d);
+		//
+		//
+		//
+		final Sampler sampler = new StratifiedSampler(imageSizeX, imageSizeY, 4);
 
-		final SimpleImageFilm film = new SimpleImageFilm(800, 600, sampler);
+		final Camera camera = new PinholeCamera(imageSizeX, imageSizeY, 4d, 3d, new Point(2, 2.1, -8),
+				new Point(0, 0, 0), Vector.J, 5d);
 
-		final AbstractIntegrator integrator = new SimplePathTracingIntegrator(camera, film, sampler, 4);
+		final SimpleImageFilm film = new SimpleImageFilm(imageSizeX, imageSizeY, sampler);
+
+		final AbstractIntegrator integrator = new MonteCarloImportanceIntegrator(camera, film, sampler, 4, 16);
 
 		//
 		//
