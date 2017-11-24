@@ -1,4 +1,4 @@
-package org.snowjak.rays3.intersect;
+package org.snowjak.rays3.intersect.bound;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
