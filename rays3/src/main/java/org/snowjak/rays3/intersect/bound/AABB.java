@@ -25,6 +25,22 @@ public class AABB {
 	private Point minExtent, maxExtent;
 
 	/**
+	 * Given an existing {@link BoundingSphere}, construct an AABB that will
+	 * fully-enclose the same volume bounded by this sphere.
+	 * 
+	 * @param fromSphere
+	 */
+	public AABB(BoundingSphere fromSphere) {
+		this(Arrays.asList(
+				new Point(fromSphere.getCenter().getX() - fromSphere.getRadius(),
+						fromSphere.getCenter().getY() - fromSphere.getRadius(),
+						fromSphere.getCenter().getZ() - fromSphere.getRadius()),
+				new Point(fromSphere.getCenter().getX() + fromSphere.getRadius(),
+						fromSphere.getCenter().getY() + fromSphere.getRadius(),
+						fromSphere.getCenter().getZ() + fromSphere.getRadius())));
+	}
+
+	/**
 	 * Given an existing AABB (assumed to be given in object-local coordinates),
 	 * and a {@link List} of {@link Transform}s (assumed to give the proper
 	 * order for local-to-world transformation), compute the corresponding AABB

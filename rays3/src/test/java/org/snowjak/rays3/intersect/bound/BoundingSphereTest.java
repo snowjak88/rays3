@@ -20,11 +20,11 @@ public class BoundingSphereTest {
 		final Point sphereCenter = boundingSphere.getCenter();
 		final double sphereRadius = boundingSphere.getRadius();
 
-		assertEquals("Center-X is not as expected!", 0, sphereCenter.getX(), 0.00001);
-		assertEquals("Center-Y is not as expected!", 0.5, sphereCenter.getY(), 0.00001);
-		assertEquals("Center-Z is not as expected!", -0.5, sphereCenter.getZ(), 0.00001);
+		assertEquals("Center-X is not as expected!", 0.5, sphereCenter.getX(), 0.00001);
+		assertEquals("Center-Y is not as expected!", 0.75, sphereCenter.getY(), 0.00001);
+		assertEquals("Center-Z is not as expected!", -0.75, sphereCenter.getZ(), 0.00001);
 
-		assertEquals("Radius is not as expected!", sqrt(3 * 3 + 2.5 * 2.5 + .5 * .5), sphereRadius, 0.00001);
+		assertEquals("Radius is not as expected!", 3.79143, sphereRadius, 0.00001);
 	}
 
 	@Test
