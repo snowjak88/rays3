@@ -64,7 +64,7 @@ public class LambertianBRDF extends BSDF {
 	}
 
 	@Override
-	public Vector sampleW_o(Interaction interaction, Sample sample) {
+	public Vector sampleW_i(Interaction interaction, Sample sample) {
 
 		//
 		//
@@ -79,6 +79,7 @@ public class LambertianBRDF extends BSDF {
 		final double cos2_theta = 1d - sin2_theta; // cos^2(x) + sin^2(x) = 1
 		final double sin_theta = sqrt(sin2_theta);
 		final double cos_theta = sqrt(cos2_theta);
+
 		final double orientation = sampledPoint.getY() * 2d * PI;
 		//
 		//

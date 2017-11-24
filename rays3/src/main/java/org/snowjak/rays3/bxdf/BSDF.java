@@ -63,13 +63,13 @@ public abstract class BSDF {
 	public abstract Spectrum sampleL_e(Interaction interaction, Sample sample);
 
 	/**
-	 * Sample an outbound vector from the given interaction.
+	 * Sample an incident vector from the given interaction.
 	 * 
 	 * @param interaction
 	 * @param sample
 	 * @return
 	 */
-	public abstract Vector sampleW_o(Interaction interaction, Sample sample);
+	public abstract Vector sampleW_i(Interaction interaction, Sample sample);
 
 	/**
 	 * Compute the fraction of energy (for each wavelength) that's reflected

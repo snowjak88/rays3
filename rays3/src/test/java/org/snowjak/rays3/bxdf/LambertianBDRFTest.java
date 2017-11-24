@@ -67,7 +67,7 @@ public class LambertianBDRFTest {
 
 		for (int i = 0; i < 32; i++) {
 
-			final Vector sampledReflection = bdrf.sampleW_o(interaction, sample);
+			final Vector sampledReflection = bdrf.sampleW_i(interaction, sample);
 			final double dotProduct = sampledReflection
 					.normalize()
 						.dotProduct(interaction.getNormal().asVector().normalize());

@@ -81,7 +81,7 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 
 			} else {
 
-				final Vector reflectedDirection = bsdf.sampleW_o(relativeInteraction, sample);
+				final Vector reflectedDirection = bsdf.sampleW_i(relativeInteraction, sample);
 				final Ray reflectedRay = new Ray(point, reflectedDirection, ray);
 				incomingRadiance = followRay(reflectedRay, world, sample)
 						.multiply(bsdf.f_r(relativeInteraction, sample, reflectedDirection));
