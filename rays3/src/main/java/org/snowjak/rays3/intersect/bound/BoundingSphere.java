@@ -2,6 +2,7 @@ package org.snowjak.rays3.intersect.bound;
 
 import static org.apache.commons.math3.util.FastMath.*;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.snowjak.rays3.geometry.Point;
@@ -65,6 +66,19 @@ public class BoundingSphere {
 	public Point getCenter() {
 
 		return center;
+	}
+
+	/**
+	 * Construct an AABB that will fully-enclose the same volume bounded by this
+	 * sphere.
+	 */
+	public AABB toAABB() {
+
+		return new AABB(Arrays.asList(
+				new Point(getCenter().getX() - getRadius(), getCenter().getY() - getRadius(),
+						getCenter().getZ() - getRadius()),
+				new Point(getCenter().getX() + getRadius(), getCenter().getY() + getRadius(),
+						getCenter().getZ() + getRadius())));
 	}
 
 }
