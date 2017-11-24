@@ -1,5 +1,6 @@
 package org.snowjak.rays3.bxdf;
 
+import static org.apache.commons.math3.util.FastMath.PI;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -63,7 +64,7 @@ public class LambertianBDRFTest {
 	}
 
 	@Test
-	public void testSampleW_o() {
+	public void testSampleW_i() {
 
 		for (int i = 0; i < 32; i++) {
 
@@ -74,6 +75,13 @@ public class LambertianBDRFTest {
 
 			assertTrue("Sampled reflection vector is not as expected!", ( dotProduct >= 0d ) && ( dotProduct <= 1d ));
 		}
+	}
+
+	@Test
+	public void testPdfW_i() {
+
+		assertEquals("PDF of w_i should always be 1 / (2 * pi)", 1d / ( 2d * PI ),
+				bdrf.pdfW_i(interaction, sample, null), 0.00001);
 	}
 
 }

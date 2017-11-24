@@ -102,6 +102,18 @@ public class LambertianBRDF extends BSDF {
 	}
 
 	@Override
+	public double pdfW_i(Interaction interaction, Sample sample, Vector w_i) {
+
+		//
+		// A Lambertian BRDF samples directions from anywhere on the hemisphere.
+		// Therefore the probability of choosing any 1 direction is equal to
+		//
+		// 1 / (integral (0 -> 2pi) 1 dx == 1 / 2pi
+		//
+		return 1d / ( 2d * PI );
+	}
+
+	@Override
 	public Spectrum f_r(Interaction interaction, Sample sample, Vector w_o) {
 
 		//

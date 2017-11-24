@@ -72,6 +72,17 @@ public abstract class BSDF {
 	public abstract Vector sampleW_i(Interaction interaction, Sample sample);
 
 	/**
+	 * Given an inbound vector <code>w<sub>i</sub></code>, what is the
+	 * probability that this BSDF would have chosen that vector?
+	 * 
+	 * @param interaction
+	 * @param sample
+	 * @param w_i
+	 * @return
+	 */
+	public abstract double pdfW_i(Interaction interaction, Sample sample, Vector w_i);
+
+	/**
 	 * Compute the fraction of energy (for each wavelength) that's reflected
 	 * from the given vector <code>w<sub>o</sub></code>.
 	 * 

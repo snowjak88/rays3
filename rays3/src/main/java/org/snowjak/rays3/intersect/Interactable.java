@@ -1,6 +1,7 @@
 package org.snowjak.rays3.intersect;
 
 import org.snowjak.rays3.geometry.Ray;
+import org.snowjak.rays3.intersect.bound.AABB;
 import org.snowjak.rays3.transform.Transformable;
 
 /**

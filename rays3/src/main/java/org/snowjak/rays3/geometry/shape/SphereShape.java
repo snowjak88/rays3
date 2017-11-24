@@ -11,8 +11,8 @@ import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Point2D;
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.geometry.Vector;
-import org.snowjak.rays3.intersect.AABB;
 import org.snowjak.rays3.intersect.Interaction;
+import org.snowjak.rays3.intersect.bound.AABB;
 import org.snowjak.rays3.transform.Transform;
 
 /**

@@ -1,4 +1,4 @@
-package org.snowjak.rays3.intersect;
+package org.snowjak.rays3.intersect.bound;
 
 import java.util.Arrays;
 import java.util.Collection;
