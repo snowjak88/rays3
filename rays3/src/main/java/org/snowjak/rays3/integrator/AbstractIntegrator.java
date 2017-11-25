@@ -226,23 +226,33 @@ public abstract class AbstractIntegrator {
 			this.samplesWaitingToRender.release();
 			this.samplesCurrentlyRenderingCount.incrementAndGet();
 
-			//
-			// Set up the initial ray to follow.
-			final Ray ray = camera.getRay(sample);
+			try {
+				
+				//
+				// Set up the initial ray to follow.
+				final Ray ray = camera.getRay(sample);
 
-			//
-			// Follow the ray.
-			//
-			// (notice that the initial ray-follow, at least, is kept on this
-			// same thread)
-			final Spectrum spectrum = new FollowRayRecursiveTask(integrator, ray, world, sample)
-					.invoke()
-						.multiply(1d / sample.getSampler().getSamplesPerPixel());
+				//
+				// Follow the ray.
+				//
+				// (notice that the initial ray-follow, at least, is kept on this
+				// same thread)
+				final Spectrum spectrum = new FollowRayRecursiveTask(integrator, ray, world, sample)
+						.invoke()
+							.multiply(1d / sample.getSampler().getSamplesPerPixel());
 
-			this.samplesCurrentlyRenderingCount.decrementAndGet();
+				//this.samplesCurrentlyRenderingCount.decrementAndGet();
 
-			if (sample.getSampler().isSampleAcceptable(sample, spectrum))
-				film.addSample(sample, spectrum);
+				if (sample.getSampler().isSampleAcceptable(sample, spectrum))
+					film.addSample(sample, spectrum);
+				
+			}
+			catch(Throwable t) {
+				t.printStackTrace();
+				
+			} finally {
+				this.samplesCurrentlyRenderingCount.decrementAndGet();
+			}
 		}
 
 	}
