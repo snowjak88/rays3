@@ -105,14 +105,16 @@ public class RotationTransform implements Transform {
 	public Interaction worldToLocal(Interaction interaction) {
 
 		return new Interaction(worldToLocal(interaction.getPoint()), worldToLocal(interaction.getInteractingRay()),
-				worldToLocal(interaction.getNormal()), interaction.getParam(), interaction.getPrimitive());
+				worldToLocal(interaction.getNormal()), interaction.getParam(), interaction.getPrimitive(),
+				interaction.getN1(), interaction.getN2());
 	}
 
 	@Override
 	public Interaction localToWorld(Interaction interaction) {
 
 		return new Interaction(localToWorld(interaction.getPoint()), localToWorld(interaction.getInteractingRay()),
-				localToWorld(interaction.getNormal()), interaction.getParam(), interaction.getPrimitive());
+				localToWorld(interaction.getNormal()), interaction.getParam(), interaction.getPrimitive(),
+				interaction.getN1(), interaction.getN2());
 	}
 
 	private double[] apply(Matrix matrix, double... coordinates) {
