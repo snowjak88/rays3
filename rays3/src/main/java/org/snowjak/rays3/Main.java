@@ -21,6 +21,7 @@ import org.snowjak.rays3.geometry.shape.PlaneShape;
 import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.geometry.shape.SphereShape;
 import org.snowjak.rays3.integrator.AbstractIntegrator;
+import org.snowjak.rays3.integrator.SimplePathTracingIntegrator;
 import org.snowjak.rays3.integrator.MonteCarloImportanceIntegrator;
 import org.snowjak.rays3.light.Light;
 import org.snowjak.rays3.light.SphereLight;
@@ -31,6 +32,7 @@ import org.snowjak.rays3.spectrum.RGBSpectrum;
 import org.snowjak.rays3.spectrum.Spectrum;
 import org.snowjak.rays3.texture.CheckerboardTexture;
 import org.snowjak.rays3.texture.ConstantTexture;
+import org.snowjak.rays3.transform.RotationTransform;
 import org.snowjak.rays3.transform.TranslationTransform;
 
 public class Main {
@@ -43,42 +45,67 @@ public class Main {
 		//
 		//
 		//
-		final Sampler sampler = new StratifiedSampler(imageSizeX, imageSizeY, 4);
+		final Sampler sampler = new StratifiedSampler(imageSizeX, imageSizeY, 8);
 
-		final Camera camera = new PinholeCamera(imageSizeX, imageSizeY, 4d, 3d, new Point(2, 2.1, -8),
-				new Point(0, 0, 0), Vector.J, 5d);
+		final Camera camera = new PinholeCamera(imageSizeX, imageSizeY, 4d, 3d, new Point(1, 1, -5), new Point(0, 0, 0),
+				Vector.J, 5d);
 
 		final SimpleImageFilm film = new SimpleImageFilm(imageSizeX, imageSizeY, sampler);
 
-		final AbstractIntegrator integrator = new MonteCarloImportanceIntegrator(camera, film, sampler, 4, 16);
+		final AbstractIntegrator integrator = new MonteCarloImportanceIntegrator(camera, film, sampler, 8, 8);
+		// final AbstractIntegrator integrator = new
+		// SimplePathTracingIntegrator(camera, film, sampler, 8);
 
 		//
 		//
 		//
 		final World world = new World();
 
-		for (double x = -5d; x <= 5d; x += 1d) {
-			for (double z = -5d; z <= 5d; z += 1d) {
-				final double hue = atan2(z, x) * 180d / PI + 180d;
-				final double saturation = sqrt(( x * x ) + ( z * z )) / 5;
-				final double y = 2d - sin(sqrt(x * x + z * z) / 5);
-				final Spectrum color = new RGBSpectrum(RGB.fromHSL(hue, saturation, 0.5d));
+		Primitive sphere = new Primitive(new SphereShape(0.5, Arrays.asList(new TranslationTransform(-1.5, 0, 0))),
+				new LambertianBRDF(new ConstantTexture(RGBSpectrum.WHITE), 1000d));
+		world.getPrimitives().add(sphere);
 
-				Primitive sphere = new Primitive(new SphereShape(0.4, Arrays.asList(new TranslationTransform(x, y, z))),
-						new LambertianBRDF(new ConstantTexture(color),
-								new ConstantTexture(color.multiply(2d - sqrt(x * x + z * z) / 2.5)), 6d));
-				world.getPrimitives().add(sphere);
-			}
-		}
+		sphere = new Primitive(new SphereShape(0.5, Arrays.asList(new TranslationTransform(+1.5, 0, 0))),
+				new LambertianBRDF(new ConstantTexture(RGBSpectrum.WHITE), 2d));
+		world.getPrimitives().add(sphere);
+
+		sphere = new Primitive(new SphereShape(0.5, Arrays.asList(new TranslationTransform(0, +3, 0))),
+				new LambertianBRDF(new ConstantTexture(RGBSpectrum.WHITE),
+						new ConstantTexture(RGBSpectrum.WHITE.multiply(10d)), 2d));
+		world.getPrimitives().add(sphere);
 
 		Primitive plane = new Primitive(new PlaneShape(Arrays.asList(new TranslationTransform(0d, -0.5d, 0d))),
 				new LambertianBRDF(new CheckerboardTexture(new ConstantTexture(RGBSpectrum.BLACK),
-						new ConstantTexture(new RGBSpectrum(RGB.WHITE))), 1000d));
+						new ConstantTexture(RGBSpectrum.WHITE)), 1000d));
 		world.getPrimitives().add(plane);
 
-		Light light = new SphereLight(new RGBSpectrum(RGB.WHITE.multiply(64d)),
-				Arrays.asList(new TranslationTransform(0d, 5d, 0d)));
-		world.getLights().add(light);
+		plane = new Primitive(
+				new PlaneShape(
+						Arrays.asList(new TranslationTransform(0, 0d, 2.5d), new RotationTransform(Vector.I, -90d))),
+				new LambertianBRDF(new ConstantTexture(new RGBSpectrum(RGB.WHITE)), 1000d));
+		world.getPrimitives().add(plane);
+
+		plane = new Primitive(
+				new PlaneShape(Arrays.asList(new TranslationTransform(3, 0, 0), new RotationTransform(Vector.K, +90d))),
+				new LambertianBRDF(new ConstantTexture(new RGBSpectrum(RGB.WHITE)), 1000d));
+		world.getPrimitives().add(plane);
+
+		plane = new Primitive(
+				new PlaneShape(
+						Arrays.asList(new TranslationTransform(-3, 0, 0), new RotationTransform(Vector.K, -90d))),
+				new LambertianBRDF(new ConstantTexture(new RGBSpectrum(RGB.WHITE)), 1000d));
+		world.getPrimitives().add(plane);
+
+		plane = new Primitive(
+				new PlaneShape(
+						Arrays.asList(new TranslationTransform(0d, +5.5d, 0d), new RotationTransform(Vector.I, 180d))),
+				new LambertianBRDF(new ConstantTexture(RGBSpectrum.WHITE), 1000d));
+		world.getPrimitives().add(plane);
+
+		// Light light = new SphereLight(new
+		// RGBSpectrum(RGB.WHITE.multiply(64d)),
+		// Arrays.asList(new TranslationTransform(0d, 5d, 0d)));
+		// world.getLights().add(light);
 
 		//
 		//

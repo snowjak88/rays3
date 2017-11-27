@@ -2,6 +2,7 @@ package org.snowjak.rays3.integrator;
 
 import java.util.Optional;
 
+import org.snowjak.rays3.Global;
 import org.snowjak.rays3.World;
 import org.snowjak.rays3.bxdf.BSDF;
 import org.snowjak.rays3.camera.Camera;
@@ -33,6 +34,8 @@ public class MonteCarloImportanceIntegrator extends AbstractIntegrator {
 
 	@Override
 	public Spectrum followRay(Ray ray, World world, Sample sample) {
+
+		ray = new Ray(ray, 1.0);
 
 		final Optional<Interaction> op_interaction = world.getClosestInteraction(ray);
 
@@ -69,13 +72,19 @@ public class MonteCarloImportanceIntegrator extends AbstractIntegrator {
 
 				final Vector sampledDirection = bsdf.sampleW_i(relativeInteraction, sample);
 				final double sampledProb = bsdf.pdfW_i(relativeInteraction, sample, sampledDirection);
+				final double cos_i = bsdf.cos_i(relativeInteraction, sampledDirection);
 
-				final Ray sampledRay = new Ray(point, sampledDirection, ray);
-				final Spectrum sampledW_i = followRay(sampledRay, world, sample)
-						.multiply(bsdf.f_r(relativeInteraction, sample, sampledDirection))
-							.multiply(bsdf.cos_i(relativeInteraction, sampledDirection));
+				if (Global.RND.nextDouble() >= cos_i) {
 
-				totalW_i = totalW_i.add(sampledW_i.multiply(1d / sampledProb));
+					final Ray sampledRay = new Ray(point, sampledDirection, ray, ray.getWeight() * cos_i);
+
+					final Spectrum sampledW_i = followRay(sampledRay, world, sample)
+							.multiply(bsdf.f_r(relativeInteraction, sample, sampledDirection))
+								.multiply(cos_i);
+
+					totalW_i = totalW_i.add(sampledW_i.multiply(1d / sampledProb).multiply(1d / cos_i));
+
+				}
 
 			}
 

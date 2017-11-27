@@ -104,6 +104,24 @@ public class Ray {
 	}
 
 	/**
+	 * Initialize a new Ray with the given origin and direction, taking another
+	 * Ray as its "parent".
+	 * <ul>
+	 * <li>Depth: <code>parent.depth + 1</code></li>
+	 * <li>Curr-T: {@link Double#POSITIVE_INFINITY}</li>
+	 * <li>Min-T: {@link Double#POSITIVE_INFINITY}</li>
+	 * <li>Max-T: {@link Double#NEGATIVE_INFINITY}</li>
+	 * </ul>
+	 * 
+	 * @param origin
+	 * @param direction
+	 * @param parent
+	 */
+	public Ray(Point origin, Vector direction, Ray parent, double weight) {
+		this(origin, direction, weight, parent.depth + 1);
+	}
+
+	/**
 	 * Initialize a new Ray with the given origin, direction, and
 	 * <code>t</code>, taking another Ray as its "parent".
 	 * <ul>
