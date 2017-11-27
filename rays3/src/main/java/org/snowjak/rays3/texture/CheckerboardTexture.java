@@ -1,9 +1,12 @@
 package org.snowjak.rays3.texture;
 
+import java.lang.Double;
+import java.lang.ArrayIndexOutOfBoundsException;
 import org.apache.commons.math3.util.FastMath;
 import org.snowjak.rays3.geometry.Point2D;
 import org.snowjak.rays3.geometry.shape.SurfaceDescriptor;
 import org.snowjak.rays3.spectrum.Spectrum;
+import org.snowjak.rays3.spectrum.RGBSpectrum;
 import org.snowjak.rays3.texture.mapping.LinearTextureMapping;
 import org.snowjak.rays3.texture.mapping.TextureMapping;
 
@@ -55,10 +58,18 @@ public class CheckerboardTexture extends Texture {
 	@Override
 	public Spectrum evaluate(SurfaceDescriptor surface) {
 
-		Point2D mappedPoint = getTextureMapping().map(surface.getParam());
-		SurfaceDescriptor mappedSurface = new SurfaceDescriptor(surface.getPoint(), surface.getNormal(), mappedPoint);
+		final Point2D mappedPoint = getTextureMapping().map(surface.getParam());
+		final SurfaceDescriptor mappedSurface = new SurfaceDescriptor(surface.getPoint(), surface.getNormal(),
+				mappedPoint);
 
-		return textures[determineTextureIndex(mappedPoint)].evaluate(mappedSurface);
+		Spectrum result = RGBSpectrum.BLACK;
+		try {
+			result = textures[determineTextureIndex(mappedPoint)].evaluate(mappedSurface);
+		} catch (ArrayIndexOutOfBoundsException e) {
+			System.err.println("ArrayIndexOutOfBoundsException at [" + Double.toString(mappedPoint.getX()) + ", "
+					+ Double.toString(mappedPoint.getY()));
+		}
+		return result;
 	}
 
 	/**
@@ -70,8 +81,8 @@ public class CheckerboardTexture extends Texture {
 	 */
 	public int determineTextureIndex(Point2D textureParam) {
 
-		return ( FastMath.abs((int) FastMath.round(textureParam.getX()))
-				+ FastMath.abs((int) FastMath.round(textureParam.getY())) ) % textures.length;
+		return (int) ( ( (long) FastMath.round(FastMath.abs(textureParam.getX()))
+				+ (long) FastMath.round(FastMath.abs(textureParam.getY())) ) % (long) textures.length );
 	}
 
 }
