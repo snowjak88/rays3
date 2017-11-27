@@ -1,5 +1,7 @@
 package org.snowjak.rays3.geometry;
 
+import org.snowjak.rays3.integrator.AbstractIntegrator;
+
 /**
  * Represents a direction + origin in 3-space.
  * 
@@ -35,6 +37,17 @@ public class Ray {
 		this.maxT = Double.NEGATIVE_INFINITY;
 		this.depth = 0;
 		this.weight = 0;
+	}
+
+	/**
+	 * Copy an existing Ray, setting a new weight in the process.
+	 * 
+	 * @param toCopy
+	 * @param weight
+	 */
+	public Ray(Ray toCopy, double weight) {
+		this(toCopy.getOrigin(), toCopy.getDirection(), toCopy.getDepth(), toCopy.getCurrT(), toCopy.getMinT(),
+				toCopy.getMaxT(), weight);
 	}
 
 	/**
@@ -310,11 +323,23 @@ public class Ray {
 		return maxT;
 	}
 
+	/**
+	 * Get this Ray's current "weight". Different {@link AbstractIntegrator}
+	 * implementations may make use of this field in different ways -- no
+	 * specific use-case is envisioned absolutely.
+	 * 
+	 * @return
+	 */
+	public double getWeight() {
+
+		return weight;
+	}
+
 	@Override
 	public String toString() {
 
 		return "Ray [origin=" + origin.toString() + ", direction=" + direction.toString() + ", currT="
 				+ Double.toString(currT) + ", minT=" + Double.toString(minT) + ", maxT=" + Double.toString(maxT)
-				+ ", depth=" + depth + "]";
+				+ ", depth=" + depth + ", weight=" + Double.toString(weight) + "]";
 	}
 }

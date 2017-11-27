@@ -74,7 +74,7 @@ public class ScaleTransform implements Transform {
 				.getMagnitude();
 
 		return new Ray(worldToLocal(ray.getOrigin()), worldToLocal(ray.getDirection()), ray.getDepth(),
-				transformedCurrT, transformedMinT, transformedMaxT);
+				transformedCurrT, transformedMinT, transformedMaxT, ray.getWeight());
 	}
 
 	@Override
@@ -88,7 +88,7 @@ public class ScaleTransform implements Transform {
 				.getMagnitude();
 
 		return new Ray(localToWorld(ray.getOrigin()), localToWorld(ray.getDirection()), ray.getDepth(),
-				transformedCurrT, transformedMinT, transformedMaxT);
+				transformedCurrT, transformedMinT, transformedMaxT, ray.getWeight());
 	}
 
 	@Override

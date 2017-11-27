@@ -75,7 +75,7 @@ public class SphereShape extends AbstractShape {
 		if (t == null)
 			return null;
 
-		Ray newRay = new Ray(ray.getOrigin(), ray.getDirection(), ray.getDepth(), t, t, t);
+		Ray newRay = new Ray(ray.getOrigin(), ray.getDirection(), ray.getDepth(), t, t, t, ray.getWeight());
 		Point point = newRay.getPointAlong();
 		Normal normalAt = new Normal(new Vector(point).normalize());
 

@@ -91,7 +91,7 @@ public class ScaleTransformTest {
 
 		final Transform transform2 = new ScaleTransform(1d / 3d, -1d / 2d, 1d / 5d);
 
-		final Ray ray = new Ray(new Point(1, 2, 3), new Vector(-2, 4, -6).normalize(), 1, 2d, 2d, 2d);
+		final Ray ray = new Ray(new Point(1, 2, 3), new Vector(-2, 4, -6).normalize(), 1, 2d, 2d, 2d, 0.5);
 		final Ray transformed1 = transform.localToWorld(ray);
 
 		assertEquals("#1-Transformed origin-X is not as expected!", 1d * 2d, transformed1.getOrigin().getX(), 0.00001);
@@ -109,6 +109,7 @@ public class ScaleTransformTest {
 		assertEquals("#1-Transformed currT is not as expected!", 4d, transformed1.getCurrT(), 0.00001);
 		assertEquals("#1-Transformed minT is not as expected!", 4d, transformed1.getMinT(), 0.00001);
 		assertEquals("#1-Transformed maxT is not as expected!", 4d, transformed1.getMaxT(), 0.00001);
+		assertEquals("#1-Transformed weight not as expected!", 0.5, transformed1.getWeight(), 0.00001);
 
 		final Ray transformed2 = transform2.localToWorld(ray);
 
@@ -127,6 +128,7 @@ public class ScaleTransformTest {
 		assertEquals("#2-Transformed currT is not as expected!", 0.648319, transformed2.getCurrT(), 0.00001);
 		assertEquals("#2-Transformed minT is not as expected!", 0.648319, transformed2.getMinT(), 0.00001);
 		assertEquals("#2-Transformed maxT is not as expected!", 0.648319, transformed2.getMaxT(), 0.00001);
+		assertEquals("#2-Transformed weight not as expected!", 0.5, transformed2.getWeight(), 0.00001);
 	}
 
 	@Test
@@ -134,7 +136,7 @@ public class ScaleTransformTest {
 
 		final Transform transform2 = new ScaleTransform(1d / 3d, -1d / 2d, 1d / 5d);
 
-		final Ray ray = new Ray(new Point(1, 2, 3), new Vector(-2, 4, -6), 1, 2d, 2d, 2d);
+		final Ray ray = new Ray(new Point(1, 2, 3), new Vector(-2, 4, -6), 1, 2d, 2d, 2d, 0.5);
 		final Ray transformed1 = transform.worldToLocal(ray);
 
 		assertEquals("Transformed X is not as expected!", 1d / 2d, transformed1.getOrigin().getX(), 0.00001);
@@ -152,6 +154,7 @@ public class ScaleTransformTest {
 		assertEquals("#1-Transformed currT is not as expected!", 2d / 2d, transformed1.getCurrT(), 0.00001);
 		assertEquals("#1-Transformed minT is not as expected!", 2d / 2d, transformed1.getMinT(), 0.00001);
 		assertEquals("#1-Transformed maxT is not as expected!", 2d / 2d, transformed1.getMaxT(), 0.00001);
+		assertEquals("#1-Transformed weight not as expected!", 0.5, transformed1.getWeight(), 0.00001);
 
 		final Ray transformed2 = transform2.worldToLocal(ray);
 
@@ -173,6 +176,7 @@ public class ScaleTransformTest {
 		assertEquals("#2-Transformed currT is not as expected!", 8.45154, transformed2.getCurrT(), 0.00001);
 		assertEquals("#2-Transformed minT is not as expected!", 8.45154, transformed2.getMinT(), 0.00001);
 		assertEquals("#2-Transformed maxT is not as expected!", 8.45154, transformed2.getMaxT(), 0.00001);
+		assertEquals("#2-Transformed weight not as expected!", 0.5, transformed2.getWeight(), 0.00001);
 	}
 
 }

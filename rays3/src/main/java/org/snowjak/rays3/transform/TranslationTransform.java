@@ -72,14 +72,14 @@ public class TranslationTransform implements Transform {
 	public Ray worldToLocal(Ray ray) {
 
 		return new Ray(worldToLocal(ray.getOrigin()), worldToLocal(ray.getDirection()), ray.getDepth(), ray.getCurrT(),
-				ray.getMinT(), ray.getMaxT());
+				ray.getMinT(), ray.getMaxT(), ray.getWeight());
 	}
 
 	@Override
 	public Ray localToWorld(Ray ray) {
 
 		return new Ray(localToWorld(ray.getOrigin()), localToWorld(ray.getDirection()), ray.getDepth(), ray.getCurrT(),
-				ray.getMinT(), ray.getMaxT());
+				ray.getMinT(), ray.getMaxT(), ray.getWeight());
 	}
 
 	/**
@@ -104,14 +104,16 @@ public class TranslationTransform implements Transform {
 	public Interaction worldToLocal(Interaction interaction) {
 
 		return new Interaction(worldToLocal(interaction.getPoint()), worldToLocal(interaction.getInteractingRay()),
-				worldToLocal(interaction.getNormal()), interaction.getParam(), interaction.getPrimitive());
+				worldToLocal(interaction.getNormal()), interaction.getParam(), interaction.getPrimitive(),
+				interaction.getN1(), interaction.getN2());
 	}
 
 	@Override
 	public Interaction localToWorld(Interaction interaction) {
 
 		return new Interaction(localToWorld(interaction.getPoint()), localToWorld(interaction.getInteractingRay()),
-				localToWorld(interaction.getNormal()), interaction.getParam(), interaction.getPrimitive());
+				localToWorld(interaction.getNormal()), interaction.getParam(), interaction.getPrimitive(),
+				interaction.getN1(), interaction.getN2());
 	}
 
 	private double[] apply(Matrix matrix, double... coordinates) {

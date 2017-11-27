@@ -73,14 +73,14 @@ public class RotationTransform implements Transform {
 	public Ray worldToLocal(Ray ray) {
 
 		return new Ray(worldToLocal(ray.getOrigin()), worldToLocal(ray.getDirection()), ray.getDepth(), ray.getCurrT(),
-				ray.getMinT(), ray.getMaxT());
+				ray.getMinT(), ray.getMaxT(), ray.getWeight());
 	}
 
 	@Override
 	public Ray localToWorld(Ray ray) {
 
 		return new Ray(localToWorld(ray.getOrigin()), localToWorld(ray.getDirection()), ray.getDepth(), ray.getCurrT(),
-				ray.getMinT(), ray.getMaxT());
+				ray.getMinT(), ray.getMaxT(), ray.getWeight());
 	}
 
 	@Override

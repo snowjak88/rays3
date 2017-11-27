@@ -76,7 +76,7 @@ public class PlaneShape extends AbstractShape {
 		if (t < Global.DOUBLE_TOLERANCE || Double.isNaN(t) || Global.isNear(t, 0d))
 			return null;
 
-		Ray intersectingRay = new Ray(ray.getOrigin(), ray.getDirection(), ray.getDepth(), t, t, t);
+		Ray intersectingRay = new Ray(ray.getOrigin(), ray.getDirection(), ray.getDepth(), t, t, t, ray.getWeight());
 		Point intersectionPoint = intersectingRay.getPointAlong();
 		Normal normal = new Normal(Vector.J);
 		Point2D surfaceParam = getParamFromLocalSurface(intersectionPoint);
