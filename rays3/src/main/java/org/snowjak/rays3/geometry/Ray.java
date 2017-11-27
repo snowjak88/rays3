@@ -13,6 +13,8 @@ public class Ray {
 	private final double	minT, maxT;
 	private final int		depth;
 
+	private final double	weight;
+
 	/**
 	 * Initialize a new Ray:
 	 * <ul>
@@ -22,6 +24,7 @@ public class Ray {
 	 * <li>Curr-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Min-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Max-T: {@link Double#NEGATIVE_INFINITY}</li>
+	 * <li>Weight: 0.0</li>
 	 * </ul>
 	 */
 	public Ray() {
@@ -31,6 +34,7 @@ public class Ray {
 		this.minT = Double.POSITIVE_INFINITY;
 		this.maxT = Double.NEGATIVE_INFINITY;
 		this.depth = 0;
+		this.weight = 0;
 	}
 
 	/**
@@ -40,13 +44,14 @@ public class Ray {
 	 * <li>Curr-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Min-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Max-T: {@link Double#NEGATIVE_INFINITY}</li>
+	 * <li>Weight: 0</li>
 	 * </ul>
 	 * 
 	 * @param origin
 	 * @param direction
 	 */
 	public Ray(Point origin, Vector direction) {
-		this(origin, direction, 0, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY);
+		this(origin, direction, 0, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 0);
 	}
 
 	/**
@@ -55,6 +60,7 @@ public class Ray {
 	 * <li>Depth: <code>0</code></li>
 	 * <li>Min-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Max-T: {@link Double#NEGATIVE_INFINITY}</li>
+	 * <li>Weight: 0</li>
 	 * </ul>
 	 * 
 	 * @param origin
@@ -73,6 +79,7 @@ public class Ray {
 	 * <li>Curr-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Min-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Max-T: {@link Double#NEGATIVE_INFINITY}</li>
+	 * <li>Weight: <code>parent.weight</code>
 	 * </ul>
 	 * 
 	 * @param origin
@@ -80,7 +87,7 @@ public class Ray {
 	 * @param parent
 	 */
 	public Ray(Point origin, Vector direction, Ray parent) {
-		this(origin, direction, parent.depth + 1);
+		this(origin, direction, parent.weight, parent.depth + 1);
 	}
 
 	/**
@@ -90,6 +97,7 @@ public class Ray {
 	 * <li>Depth: <code>parent.depth + 1</code></li>
 	 * <li>Min-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Max-T: {@link Double#NEGATIVE_INFINITY}</li>
+	 * <li>Weight: <code>parent.weight</code>
 	 * </ul>
 	 * 
 	 * @param origin
@@ -98,11 +106,11 @@ public class Ray {
 	 * @param parent
 	 */
 	public Ray(Point origin, Vector direction, double currT, Ray parent) {
-		this(origin, direction, parent.depth + 1, currT);
+		this(origin, direction, parent.depth + 1, currT, parent.weight);
 	}
 
 	/**
-	 * Initialize a new Ray with the given origin, direction, and depth.
+	 * Initialize a new Ray with the given origin, direction, weight, and depth.
 	 * <ul>
 	 * <li>Curr-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Min-T: {@link Double#POSITIVE_INFINITY}</li>
@@ -111,14 +119,50 @@ public class Ray {
 	 * 
 	 * @param origin
 	 * @param direction
-	 * @param parent
+	 * @param depth
+	 */
+	public Ray(Point origin, Vector direction, double weight, int depth) {
+		this(origin, direction, depth, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY,
+				weight);
+	}
+
+	/**
+	 * Initialize a new Ray with the given origin, direction, and depth.
+	 * <ul>
+	 * <li>Curr-T: {@link Double#POSITIVE_INFINITY}</li>
+	 * <li>Min-T: {@link Double#POSITIVE_INFINITY}</li>
+	 * <li>Max-T: {@link Double#NEGATIVE_INFINITY}</li>
+	 * <li>Weight: 0</li>
+	 * </ul>
+	 * 
+	 * @param origin
+	 * @param direction
+	 * @param depth
 	 */
 	public Ray(Point origin, Vector direction, int depth) {
-		this(origin, direction, depth, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY);
+		this(origin, direction, depth, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 0);
 	}
 
 	/**
 	 * Initialize a new Ray with the given origin, direction, depth, and curr-T.
+	 * <ul>
+	 * <li>Min-T: {@link Double#POSITIVE_INFINITY}</li>
+	 * <li>Max-T: {@link Double#NEGATIVE_INFINITY}</li>
+	 * <li>Weight: 0</li>
+	 * </ul>
+	 * 
+	 * @param origin
+	 * @param direction
+	 * @param depth
+	 * @param currT
+	 */
+	public Ray(Point origin, Vector direction, int depth, double currT) {
+		this(origin, direction, depth, currT, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 0);
+	}
+
+	/**
+	 * Initialize a new Ray with the given origin, direction, depth, curr-T, and
+	 * weight.
 	 * <ul>
 	 * <li>Min-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Max-T: {@link Double#NEGATIVE_INFINITY}</li>
@@ -128,14 +172,18 @@ public class Ray {
 	 * @param direction
 	 * @param depth
 	 * @param currT
+	 * @param weight
 	 */
-	public Ray(Point origin, Vector direction, int depth, double currT) {
-		this(origin, direction, depth, currT, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY);
+	public Ray(Point origin, Vector direction, int depth, double currT, double weight) {
+		this(origin, direction, depth, currT, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, weight);
 	}
 
 	/**
 	 * Initialize a new Ray with the given origin, direction, depth, curr-T,
 	 * min-T, and max-T.
+	 * <ul>
+	 * <li>Weight: 0</li>
+	 * </ul>
 	 * 
 	 * @param origin
 	 * @param direction
@@ -143,14 +191,32 @@ public class Ray {
 	 * @param currT
 	 * @param minT
 	 * @param maxT
+	 * @param weight
 	 */
 	public Ray(Point origin, Vector direction, int depth, double currT, double minT, double maxT) {
+		this(origin, direction, depth, currT, minT, maxT, 0);
+	}
+
+	/**
+	 * Initialize a new Ray with the given origin, direction, depth, curr-T,
+	 * min-T, max-T, and weight.
+	 * 
+	 * @param origin
+	 * @param direction
+	 * @param depth
+	 * @param currT
+	 * @param minT
+	 * @param maxT
+	 * @param weight
+	 */
+	public Ray(Point origin, Vector direction, int depth, double currT, double minT, double maxT, double weight) {
 		this.origin = origin;
 		this.direction = direction.normalize();
 		this.depth = depth;
 		this.currT = currT;
 		this.minT = minT;
 		this.maxT = maxT;
+		this.weight = weight;
 	}
 
 	/**
