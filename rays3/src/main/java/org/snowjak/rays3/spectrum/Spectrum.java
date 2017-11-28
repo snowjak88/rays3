@@ -9,8 +9,8 @@ package org.snowjak.rays3.spectrum;
 public interface Spectrum {
 
 	/**
-	 * @return <code>true</code> if this Spectrum has 0 (or even very close to 0) energy associated with
-	 *         it.
+	 * @return <code>true</code> if this Spectrum has 0 (or even very close to
+	 *         0) energy associated with it.
 	 */
 	public boolean isBlack();
 
@@ -34,6 +34,14 @@ public interface Spectrum {
 	 * @return
 	 */
 	public Spectrum multiply(double scalar);
+
+	/**
+	 * Compute this Spectrum's amplitude -- a measure of its average intensity
+	 * over time, across all wavelengths.
+	 * 
+	 * @return
+	 */
+	public double getAmplitude();
 
 	/**
 	 * Convert this Spectrum to a RGB-trio for subsequent display.

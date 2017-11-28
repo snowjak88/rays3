@@ -1,5 +1,7 @@
 package org.snowjak.rays3.spectrum;
 
+import org.apache.commons.math3.util.FastMath;
+
 /**
  * Represents a {@link Spectrum} using a simple RGB trio.
  * 
@@ -10,13 +12,14 @@ public class RGBSpectrum implements Spectrum {
 	/**
 	 * Represents a 0-energy Spectrum.
 	 */
-	public static final RGBSpectrum	BLACK	= new RGBSpectrum(RGB.BLACK);
+	public static final RGBSpectrum	BLACK		= new RGBSpectrum(RGB.BLACK);
 	/**
 	 * Represents a 1.0-energy Spectrum. (i.e., equivalent to {@link RGB#WHITE})
 	 */
-	public static final RGBSpectrum	WHITE	= new RGBSpectrum(RGB.WHITE);
+	public static final RGBSpectrum	WHITE		= new RGBSpectrum(RGB.WHITE);
 
-	private RGB						rgb;
+	private final RGB				rgb;
+	private double					amplitude	= -1d;
 
 	/**
 	 * Construct a new {@link RGBSpectrum} instance encapsulating
@@ -53,6 +56,16 @@ public class RGBSpectrum implements Spectrum {
 	public Spectrum multiply(double scalar) {
 
 		return new RGBSpectrum(rgb.multiply(scalar));
+	}
+
+	@Override
+	public double getAmplitude() {
+
+		if (amplitude < 0d)
+			amplitude = FastMath.sqrt(
+					rgb.getRed() * rgb.getRed() + rgb.getGreen() * rgb.getGreen() + rgb.getBlue() * rgb.getBlue());
+
+		return amplitude;
 	}
 
 	@Override
