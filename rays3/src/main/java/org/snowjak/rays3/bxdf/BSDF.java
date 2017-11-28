@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.snowjak.rays3.geometry.Normal;
-import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.integrator.AbstractIntegrator;
 import org.snowjak.rays3.intersect.Interaction;
@@ -84,14 +83,14 @@ public abstract class BSDF {
 
 	/**
 	 * Compute the fraction of energy (for each wavelength) that's reflected
-	 * from the given vector <code>w<sub>o</sub></code>.
+	 * from the given vector <code>w<sub>i</sub></code>.
 	 * 
 	 * @param interaction
 	 * @param sample
-	 * @param w_o
+	 * @param w_i
 	 * @return
 	 */
-	public abstract Spectrum f_r(Interaction interaction, Sample sample, Vector w_o);
+	public abstract Spectrum f_r(Interaction interaction, Sample sample, Vector w_i);
 
 	/**
 	 * Compute the cosine term for each BSDF interaction -- i.e., the
@@ -159,23 +158,6 @@ public abstract class BSDF {
 		 * Indicates diffuse reflection
 		 */
 		DIFFUSE
-	}
-
-	/**
-	 * Given an surface-intersection point <code><strong>x</strong></code>, a
-	 * Vector from <code>x</code> toward the eye-point
-	 * <code><strong>w</strong><sub>e</sub></code>, and a surface-normal
-	 * <code><strong>n</strong></code>, construct a Vector giving the direction
-	 * of perfect specular reflection.
-	 * 
-	 * @param x
-	 * @param w_e
-	 * @param n
-	 * @return
-	 */
-	public static Vector getPerfectSpecularReflectionVector(Point x, Vector w_e, Normal n) {
-
-		return getPerfectSpecularReflectionVector(w_e, n);
 	}
 
 	/**
