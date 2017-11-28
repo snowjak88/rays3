@@ -26,7 +26,7 @@ public class Ray {
 	 * <li>Curr-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Min-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Max-T: {@link Double#NEGATIVE_INFINITY}</li>
-	 * <li>Weight: 0.0</li>
+	 * <li>Weight: 1.0</li>
 	 * </ul>
 	 */
 	public Ray() {
@@ -36,7 +36,7 @@ public class Ray {
 		this.minT = Double.POSITIVE_INFINITY;
 		this.maxT = Double.NEGATIVE_INFINITY;
 		this.depth = 0;
-		this.weight = 0;
+		this.weight = 1;
 	}
 
 	/**
@@ -57,14 +57,14 @@ public class Ray {
 	 * <li>Curr-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Min-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Max-T: {@link Double#NEGATIVE_INFINITY}</li>
-	 * <li>Weight: 0</li>
+	 * <li>Weight: 1</li>
 	 * </ul>
 	 * 
 	 * @param origin
 	 * @param direction
 	 */
 	public Ray(Point origin, Vector direction) {
-		this(origin, direction, 0, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 0);
+		this(origin, direction, 0, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 1);
 	}
 
 	/**
@@ -73,7 +73,7 @@ public class Ray {
 	 * <li>Depth: <code>0</code></li>
 	 * <li>Min-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Max-T: {@link Double#NEGATIVE_INFINITY}</li>
-	 * <li>Weight: 0</li>
+	 * <li>Weight: 1</li>
 	 * </ul>
 	 * 
 	 * @param origin
@@ -163,7 +163,7 @@ public class Ray {
 	 * <li>Curr-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Min-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Max-T: {@link Double#NEGATIVE_INFINITY}</li>
-	 * <li>Weight: 0</li>
+	 * <li>Weight: 1</li>
 	 * </ul>
 	 * 
 	 * @param origin
@@ -171,7 +171,7 @@ public class Ray {
 	 * @param depth
 	 */
 	public Ray(Point origin, Vector direction, int depth) {
-		this(origin, direction, depth, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 0);
+		this(origin, direction, depth, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 1);
 	}
 
 	/**
@@ -179,7 +179,7 @@ public class Ray {
 	 * <ul>
 	 * <li>Min-T: {@link Double#POSITIVE_INFINITY}</li>
 	 * <li>Max-T: {@link Double#NEGATIVE_INFINITY}</li>
-	 * <li>Weight: 0</li>
+	 * <li>Weight: 1</li>
 	 * </ul>
 	 * 
 	 * @param origin
@@ -188,7 +188,7 @@ public class Ray {
 	 * @param currT
 	 */
 	public Ray(Point origin, Vector direction, int depth, double currT) {
-		this(origin, direction, depth, currT, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 0);
+		this(origin, direction, depth, currT, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 1);
 	}
 
 	/**
