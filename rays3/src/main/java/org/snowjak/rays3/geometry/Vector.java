@@ -128,24 +128,32 @@ public class Vector {
 	 */
 	public Vector orthogonal() {
 
+		final double newX, newY, newZ;
+
 		if (Global.isNear(this.z, 0d)) {
 
-			double newX = Global.RND.nextGaussian();
-			double newZ = Global.RND.nextGaussian();
-			double newY = ( -this.x * newX - this.z * newZ ) / this.y;
+			if (Global.isNear(this.x, 0d)) {
 
-			return new Vector(newX, newY, newZ).normalize();
+				newX = Global.RND.nextGaussian();
+				newZ = Global.RND.nextGaussian();
+				newY = ( -this.x * newX - this.z * newZ ) / this.y;
+
+			} else {
+
+				newY = Global.RND.nextGaussian();
+				newZ = Global.RND.nextGaussian();
+				newX = ( -this.y * newY - this.z * newZ ) / this.x;
+			}
 
 		} else {
 
 			// => z2 = (-x1 * x2 - y1 * y2) / z1
-
-			double newX = Global.RND.nextGaussian();
-			double newY = Global.RND.nextGaussian();
-			double newZ = ( -this.x * newX - this.y * newY ) / this.z;
-
-			return new Vector(newX, newY, newZ).normalize();
+			newX = Global.RND.nextGaussian();
+			newY = Global.RND.nextGaussian();
+			newZ = ( -this.x * newX - this.y * newY ) / this.z;
 		}
+
+		return new Vector(newX, newY, newZ).normalize();
 	}
 
 	public double getX() {
