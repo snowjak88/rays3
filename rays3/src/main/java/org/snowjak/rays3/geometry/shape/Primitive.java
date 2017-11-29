@@ -4,6 +4,7 @@ import java.awt.Shape;
 import java.util.List;
 
 import org.snowjak.rays3.bxdf.BSDF;
+import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.intersect.Interactable;
 import org.snowjak.rays3.intersect.Interaction;
@@ -88,6 +89,30 @@ public class Primitive implements Interactable, Transformable {
 
 		return new Interaction(interaction.getPoint(), interaction.getInteractingRay(), interaction.getNormal(),
 				interaction.getParam(), this);
+	}
+
+	/**
+	 * @see AbstractShape#sampleSurfacePoint()
+	 */
+	public Point sampleSurfacePoint() {
+
+		return shape.sampleSurfacePoint();
+	}
+
+	/**
+	 * @see AbstractShape#sampleSurfacePoint(Point)
+	 */
+	public Point sampleSurfacePoint(Point facing) {
+
+		return shape.sampleSurfacePoint(facing);
+	}
+
+	/**
+	 * @see AbstractShape#computeSolidAngle(Point)
+	 */
+	public double computeSolidAngle(Point viewedFrom) {
+
+		return shape.computeSolidAngle(viewedFrom);
 	}
 
 }
