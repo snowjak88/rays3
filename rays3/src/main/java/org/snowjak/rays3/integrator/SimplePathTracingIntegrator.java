@@ -81,7 +81,7 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 			// First, form an estimate of the total incident radiance due to
 			// direct illumination.
 			final Spectrum directRadiance = world.getEmissives().stream().map(p -> {
-				final Point emissiveSurfacePoint = p.getShape().sampleSurfacePoint(point);
+				final Point emissiveSurfacePoint = p.sampleSurfacePoint(point);
 				final Vector toEmissiveVector = new Vector(point, emissiveSurfacePoint);
 
 				if (toEmissiveVector.normalize().dotProduct(interaction.getNormal().asVector().normalize()) <= 0d)
