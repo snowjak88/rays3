@@ -94,6 +94,14 @@ public class AbstractShapeTest {
 				// test.
 				return null;
 			}
+
+			@Override
+			public double computeSolidAngle(Point viewedFrom) {
+
+				// We don't care about this method for the purposes of this
+				// test.
+				return 0;
+			}
 		};
 	}
 

@@ -184,6 +184,12 @@ public class SphereShape extends AbstractShape {
 	}
 
 	@Override
+	public double computeSolidAngle(Point viewedFrom) {
+
+		return computeSolidAngle_sphere(viewedFrom, r);
+	}
+
+	@Override
 	public SurfaceDescriptor getSurfaceNearestTo(Point point) {
 
 		//

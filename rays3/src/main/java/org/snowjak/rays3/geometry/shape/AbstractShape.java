@@ -1,12 +1,16 @@
 package org.snowjak.rays3.geometry.shape;
 
+import static org.apache.commons.math3.util.FastMath.*;
+
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Point2D;
+import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.intersect.Interactable;
+import org.snowjak.rays3.intersect.bound.BoundingSphere;
 import org.snowjak.rays3.transform.Transform;
 
 /**
@@ -45,6 +49,35 @@ public abstract class AbstractShape implements Interactable {
 	 * @return
 	 */
 	public abstract Point sampleSurfacePoint(Point facing);
+
+	/**
+	 * Given a Point (expressed in global coordinates) which this AbstractShape
+	 * is viewed from, compute the solid angle which this AbstractShape subtends
+	 * as seen from that Point.
+	 * 
+	 * @param viewedFrom
+	 * @return
+	 * @see #computeSolidAngle_sphere(Point, BoundingSphere)
+	 */
+	public abstract double computeSolidAngle(Point viewedFrom);
+
+	/**
+	 * Given a Point (expressed in global coordinates) which this AbstractShape
+	 * is viewed from, compute the solid angle which this AbstractShape subtends
+	 * as seen from that Point -- <em>assuming</em> that this AbstractShape
+	 * looks like a sphere.
+	 * 
+	 * @param viewedFrom
+	 * @param sphereRadius
+	 * @return
+	 */
+	protected double computeSolidAngle_sphere(Point viewedFrom, double sphereRadius) {
+
+		final double d = new Vector(getObjectZero(), viewedFrom).getMagnitude();
+		final double r = sphereRadius;
+
+		return 2d * PI * ( 1d - sqrt(d * d - r * r) / d );
+	}
 
 	/**
 	 * Given a Point (expressed in global coordinates), calculate the
