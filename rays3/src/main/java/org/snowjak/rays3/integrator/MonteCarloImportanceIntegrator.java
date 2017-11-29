@@ -99,9 +99,8 @@ public class MonteCarloImportanceIntegrator extends AbstractIntegrator {
 						* ( p.getShape().computeSolidAngle(point) / ( 2d * PI ) );
 				final double emissiveDistance = emissiveInteraction.getInteractingRay().getCurrT();
 
-				final Spectrum radianceFromEmissive = bsdf
-						.sampleL_e(emissiveInteraction, sample)
-							.multiply(1d / ( emissiveDistance * emissiveDistance ));
+				final Spectrum radianceFromEmissive = p.getBsdf().sampleL_e(emissiveInteraction, sample).multiply(
+						1d / ( emissiveDistance * emissiveDistance ));
 
 				totalProb_direct += ( 1d / sampleProb );
 				totalW_i_direct = totalW_i_direct.add(radianceFromEmissive

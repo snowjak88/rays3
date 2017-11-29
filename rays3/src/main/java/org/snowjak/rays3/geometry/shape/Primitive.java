@@ -36,7 +36,7 @@ public class Primitive implements Interactable, Transformable {
 		return shape;
 	}
 
-	public BSDF getBdsf() {
+	public BSDF getBsdf() {
 
 		return bsdf;
 	}

@@ -95,7 +95,7 @@ public class StratifiedSampler extends Sampler {
 					@Override
 					public Supplier<Point2D> apply(Integer period) {
 
-						return new Stratified2DSupplier(period);
+						return new Stratified2DSupplier((int) ceil(sqrt((double) period)));
 					}
 
 				});

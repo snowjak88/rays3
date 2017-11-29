@@ -99,7 +99,7 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 				if (emissiveInteraction.getPrimitive() != p)
 					return RGBSpectrum.BLACK;
 
-				final Spectrum emissiveRadiance = p.getBdsf().sampleL_e(emissiveInteraction, sample);
+				final Spectrum emissiveRadiance = p.getBsdf().sampleL_e(emissiveInteraction, sample);
 				return emissiveRadiance
 						.multiply(bsdf.f_r(relativeInteraction, sample, toEmissiveVector))
 							.multiply(bsdf.cos_i(relativeInteraction, toEmissiveVector))

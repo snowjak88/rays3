@@ -29,7 +29,7 @@ public class World {
 
 		return primitives
 				.stream()
-					.filter(p -> p.getBdsf().isEmissive())
+					.filter(p -> p.getBsdf().isEmissive())
 					.collect(Collectors.toCollection(LinkedList::new));
 	}
 

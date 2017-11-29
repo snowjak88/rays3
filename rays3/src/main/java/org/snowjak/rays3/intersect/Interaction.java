@@ -65,7 +65,7 @@ public class Interaction extends SurfaceDescriptor {
 	 * Indices of refraction are given default values:
 	 * <ul>
 	 * <li>n1: 1.0</li>
-	 * <li>n2: {@link Primitive#getBdsf()}.getIndexOfRefraction()
+	 * <li>n2: {@link Primitive#getBsdf()}.getIndexOfRefraction()
 	 * <strong>or</strong> 1.0 if <code>primitive == null</code> or
 	 * <code>primitive.bdsf == null</code></li>
 	 * </ul>
@@ -78,8 +78,8 @@ public class Interaction extends SurfaceDescriptor {
 	 * @param primitive
 	 */
 	public Interaction(Point point, Ray interactingRay, Normal normal, Point2D param, Primitive primitive) {
-		this(point, interactingRay, normal, param, primitive, 1.0, ( primitive == null || primitive.getBdsf() == null
-				? 1.0 : primitive.getBdsf().getIndexOfRefraction() ));
+		this(point, interactingRay, normal, param, primitive, 1.0, ( primitive == null || primitive.getBsdf() == null
+				? 1.0 : primitive.getBsdf().getIndexOfRefraction() ));
 	}
 
 	public Interaction(Point point, Ray interactingRay, Normal normal, Point2D param, Primitive primitive, double n1,
@@ -116,7 +116,7 @@ public class Interaction extends SurfaceDescriptor {
 	 */
 	public BSDF getBdsf() {
 
-		return primitive.getBdsf();
+		return primitive.getBsdf();
 	}
 
 	/**
