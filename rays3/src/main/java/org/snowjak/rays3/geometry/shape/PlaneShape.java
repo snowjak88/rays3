@@ -1,8 +1,8 @@
 package org.snowjak.rays3.geometry.shape;
 
-import java.lang.Double;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.commons.math3.util.FastMath;
 import org.snowjak.rays3.Global;
@@ -85,19 +85,21 @@ public class PlaneShape extends AbstractShape {
 	}
 
 	@Override
-	public Point sampleSurfacePoint() {
+	public Point sampleSurfacePoint(Supplier<Point2D> sampleSupplier) {
 
-		final double x = ( Global.RND.nextDouble() - 0.5 ) * Double.MAX_VALUE;
+		final Point2D planarPoint = sampleSupplier.get();
+
+		final double x = ( planarPoint.getX() - 0.5 ) * Double.MAX_VALUE;
 		final double y = 0d;
-		final double z = ( Global.RND.nextDouble() - 0.5 ) * Double.MAX_VALUE;
+		final double z = ( planarPoint.getY() - 0.5 ) * Double.MAX_VALUE;
 
 		return localToWorld(new Point(x, y, z));
 	}
 
 	@Override
-	public Point sampleSurfacePoint(Point facing) {
+	public Point sampleSurfacePoint(Supplier<Point2D> sampleSupplier, Point facing) {
 
-		return sampleSurfacePoint();
+		return sampleSurfacePoint(sampleSupplier);
 	}
 
 	@Override

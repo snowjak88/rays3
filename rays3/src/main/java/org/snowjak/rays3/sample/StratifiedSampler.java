@@ -4,6 +4,7 @@ import static org.apache.commons.math3.util.FastMath.ceil;
 import static org.apache.commons.math3.util.FastMath.pow;
 import static org.apache.commons.math3.util.FastMath.sqrt;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.snowjak.rays3.Global;
@@ -81,20 +82,20 @@ public class StratifiedSampler extends Sampler {
 		final double timeSample = timeSamples.get();
 
 		return new Sample(this, imageSample.getX() + (double) currFilmX, imageSample.getY() + (double) currFilmY,
-				lensSample.getX(), lensSample.getY(), timeSample, null, new Supplier<Supplier<Double>>() {
+				lensSample.getX(), lensSample.getY(), timeSample, null, new Function<Integer, Supplier<Double>>() {
 
 					@Override
-					public Supplier<Double> get() {
+					public Supplier<Double> apply(Integer period) {
 
-						return new Stratified1DSupplier(gridSideSize);
+						return new Stratified1DSupplier(period);
 					}
 
-				}, new Supplier<Supplier<Point2D>>() {
+				}, new Function<Integer, Supplier<Point2D>>() {
 
 					@Override
-					public Supplier<Point2D> get() {
+					public Supplier<Point2D> apply(Integer period) {
 
-						return new Stratified2DSupplier(gridSideSize);
+						return new Stratified2DSupplier(period);
 					}
 
 				});

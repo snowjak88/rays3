@@ -2,7 +2,7 @@ package org.snowjak.rays3.integrator;
 
 import java.util.Optional;
 
-import org.snowjak.rays3.Global;
+import static org.apache.commons.math3.util.FastMath.*;
 import org.snowjak.rays3.World;
 import org.snowjak.rays3.bxdf.BSDF;
 import org.snowjak.rays3.camera.Camera;
@@ -10,6 +10,7 @@ import org.snowjak.rays3.film.Film;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.geometry.Vector;
+import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.intersect.Interaction;
 import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.sample.Sampler;
@@ -34,8 +35,6 @@ public class MonteCarloImportanceIntegrator extends AbstractIntegrator {
 
 	@Override
 	public Spectrum followRay(Ray ray, World world, Sample sample) {
-
-		ray = new Ray(ray, 1.0);
 
 		final Optional<Interaction> op_interaction = world.getClosestInteraction(ray);
 
@@ -63,37 +62,91 @@ public class MonteCarloImportanceIntegrator extends AbstractIntegrator {
 
 		//
 		//
-		// Sample a number of rays and scale them according to their respective
-		// probabilities.
-		Spectrum totalW_i = RGBSpectrum.BLACK;
+		Spectrum totalW_i_direct = RGBSpectrum.BLACK;
+		Spectrum totalW_i_indirect = RGBSpectrum.BLACK;
 
-		if (ray.getDepth() < getMaxRayDepth())
+		double totalProb_direct = 0d;
+		double totalProb_indirect = 0d;
+		//
+		//
+		// First, sample all known emissives, to estimate direct illumination.
+		for (Primitive p : world.getEmissives()) {
+
 			for (int i = 0; i < samplesPerInteraction; i++) {
 
-				final Vector sampledDirection = bsdf.sampleW_i(relativeInteraction, sample);
-				final double sampledProb = bsdf.pdfW_i(relativeInteraction, sample, sampledDirection);
-				final double cos_i = bsdf.cos_i(relativeInteraction, sampledDirection);
+				//
+				// Create an incident direction from this point toward the
+				// emissive shape.
+				//
+				final Point emissiveSurfacePoint = p.sampleSurfacePoint(
+						sample.getAdditionalTwinSample("sample-emissive-surface", samplesPerInteraction), point);
+				final Vector toEmissiveSurface = new Vector(point, emissiveSurfacePoint);
 
-				if (Global.RND.nextDouble() >= cos_i) {
+				final double cos_i = bsdf.cos_i(relativeInteraction, toEmissiveSurface);
+				if (cos_i <= 0d)
+					continue;
 
-					final Ray sampledRay = new Ray(point, sampledDirection, ray, ray.getWeight() * cos_i);
+				final Ray toEmissiveSurfaceRay = new Ray(point, toEmissiveSurface);
+				final Optional<Interaction> op_emissiveInteraction = world.getClosestInteraction(toEmissiveSurfaceRay);
+				if (!op_emissiveInteraction.isPresent())
+					continue;
 
-					final Spectrum sampledW_i = followRay(sampledRay, world, sample)
-							.multiply(bsdf.f_r(relativeInteraction, sample, sampledDirection))
-								.multiply(cos_i);
+				final Interaction emissiveInteraction = op_emissiveInteraction.get();
+				if (emissiveInteraction.getPrimitive() != p)
+					continue;
 
-					totalW_i = totalW_i.add(sampledW_i.multiply(1d / sampledProb).multiply(1d / cos_i));
+				final double sampleProb = bsdf.pdfW_i(relativeInteraction, sample, toEmissiveSurface)
+						* ( p.getShape().computeSolidAngle(point) / ( 2d * PI ) );
+				final double emissiveDistance = emissiveInteraction.getInteractingRay().getCurrT();
 
-				}
+				final Spectrum radianceFromEmissive = bsdf
+						.sampleL_e(emissiveInteraction, sample)
+							.multiply(1d / ( emissiveDistance * emissiveDistance ));
+
+				totalProb_direct += ( 1d / sampleProb );
+				totalW_i_direct = totalW_i_direct.add(radianceFromEmissive
+						.multiply(bsdf.f_r(relativeInteraction, sample, toEmissiveSurface))
+							.multiply(cos_i)
+							.multiply(1d / sampleProb));
 
 			}
 
-		totalW_i = totalW_i.multiply(1d / (double) samplesPerInteraction);
+		}
+		totalW_i_direct = totalW_i_direct.multiply(1d / totalProb_direct);
+
+		//
+		//
+		// Sample a number of rays and scale them according to their respective
+		// probabilities.
+
+		if (ray.getDepth() < getMaxRayDepth()) {
+
+			for (int i = 0; i < samplesPerInteraction; i++) {
+				//
+				// Sample an incident direction from the BSDF and compute its
+				// PDF.
+				final Vector sampledDirection = bsdf.sampleW_i(relativeInteraction, sample);
+				final double sampledProb = bsdf.pdfW_i(relativeInteraction, sample, sampledDirection);
+
+				final Ray sampledRay = new Ray(point, sampledDirection, ray);
+
+				final Spectrum sampledW_i = followRay(sampledRay, world, sample)
+						.multiply(bsdf.f_r(relativeInteraction, sample, sampledDirection))
+							.multiply(bsdf.cos_i(relativeInteraction, sampledDirection));
+
+				totalProb_indirect += ( 1d / sampledProb );
+				totalW_i_indirect = totalW_i_indirect.add(sampledW_i.multiply(1d / sampledProb));
+
+			}
+
+		}
+		totalW_i_indirect = totalW_i_indirect.multiply(1d / totalProb_indirect);
 
 		//
 		//
 		//
-		return bsdf.sampleL_e(relativeInteraction, sample).add(totalW_i);
+		return bsdf.sampleL_e(relativeInteraction, sample).add(totalW_i_direct.multiply(1d / 2d)).add(
+				totalW_i_indirect.multiply(1d / 2d));
 	}
 
 }

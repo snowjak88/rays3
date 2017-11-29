@@ -2,6 +2,7 @@ package org.snowjak.rays3.sample;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.snowjak.rays3.Global;
@@ -25,17 +26,17 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public class Sample {
 
-	private Sampler									sampler;
+	private Sampler										sampler;
 
-	private final double							imageX, imageY;
-	private final double							lensU, lensV;
-	private final double							t;
-	private final Spectrum							wavelength;
+	private final double								imageX, imageY;
+	private final double								lensU, lensV;
+	private final double								t;
+	private final Spectrum								wavelength;
 
-	private final Supplier<Supplier<Double>>		singleSampleSupplier;
-	private final Supplier<Supplier<Point2D>>		twinSampleSupplier;
-	private final Map<String, Supplier<Double>>		singleSampleSupplierMap;
-	private final Map<String, Supplier<Point2D>>	twinSampleSupplierMap;
+	private final Function<Integer, Supplier<Double>>	singleSampleSupplier;
+	private final Function<Integer, Supplier<Point2D>>	twinSampleSupplier;
+	private final Map<String, Supplier<Double>>			singleSampleSupplierMap;
+	private final Map<String, Supplier<Point2D>>		twinSampleSupplierMap;
 
 	/**
 	 * Construct a new Sample.
@@ -106,10 +107,10 @@ public class Sample {
 	 */
 	public Sample(Sampler sampler, double imageX, double imageY, double lensU, double lensV, double t,
 			Spectrum wavelength) {
-		this(sampler, imageX, imageY, lensU, lensV, t, wavelength, new Supplier<Supplier<Double>>() {
+		this(sampler, imageX, imageY, lensU, lensV, t, wavelength, new Function<Integer, Supplier<Double>>() {
 
 			@Override
-			public Supplier<Double> get() {
+			public Supplier<Double> apply(Integer period) {
 
 				return new Supplier<Double>() {
 
@@ -122,10 +123,10 @@ public class Sample {
 				};
 			}
 
-		}, new Supplier<Supplier<Point2D>>() {
+		}, new Function<Integer, Supplier<Point2D>>() {
 
 			@Override
-			public Supplier<Point2D> get() {
+			public Supplier<Point2D> apply(Integer period) {
 
 				return new Supplier<Point2D>() {
 
@@ -155,8 +156,8 @@ public class Sample {
 	 * @param twinSampleSupplier
 	 */
 	public Sample(Sampler sampler, double imageX, double imageY, double lensU, double lensV, double t,
-			Spectrum wavelength, Supplier<Supplier<Double>> singleSampleSupplier,
-			Supplier<Supplier<Point2D>> twinSampleSupplier) {
+			Spectrum wavelength, Function<Integer, Supplier<Double>> singleSampleSupplier,
+			Function<Integer, Supplier<Point2D>> twinSampleSupplier) {
 
 		this.sampler = sampler;
 		this.imageX = imageX;
@@ -229,25 +230,29 @@ public class Sample {
 	}
 
 	/**
-	 * @return a {@link Supplier} of additional single (i.e.,
-	 *         <code>double</code>) samples corresponding to the given name
+	 * Return the {@link Supplier} of additional single (i.e.,
+	 * <code>double</code>) samples corresponding to the given name. If no such
+	 * Supplier exists already, create one (using the specified
+	 * <code>period</code> if applicable).
 	 */
-	public Supplier<Double> getAdditionalSingleSampleSupplier(String name) {
+	public Supplier<Double> getAdditionalSingleSampleSupplier(String name, int period) {
 
 		if (!singleSampleSupplierMap.containsKey(name))
-			singleSampleSupplierMap.put(name, singleSampleSupplier.get());
+			singleSampleSupplierMap.put(name, singleSampleSupplier.apply(period));
 
 		return singleSampleSupplierMap.get(name);
 	}
 
 	/**
-	 * @return a {@link Supplier} of additional twin (i.e., {@link Point2D})
-	 *         samples corresponding to the given name
+	 * Return the {@link Supplier} of additional twin (i.e., {@link Point2D})
+	 * samples corresponding to the given name. If no such Supplier exists
+	 * already, create one (using the specified <code>period</code> if
+	 * applicable).
 	 */
-	public Supplier<Point2D> getAdditionalTwinSample(String name) {
+	public Supplier<Point2D> getAdditionalTwinSample(String name, int period) {
 
 		if (!twinSampleSupplierMap.containsKey(name))
-			twinSampleSupplierMap.put(name, twinSampleSupplier.get());
+			twinSampleSupplierMap.put(name, twinSampleSupplier.apply(period));
 
 		return twinSampleSupplierMap.get(name);
 	}

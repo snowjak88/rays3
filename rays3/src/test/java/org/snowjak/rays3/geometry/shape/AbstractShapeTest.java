@@ -3,6 +3,7 @@ package org.snowjak.rays3.geometry.shape;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collections;
+import java.util.function.Supplier;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -80,7 +81,7 @@ public class AbstractShapeTest {
 			}
 
 			@Override
-			public Point sampleSurfacePoint() {
+			public Point sampleSurfacePoint(Supplier<Point2D> sampleSupplier) {
 
 				// We don't care about this method for the purposes of this
 				// test.
@@ -88,7 +89,7 @@ public class AbstractShapeTest {
 			}
 
 			@Override
-			public Point sampleSurfacePoint(Point facing) {
+			public Point sampleSurfacePoint(Supplier<Point2D> sampleSupplier, Point facing) {
 
 				// We don't care about this method for the purposes of this
 				// test.

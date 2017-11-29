@@ -1,10 +1,12 @@
 package org.snowjak.rays3.geometry.shape;
 
-import static org.apache.commons.math3.util.FastMath.*;
+import static org.apache.commons.math3.util.FastMath.PI;
+import static org.apache.commons.math3.util.FastMath.sqrt;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Point2D;
@@ -38,7 +40,7 @@ public abstract class AbstractShape implements Interactable {
 	 * 
 	 * @return
 	 */
-	public abstract Point sampleSurfacePoint();
+	public abstract Point sampleSurfacePoint(Supplier<Point2D> sampleSupplier);
 
 	/**
 	 * Given another point (expressed in <strong>global</strong> coordinates),
@@ -48,7 +50,7 @@ public abstract class AbstractShape implements Interactable {
 	 * @param facing
 	 * @return
 	 */
-	public abstract Point sampleSurfacePoint(Point facing);
+	public abstract Point sampleSurfacePoint(Supplier<Point2D> sampleSupplier, Point facing);
 
 	/**
 	 * Given a Point (expressed in global coordinates) which this AbstractShape

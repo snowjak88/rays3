@@ -8,7 +8,7 @@ import static org.apache.commons.math3.util.FastMath.sqrt;
 import java.util.Arrays;
 import java.util.HashSet;
 
-import org.snowjak.rays3.Global;
+import org.snowjak.rays3.geometry.Point2D;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.intersect.Interaction;
 import org.snowjak.rays3.sample.Sample;
@@ -93,12 +93,16 @@ public class LambertianBRDF extends BSDF {
 		// For a simple Lambertian BRDF, we can simply choose any direction in
 		// the hemisphere centered around the surface normal.
 		//
-		final double sin2_theta = Global.RND.nextDouble();
+		final Point2D sphericalPoint = sample
+				.getAdditionalTwinSample("Lambertian-W_i", sample.getSampler().getSamplesPerPixel())
+					.get();
+
+		final double sin2_theta = sphericalPoint.getX();
 		final double cos2_theta = 1d - sin2_theta;
 		final double sin_theta = sqrt(sin2_theta);
 		final double cos_theta = sqrt(cos2_theta);
 
-		final double orientation = Global.RND.nextDouble() * 2d * PI;
+		final double orientation = sphericalPoint.getY() * 2d * PI;
 		//
 		//
 		//

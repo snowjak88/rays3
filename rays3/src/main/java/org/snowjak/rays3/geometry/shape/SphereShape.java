@@ -1,10 +1,15 @@
 package org.snowjak.rays3.geometry.shape;
 
-import static org.apache.commons.math3.util.FastMath.*;
+import static org.apache.commons.math3.util.FastMath.PI;
+import static org.apache.commons.math3.util.FastMath.acos;
+import static org.apache.commons.math3.util.FastMath.cos;
+import static org.apache.commons.math3.util.FastMath.sin;
+import static org.apache.commons.math3.util.FastMath.sqrt;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.commons.math3.util.FastMath;
 import org.snowjak.rays3.Global;
@@ -140,13 +145,15 @@ public class SphereShape extends AbstractShape {
 	}
 
 	@Override
-	public Point sampleSurfacePoint() {
+	public Point sampleSurfacePoint(Supplier<Point2D> sampleSupplier) {
 
 		//
 		//
 		//
-		final double theta = Global.RND.nextDouble() * 2d * PI;
-		final double phi = acos(2d * Global.RND.nextDouble() - 1d);
+		final Point2D sphericalPoint = sampleSupplier.get();
+
+		final double theta = sphericalPoint.getX() * 2d * PI;
+		final double phi = acos(2d * sphericalPoint.getY() - 1d);
 		//
 		final double x = r * cos(theta) * sin(phi);
 		final double y = r * cos(phi);
@@ -158,7 +165,7 @@ public class SphereShape extends AbstractShape {
 	}
 
 	@Override
-	public Point sampleSurfacePoint(Point facing) {
+	public Point sampleSurfacePoint(Supplier<Point2D> sampleSupplier, Point facing) {
 
 		final Vector towardsV_local = new Vector(worldToLocal(facing));
 
@@ -168,12 +175,14 @@ public class SphereShape extends AbstractShape {
 		//
 		//
 		//
-		final double sin2_theta = Global.RND.nextDouble();
+		final Point2D sphericalPoint = sampleSupplier.get();
+
+		final double sin2_theta = sphericalPoint.getX();
 		final double cos2_theta = 1d - sin2_theta;
 		final double sin_theta = sqrt(sin2_theta);
 		final double cos_theta = sqrt(cos2_theta);
 
-		final double orientation = Global.RND.nextDouble() * 2d * PI;
+		final double orientation = sphericalPoint.getY() * 2d * PI;
 		//
 		final double x = sin_theta * cos(orientation);
 		final double y = cos_theta;
