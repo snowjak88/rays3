@@ -34,6 +34,10 @@ public class Vector {
 		this(0d, 0d, 0d, 0d, 0d);
 	}
 
+	public Vector(Point from, Point towards) {
+		this(towards.getX() - from.getX(), towards.getY() - from.getY(), towards.getZ() - from.getZ());
+	}
+
 	public Vector(Point pointTowards) {
 		this(pointTowards.getX(), pointTowards.getY(), pointTowards.getZ());
 	}
