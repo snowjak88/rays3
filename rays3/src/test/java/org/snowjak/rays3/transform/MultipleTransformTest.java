@@ -68,4 +68,23 @@ public class MultipleTransformTest {
 		assertEquals("Interaction-normal-Y not as expected!", 0, normal.getY(), 0.00001);
 		assertEquals("Interaction-normal-Z not as expected!", 0, normal.getZ(), 0.00001);
 	}
+	
+	@Test
+	public void testInverseTransforms() {
+		
+		final Ray ray = new Ray(new Point(-1,0,0),new Vector(1,0,0));
+		final AbstractShape shape = new PlaneShape(transforms);
+		
+		final Ray transformedRay = shape.worldToLocal(ray);
+		final Ray inverseRay = shape.localToWorld(transformedRay);
+		
+		assertEquals("Inverse-transformed-origin-X not as original!", ray.getOrigin().getX(), inverseRay.getOrigin().getX(), 0.00001);
+		assertEquals("Inverse-transformed-origin-Y not as original!", ray.getOrigin().getY(), inverseRay.getOrigin().getY(), 0.00001);
+		assertEquals("Inverse-transformed-origin-Z not as original!", ray.getOrigin().getZ(), inverseRay.getOrigin().getZ(), 0.00001);
+		
+		assertEquals("Inverse-transformed-direction-X not as original!", ray.getDirection().getX(), inverseRay.getDirection().getX(), 0.00001);
+		assertEquals("Inverse-transformed-direction-Y not as original!", ray.getDirection().getY(), inverseRay.getDirection().getY(), 0.00001);
+		assertEquals("Inverse-transformed-direction-Z not as original!", ray.getDirection().getZ(), inverseRay.getDirection().getZ(), 0.00001);
+		
+	}
 }
