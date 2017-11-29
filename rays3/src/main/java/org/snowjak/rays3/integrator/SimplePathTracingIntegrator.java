@@ -2,7 +2,6 @@ package org.snowjak.rays3.integrator;
 
 import java.util.Optional;
 
-import org.apache.commons.math3.util.FastMath;
 import org.snowjak.rays3.World;
 import org.snowjak.rays3.bxdf.BSDF;
 import org.snowjak.rays3.camera.Camera;
@@ -11,7 +10,6 @@ import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.intersect.Interaction;
-import org.snowjak.rays3.light.Light;
 import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.sample.Sampler;
 import org.snowjak.rays3.spectrum.RGBSpectrum;
@@ -83,14 +81,14 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 			// First, form an estimate of the total incident radiance due to
 			// direct illumination.
 			final Spectrum directRadiance = world.getEmissives().stream().map(p -> {
-				final Point surfacePoint = p.getShape().sampleSurfacePoint(point);
-				final Vector toSurfacePoint = new Vector(surfacePoint).subtract(new Vector(point));
+				final Point emissiveSurfacePoint = p.getShape().sampleSurfacePoint(point);
+				final Vector toEmissiveVector = new Vector(point, emissiveSurfacePoint);
 
-				if (toSurfacePoint.normalize().dotProduct(interaction.getNormal().asVector().normalize()) <= 0d)
+				if (toEmissiveVector.normalize().dotProduct(interaction.getNormal().asVector().normalize()) <= 0d)
 					return RGBSpectrum.BLACK;
 
-				final Ray toSurfacePointRay = new Ray(point, toSurfacePoint);
-				final Optional<Interaction> op_emissiveInteraction = world.getClosestInteraction(toSurfacePointRay);
+				final Ray toEmissiveSurfaceRay = new Ray(point, toEmissiveVector);
+				final Optional<Interaction> op_emissiveInteraction = world.getClosestInteraction(toEmissiveSurfaceRay);
 				if (!op_emissiveInteraction.isPresent())
 					return RGBSpectrum.BLACK;
 
@@ -102,8 +100,8 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 
 				final Spectrum emissiveRadiance = p.getBdsf().sampleL_e(emissiveInteraction, sample);
 				return emissiveRadiance
-						.multiply(bsdf.f_r(relativeInteraction, sample, toSurfacePoint))
-							.multiply(bsdf.cos_i(relativeInteraction, toSurfacePoint))
+						.multiply(bsdf.f_r(relativeInteraction, sample, toEmissiveVector))
+							.multiply(bsdf.cos_i(relativeInteraction, toEmissiveVector))
 							.multiply(1d / ( emissiveDistance * emissiveDistance ));
 			}).reduce(RGBSpectrum.BLACK, Spectrum::add);
 
@@ -130,8 +128,8 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 			//
 			final Spectrum result = bsdf
 					.sampleL_e(relativeInteraction, sample)
-						.add(directRadiance)
-						.add(indirectSampledRadiance);
+						.add(directRadiance.multiply(1d / 2d))
+						.add(indirectSampledRadiance.multiply(1d / 2d));
 			return result;
 
 		} else {
