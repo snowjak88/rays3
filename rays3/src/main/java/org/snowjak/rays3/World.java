@@ -1,6 +1,7 @@
 package org.snowjak.rays3;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Optional;
 
@@ -42,13 +43,31 @@ public class World {
 	 */
 	public Optional<Interaction> getClosestInteraction(Ray ray) {
 
-		return getPrimitives()
-				.stream()
-					.filter(p -> p.isInteracting(ray))
-					.map(p -> p.getIntersection(ray))
-					.filter(p -> p != null)
-					.sorted((i1, i2) -> Double.compare(i1.getInteractingRay().getCurrT(),
-							i2.getInteractingRay().getCurrT()))
-					.findFirst();
+		final LinkedList<Interaction> interactions = new LinkedList<>();
+		for (Primitive p : getPrimitives()) {
+
+			if (p.isInteracting(ray)) {
+				final Interaction i = p.getIntersection(ray);
+				if (i != null)
+					interactions.add(i);
+			}
+		}
+
+		if (interactions.isEmpty())
+			return Optional.empty();
+
+		Collections.sort(interactions,
+				(i1, i2) -> Double.compare(i1.getInteractingRay().getCurrT(), i2.getInteractingRay().getCurrT()));
+
+		return Optional.of(interactions.getFirst());
+
+		// return getPrimitives()
+		// .stream()
+		// .filter(p -> p.isInteracting(ray))
+		// .map(p -> p.getIntersection(ray))
+		// .filter(p -> p != null)
+		// .sorted((i1, i2) -> Double.compare(i1.getInteractingRay().getCurrT(),
+		// i2.getInteractingRay().getCurrT()))
+		// .findFirst();
 	}
 }

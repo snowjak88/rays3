@@ -1,10 +1,5 @@
 package org.snowjak.rays3;
 
-import static org.apache.commons.math3.util.FastMath.PI;
-import static org.apache.commons.math3.util.FastMath.atan2;
-import static org.apache.commons.math3.util.FastMath.sin;
-import static org.apache.commons.math3.util.FastMath.sqrt;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Date;
@@ -12,6 +7,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.snowjak.rays3.bxdf.LambertianBRDF;
+import org.snowjak.rays3.bxdf.PerfectSpecularBRDF;
 import org.snowjak.rays3.camera.Camera;
 import org.snowjak.rays3.camera.PinholeCamera;
 import org.snowjak.rays3.film.SimpleImageFilm;
@@ -22,14 +18,12 @@ import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.geometry.shape.SphereShape;
 import org.snowjak.rays3.integrator.AbstractIntegrator;
 import org.snowjak.rays3.integrator.SimplePathTracingIntegrator;
-import org.snowjak.rays3.integrator.MonteCarloImportanceIntegrator;
 import org.snowjak.rays3.light.Light;
 import org.snowjak.rays3.light.SphereLight;
 import org.snowjak.rays3.sample.Sampler;
 import org.snowjak.rays3.sample.StratifiedSampler;
 import org.snowjak.rays3.spectrum.RGB;
 import org.snowjak.rays3.spectrum.RGBSpectrum;
-import org.snowjak.rays3.spectrum.Spectrum;
 import org.snowjak.rays3.texture.CheckerboardTexture;
 import org.snowjak.rays3.texture.ConstantTexture;
 import org.snowjak.rays3.transform.RotationTransform;
@@ -47,14 +41,14 @@ public class Main {
 		//
 		final Sampler sampler = new StratifiedSampler(imageSizeX, imageSizeY, 8);
 
-		final Camera camera = new PinholeCamera(imageSizeX, imageSizeY, 4d, 3d, new Point(1, 1, -5), new Point(0, 0, 0),
+		final Camera camera = new PinholeCamera(imageSizeX, imageSizeY, 4d, 3d, new Point(0, 1, -5), new Point(0, 0, 0),
 				Vector.J, 5d);
 
 		final SimpleImageFilm film = new SimpleImageFilm(imageSizeX, imageSizeY, sampler);
 
-		final AbstractIntegrator integrator = new MonteCarloImportanceIntegrator(camera, film, sampler, 8, 8);
 		// final AbstractIntegrator integrator = new
-		// SimplePathTracingIntegrator(camera, film, sampler, 8);
+		// MonteCarloImportanceIntegrator(camera, film, sampler, 8, 4);
+		final AbstractIntegrator integrator = new SimplePathTracingIntegrator(camera, film, sampler, 8);
 
 		//
 		//
@@ -62,17 +56,14 @@ public class Main {
 		final World world = new World();
 
 		Primitive sphere = new Primitive(new SphereShape(0.5, Arrays.asList(new TranslationTransform(-1.5, 0, 0))),
-				new LambertianBRDF(new ConstantTexture(RGBSpectrum.WHITE), 1000d));
+				new PerfectSpecularBRDF());
 		world.getPrimitives().add(sphere);
 
 		sphere = new Primitive(new SphereShape(0.5, Arrays.asList(new TranslationTransform(+1.5, 0, 0))),
 				new LambertianBRDF(new ConstantTexture(RGBSpectrum.WHITE), 2d));
 		world.getPrimitives().add(sphere);
 
-		sphere = new Primitive(new SphereShape(0.5, Arrays.asList(new TranslationTransform(0, +3, 0))),
-				new LambertianBRDF(new ConstantTexture(RGBSpectrum.WHITE),
-						new ConstantTexture(RGBSpectrum.WHITE.multiply(10d)), 2d));
-		world.getPrimitives().add(sphere);
+		//
 
 		Primitive plane = new Primitive(new PlaneShape(Arrays.asList(new TranslationTransform(0d, -0.5d, 0d))),
 				new LambertianBRDF(new CheckerboardTexture(new ConstantTexture(RGBSpectrum.BLACK),
@@ -82,30 +73,30 @@ public class Main {
 		plane = new Primitive(
 				new PlaneShape(
 						Arrays.asList(new TranslationTransform(0, 0d, 2.5d), new RotationTransform(Vector.I, -90d))),
-				new LambertianBRDF(new ConstantTexture(new RGBSpectrum(RGB.WHITE)), 1000d));
+				new LambertianBRDF(new ConstantTexture(RGBSpectrum.WHITE), 1000d));
 		world.getPrimitives().add(plane);
 
 		plane = new Primitive(
-				new PlaneShape(Arrays.asList(new TranslationTransform(3, 0, 0), new RotationTransform(Vector.K, +90d))),
-				new LambertianBRDF(new ConstantTexture(new RGBSpectrum(RGB.WHITE)), 1000d));
+				new PlaneShape(
+						Arrays.asList(new TranslationTransform(+3, 0, 0), new RotationTransform(Vector.K, +90d))),
+				new LambertianBRDF(new ConstantTexture(new RGBSpectrum(RGB.RED)), 1000d));
 		world.getPrimitives().add(plane);
 
 		plane = new Primitive(
 				new PlaneShape(
 						Arrays.asList(new TranslationTransform(-3, 0, 0), new RotationTransform(Vector.K, -90d))),
-				new LambertianBRDF(new ConstantTexture(new RGBSpectrum(RGB.WHITE)), 1000d));
+				new LambertianBRDF(new ConstantTexture(new RGBSpectrum(RGB.BLUE)), 1000d));
 		world.getPrimitives().add(plane);
 
 		plane = new Primitive(
 				new PlaneShape(
-						Arrays.asList(new TranslationTransform(0d, +5.5d, 0d), new RotationTransform(Vector.I, 180d))),
+						Arrays.asList(new TranslationTransform(0d, +5.0d, 0d), new RotationTransform(Vector.I, 180d))),
 				new LambertianBRDF(new ConstantTexture(RGBSpectrum.WHITE), 1000d));
-		world.getPrimitives().add(plane);
+		//world.getPrimitives().add(plane);
 
-		// Light light = new SphereLight(new
-		// RGBSpectrum(RGB.WHITE.multiply(64d)),
-		// Arrays.asList(new TranslationTransform(0d, 5d, 0d)));
-		// world.getLights().add(light);
+		Light light = new SphereLight(new RGBSpectrum(RGB.WHITE.multiply(32d)),
+				Arrays.asList(new TranslationTransform(0d, 5d, 0d)), 0.5);
+		world.getLights().add(light);
 
 		//
 		//

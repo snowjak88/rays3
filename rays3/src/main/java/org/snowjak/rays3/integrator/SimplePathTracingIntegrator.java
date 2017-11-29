@@ -2,6 +2,7 @@ package org.snowjak.rays3.integrator;
 
 import java.util.Optional;
 
+import org.apache.commons.math3.util.FastMath;
 import org.snowjak.rays3.World;
 import org.snowjak.rays3.bxdf.BSDF;
 import org.snowjak.rays3.camera.Camera;
@@ -10,6 +11,7 @@ import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.intersect.Interaction;
+import org.snowjak.rays3.light.Light;
 import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.sample.Sampler;
 import org.snowjak.rays3.spectrum.RGBSpectrum;
@@ -72,24 +74,52 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 			//
 			// With naive path-tracing, we will simply return the BSDF's
 			// emissive color, plus the BSDF's reflectance function multiplied
-			// by any incoming radiance (if the ray is not too deep yet).
+			// by any incoming radiance (if the ray is not too deep yet) both
+			// from known light-sources and from the BSDF's sampled domain.
 			//
-			final Spectrum incomingRadiance;
+
+			//
+			//
+			// First, form an estimate of the total incident radiance due to
+			// direct illumination.
+			final Spectrum incomingLightRadiance = world.getLights().stream().map(l -> {
+				final Vector lightVector = l.sampleLightVector(point, sample);
+
+				final double cos_i = bsdf.cos_i(relativeInteraction, lightVector.negate().normalize());
+				if (cos_i < 0d)
+					return l.getUnitRadiance().multiply(0d);
+
+				if (!Light.isVisibleFrom(world, point, Light.getLightSurfacePoint(point, lightVector)))
+					return l.getUnitRadiance().multiply(0d);
+
+				final Spectrum radiance = l.getRadianceAt(lightVector);
+				final Spectrum f_r_radiance = radiance.multiply(bsdf.f_r(relativeInteraction, sample, lightVector));
+				return f_r_radiance.multiply(FastMath.max(0, cos_i));
+			}).reduce(RGBSpectrum.BLACK, Spectrum::add);
+
+			//
+			//
+			// Second, estimate the total incident radiance due to indirect
+			// illumination.
+			final Spectrum incomingSampledRadiance;
+
 			if (ray.getDepth() >= getMaxRayDepth()) {
-
-				incomingRadiance = RGBSpectrum.BLACK;
-
+				incomingSampledRadiance = RGBSpectrum.BLACK;
 			} else {
 
 				final Vector reflectedDirection = bsdf.sampleW_i(relativeInteraction, sample);
 				final Ray reflectedRay = new Ray(point, reflectedDirection, ray);
-				incomingRadiance = followRay(reflectedRay, world, sample)
+
+				incomingSampledRadiance = followRay(reflectedRay, world, sample)
 						.multiply(bsdf.f_r(relativeInteraction, sample, reflectedDirection))
 							.multiply(bsdf.cos_i(relativeInteraction, reflectedDirection));
-
 			}
 
-			return bsdf.sampleL_e(relativeInteraction, sample).add(incomingRadiance);
+			//
+			//
+			//
+			final Spectrum result = bsdf.sampleL_e(relativeInteraction, sample).add(incomingLightRadiance).add(incomingSampledRadiance);
+			return result;
 
 		} else {
 			return RGBSpectrum.BLACK;
