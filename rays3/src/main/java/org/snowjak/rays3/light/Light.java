@@ -8,13 +8,11 @@ import java.util.function.DoubleFunction;
 import org.apache.commons.math3.util.FastMath;
 import org.snowjak.rays3.Global;
 import org.snowjak.rays3.World;
-import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.intersect.Interaction;
 import org.snowjak.rays3.sample.Sample;
-import org.snowjak.rays3.spectrum.RGBSpectrum;
 import org.snowjak.rays3.spectrum.Spectrum;
 import org.snowjak.rays3.transform.Transform;
 import org.snowjak.rays3.transform.Transformable;
@@ -111,31 +109,24 @@ public abstract class Light implements Transformable {
 	 * Given a surface-point with a corresponding surface-normal <code>n</code>,
 	 * and a sampled Vector <code>sampleLightVector</code> (obtained from
 	 * {@link #sampleLightVector(Point)}), determine the total radiant energy
-	 * available to that Point.
+	 * available to that Point (measured in W/m^2/sr).
 	 * <p>
-	 * This method will calculate the total radiant energy using Lambert's
-	 * cosine law, and factor in falloff due to distance.
+	 * This method will factor in the total falloff due to distance.
 	 * </p>
 	 * 
 	 * @param sampleLightVector
-	 * @param n
 	 * @return
 	 * @see #sampleLightVector(Point)
 	 * @see FalloffType#calculate(double)
 	 */
-	public Spectrum getRadianceAt(Vector sampleLightVector, Normal n) {
+	public Spectrum getRadianceAt(Vector sampleLightVector) {
 
 		if (getUnitRadiance().isBlack())
 			return getUnitRadiance();
 
-		final double cosTheta = n.asVector().normalize().dotProduct(sampleLightVector.negate().normalize());
-
-		if (cosTheta < 0d)
-			return RGBSpectrum.BLACK;
-
 		final double falloffFraction = getFalloff().calculate(sampleLightVector.getMagnitude());
 
-		return getUnitRadiance().multiply(cosTheta).multiply(falloffFraction);
+		return getUnitRadiance().multiply(falloffFraction);
 	}
 
 	/**
@@ -151,16 +142,18 @@ public abstract class Light implements Transformable {
 	 */
 	public static boolean isVisibleFrom(World world, Point pointFrom, Point lightSurfacePoint) {
 
-		final Vector toLight = new Vector(lightSurfacePoint).subtract(new Vector(pointFrom)).normalize();
-		final Ray ray = new Ray(pointFrom, toLight);
+		final Vector toLight = new Vector(lightSurfacePoint).subtract(new Vector(pointFrom));
+		final Ray ray = new Ray(pointFrom, toLight.normalize());
+
 		return world
 				.getPrimitives()
-					.parallelStream()
+					.stream()
 					.filter(p -> p.isInteracting(ray))
 					.map(p -> p.getIntersection(ray))
 					.filter(i -> i != null)
-					.allMatch(i -> i.getInteractingRay().getCurrT() < 0d
-							|| Global.isNear(i.getInteractingRay().getCurrT(), 0d));
+					.filter(i -> i.getInteractingRay().getCurrT() > 0d
+							&& !Global.isNear(i.getInteractingRay().getCurrT(), 0d))
+					.allMatch(i -> i.getInteractingRay().getCurrT() > toLight.getMagnitude());
 	}
 
 	/**

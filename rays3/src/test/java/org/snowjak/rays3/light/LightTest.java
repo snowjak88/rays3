@@ -1,13 +1,14 @@
 package org.snowjak.rays3.light;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collections;
 
 import org.junit.Test;
 import org.snowjak.rays3.World;
-import org.snowjak.rays3.geometry.Normal;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.geometry.shape.PlaneShape;
@@ -71,12 +72,10 @@ public class LightTest {
 
 		final double distanceSq = new Vector(3d, 1d, 3d).getMagnitudeSquared();
 		final double expectedFalloff = 1d / distanceSq;
-		final double expectedCosine = new Vector(0, 1, 0).dotProduct(new Vector(3, 1, 3).normalize());
 
-		final Spectrum radiance = light.getRadianceAt(new Vector(0, 0, 0).subtract(new Vector(3, 1, 3)),
-				new Normal(0, 1, 0));
+		final Spectrum radiance = light.getRadianceAt(new Vector(0, 0, 0).subtract(new Vector(3, 1, 3)));
 
-		assertEquals(1d * expectedFalloff * expectedCosine, radiance.toRGB().getRed(), 0.00001);
+		assertEquals(1d * expectedFalloff, radiance.toRGB().getRed(), 0.00001);
 	}
 
 	@Test
