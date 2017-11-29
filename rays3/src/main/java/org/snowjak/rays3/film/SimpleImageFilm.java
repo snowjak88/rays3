@@ -32,21 +32,32 @@ public class SimpleImageFilm implements StatisticsFilm {
 	private final List<Double>[][]	filmAmplitude;
 	private final int[][]			filmCounts;
 
-	@SuppressWarnings("unchecked")
 	public SimpleImageFilm(int imageWidth, int imageHeight, Sampler sampler) {
+		this(imageWidth, imageHeight, sampler, false);
+	}
+
+	@SuppressWarnings("unchecked")
+	public SimpleImageFilm(int imageWidth, int imageHeight, Sampler sampler, boolean keepAmplitudes) {
 
 		this.samplesAdded = new AtomicInteger(0);
 		this.filmLock = new ReentrantLock();
 
 		this.filmRGB = new double[imageWidth][imageHeight][3];
-		this.filmAmplitude = new ArrayList[imageWidth][imageHeight];
+
+		if (keepAmplitudes)
+			this.filmAmplitude = new ArrayList[imageWidth][imageHeight];
+		else
+			this.filmAmplitude = null;
+
 		this.filmCounts = new int[imageWidth][imageHeight];
 
 		for (int i = 0; i < imageWidth; i++)
 			for (int j = 0; j < imageHeight; j++) {
 
 				filmCounts[i][j] = 0;
-				filmAmplitude[i][j] = null;
+
+				if (filmAmplitude != null)
+					filmAmplitude[i][j] = null;
 
 				for (int k = 0; k < 3; k++)
 					filmRGB[i][j][k] = 0d;
@@ -62,10 +73,12 @@ public class SimpleImageFilm implements StatisticsFilm {
 
 		filmLock.lock();
 
-		if (filmAmplitude[filmX][filmY] == null)
-			filmAmplitude[filmX][filmY] = new ArrayList<Double>(sample.getSampler().getSamplesPerPixel());
+		if (filmAmplitude != null) {
+			if (filmAmplitude[filmX][filmY] == null)
+				filmAmplitude[filmX][filmY] = new ArrayList<Double>(sample.getSampler().getSamplesPerPixel());
 
-		filmAmplitude[filmX][filmY].add(radiance.getAmplitude());
+			filmAmplitude[filmX][filmY].add(radiance.getAmplitude());
+		}
 		filmCounts[filmX][filmY]++;
 
 		final RGB rgb = radiance.toRGB();
@@ -90,6 +103,9 @@ public class SimpleImageFilm implements StatisticsFilm {
 
 		final int filmX = Film.convertContinuousToDiscrete(imageX);
 		final int filmY = Film.convertContinuousToDiscrete(imageY);
+
+		if (filmAmplitude == null)
+			return 0d;
 
 		final List<Double> amplitudes = filmAmplitude[filmX][filmY];
 
