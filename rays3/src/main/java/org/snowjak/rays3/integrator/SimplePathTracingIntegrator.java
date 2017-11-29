@@ -82,35 +82,45 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 			//
 			// First, form an estimate of the total incident radiance due to
 			// direct illumination.
-			final Spectrum incomingLightRadiance = world.getLights().stream().map(l -> {
-				final Vector lightVector = l.sampleLightVector(point, sample);
+			final Spectrum directRadiance = world.getEmissives().stream().map(p -> {
+				final Point surfacePoint = p.getShape().sampleSurfacePoint(point);
+				final Vector toSurfacePoint = new Vector(surfacePoint).subtract(new Vector(point));
 
-				final double cos_i = bsdf.cos_i(relativeInteraction, lightVector.negate().normalize());
-				if (cos_i < 0d)
-					return l.getUnitRadiance().multiply(0d);
+				if (toSurfacePoint.normalize().dotProduct(interaction.getNormal().asVector().normalize()) <= 0d)
+					return RGBSpectrum.BLACK;
 
-				if (!Light.isVisibleFrom(world, point, Light.getLightSurfacePoint(point, lightVector)))
-					return l.getUnitRadiance().multiply(0d);
+				final Ray toSurfacePointRay = new Ray(point, toSurfacePoint);
+				final Optional<Interaction> op_emissiveInteraction = world.getClosestInteraction(toSurfacePointRay);
+				if (!op_emissiveInteraction.isPresent())
+					return RGBSpectrum.BLACK;
 
-				final Spectrum radiance = l.getRadianceAt(lightVector);
-				final Spectrum f_r_radiance = radiance.multiply(bsdf.f_r(relativeInteraction, sample, lightVector));
-				return f_r_radiance.multiply(FastMath.max(0, cos_i));
+				final Interaction emissiveInteraction = op_emissiveInteraction.get();
+				final double emissiveDistance = emissiveInteraction.getInteractingRay().getCurrT();
+
+				if (emissiveInteraction.getPrimitive() != p)
+					return RGBSpectrum.BLACK;
+
+				final Spectrum emissiveRadiance = p.getBdsf().sampleL_e(emissiveInteraction, sample);
+				return emissiveRadiance
+						.multiply(bsdf.f_r(relativeInteraction, sample, toSurfacePoint))
+							.multiply(bsdf.cos_i(relativeInteraction, toSurfacePoint))
+							.multiply(1d / ( emissiveDistance * emissiveDistance ));
 			}).reduce(RGBSpectrum.BLACK, Spectrum::add);
 
 			//
 			//
 			// Second, estimate the total incident radiance due to indirect
 			// illumination.
-			final Spectrum incomingSampledRadiance;
+			final Spectrum indirectSampledRadiance;
 
 			if (ray.getDepth() >= getMaxRayDepth()) {
-				incomingSampledRadiance = RGBSpectrum.BLACK;
+				indirectSampledRadiance = RGBSpectrum.BLACK;
 			} else {
 
 				final Vector reflectedDirection = bsdf.sampleW_i(relativeInteraction, sample);
 				final Ray reflectedRay = new Ray(point, reflectedDirection, ray);
 
-				incomingSampledRadiance = followRay(reflectedRay, world, sample)
+				indirectSampledRadiance = followRay(reflectedRay, world, sample)
 						.multiply(bsdf.f_r(relativeInteraction, sample, reflectedDirection))
 							.multiply(bsdf.cos_i(relativeInteraction, reflectedDirection));
 			}
@@ -118,7 +128,10 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 			//
 			//
 			//
-			final Spectrum result = bsdf.sampleL_e(relativeInteraction, sample).add(incomingLightRadiance).add(incomingSampledRadiance);
+			final Spectrum result = bsdf
+					.sampleL_e(relativeInteraction, sample)
+						.add(directRadiance)
+						.add(indirectSampledRadiance);
 			return result;
 
 		} else {

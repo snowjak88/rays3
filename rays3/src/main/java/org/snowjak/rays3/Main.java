@@ -18,8 +18,6 @@ import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.geometry.shape.SphereShape;
 import org.snowjak.rays3.integrator.AbstractIntegrator;
 import org.snowjak.rays3.integrator.SimplePathTracingIntegrator;
-import org.snowjak.rays3.light.Light;
-import org.snowjak.rays3.light.SphereLight;
 import org.snowjak.rays3.sample.Sampler;
 import org.snowjak.rays3.sample.StratifiedSampler;
 import org.snowjak.rays3.spectrum.RGB;
@@ -39,7 +37,7 @@ public class Main {
 		//
 		//
 		//
-		final Sampler sampler = new StratifiedSampler(imageSizeX, imageSizeY, 8);
+		final Sampler sampler = new StratifiedSampler(imageSizeX, imageSizeY, 64);
 
 		final Camera camera = new PinholeCamera(imageSizeX, imageSizeY, 4d, 3d, new Point(0, 1, -5), new Point(0, 0, 0),
 				Vector.J, 5d);
@@ -55,17 +53,17 @@ public class Main {
 		//
 		final World world = new World();
 
-		Primitive sphere = new Primitive(new SphereShape(0.5, Arrays.asList(new TranslationTransform(-1.5, 0, 0))),
+		Primitive sphere = new Primitive(new SphereShape(1.0, Arrays.asList(new TranslationTransform(-1.5, 0, 0))),
 				new PerfectSpecularBRDF());
 		world.getPrimitives().add(sphere);
 
-		sphere = new Primitive(new SphereShape(0.5, Arrays.asList(new TranslationTransform(+1.5, 0, 0))),
-				new LambertianBRDF(new ConstantTexture(RGBSpectrum.WHITE), 2d));
+		sphere = new Primitive(new SphereShape(1.0, Arrays.asList(new TranslationTransform(+1.5, 0, 0))),
+				new LambertianBRDF(new ConstantTexture(RGBSpectrum.WHITE), 1.3d));
 		world.getPrimitives().add(sphere);
 
 		//
 
-		Primitive plane = new Primitive(new PlaneShape(Arrays.asList(new TranslationTransform(0d, -0.5d, 0d))),
+		Primitive plane = new Primitive(new PlaneShape(Arrays.asList(new TranslationTransform(0d, -1d, 0d))),
 				new LambertianBRDF(new CheckerboardTexture(new ConstantTexture(RGBSpectrum.BLACK),
 						new ConstantTexture(RGBSpectrum.WHITE)), 1000d));
 		world.getPrimitives().add(plane);
@@ -92,11 +90,11 @@ public class Main {
 				new PlaneShape(
 						Arrays.asList(new TranslationTransform(0d, +5.0d, 0d), new RotationTransform(Vector.I, 180d))),
 				new LambertianBRDF(new ConstantTexture(RGBSpectrum.WHITE), 1000d));
-		//world.getPrimitives().add(plane);
+		world.getPrimitives().add(plane);
 
-		Light light = new SphereLight(new RGBSpectrum(RGB.WHITE.multiply(32d)),
-				Arrays.asList(new TranslationTransform(0d, 5d, 0d)), 0.5);
-		world.getLights().add(light);
+		sphere = new Primitive(new SphereShape(0.5, Arrays.asList(new TranslationTransform(0, 5, 0))),
+				new LambertianBRDF(new ConstantTexture(RGBSpectrum.WHITE), RGBSpectrum.WHITE.multiply(10d), 1.3d));
+		world.getPrimitives().add(sphere);
 
 		//
 		//

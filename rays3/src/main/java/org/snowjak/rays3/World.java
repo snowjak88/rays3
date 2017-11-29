@@ -1,9 +1,9 @@
 package org.snowjak.rays3;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.snowjak.rays3.geometry.Ray;
 import org.snowjak.rays3.geometry.shape.Primitive;
@@ -25,6 +25,14 @@ public class World {
 		return primitives;
 	}
 
+	public Collection<Primitive> getEmissives() {
+
+		return primitives
+				.stream()
+					.filter(p -> p.getBdsf().isEmissive())
+					.collect(Collectors.toCollection(LinkedList::new));
+	}
+
 	public Collection<Light> getLights() {
 
 		return lights;
@@ -32,7 +40,7 @@ public class World {
 
 	/**
 	 * Search for the closest interacting {@link Primitive} in this World that
-	 * the given {@link Ray} interacts with.
+	 * the given {@link Ray} interacts with (that is not behind the Ray).
 	 * <p>
 	 * <strong>Note</strong> that this method executes on the same thread as the
 	 * caller.
@@ -43,31 +51,14 @@ public class World {
 	 */
 	public Optional<Interaction> getClosestInteraction(Ray ray) {
 
-		final LinkedList<Interaction> interactions = new LinkedList<>();
-		for (Primitive p : getPrimitives()) {
-
-			if (p.isInteracting(ray)) {
-				final Interaction i = p.getIntersection(ray);
-				if (i != null)
-					interactions.add(i);
-			}
-		}
-
-		if (interactions.isEmpty())
-			return Optional.empty();
-
-		Collections.sort(interactions,
-				(i1, i2) -> Double.compare(i1.getInteractingRay().getCurrT(), i2.getInteractingRay().getCurrT()));
-
-		return Optional.of(interactions.getFirst());
-
-		// return getPrimitives()
-		// .stream()
-		// .filter(p -> p.isInteracting(ray))
-		// .map(p -> p.getIntersection(ray))
-		// .filter(p -> p != null)
-		// .sorted((i1, i2) -> Double.compare(i1.getInteractingRay().getCurrT(),
-		// i2.getInteractingRay().getCurrT()))
-		// .findFirst();
+		return getPrimitives()
+				.stream()
+					.filter(p -> p.isInteracting(ray))
+					.map(p -> p.getIntersection(ray))
+					.filter(p -> p != null)
+					.filter(p -> p.getInteractingRay().getCurrT() > 0d)
+					.sorted((i1, i2) -> Double.compare(i1.getInteractingRay().getCurrT(),
+							i2.getInteractingRay().getCurrT()))
+					.findFirst();
 	}
 }

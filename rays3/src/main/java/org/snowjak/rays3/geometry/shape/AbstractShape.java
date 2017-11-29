@@ -29,6 +29,24 @@ public abstract class AbstractShape implements Interactable {
 	}
 
 	/**
+	 * Select a point (expressed in <strong>global</strong> coordinates) from
+	 * the surface of this shape.
+	 * 
+	 * @return
+	 */
+	public abstract Point sampleSurfacePoint();
+
+	/**
+	 * Given another point (expressed in <strong>global</strong> coordinates),
+	 * select a point on the surface of this shape such that the selected point
+	 * "faces toward" the other point.
+	 * 
+	 * @param facing
+	 * @return
+	 */
+	public abstract Point sampleSurfacePoint(Point facing);
+
+	/**
 	 * Given a Point (expressed in global coordinates), calculate the
 	 * SurfaceDescriptor of the point on the surface nearest to that given
 	 * point.

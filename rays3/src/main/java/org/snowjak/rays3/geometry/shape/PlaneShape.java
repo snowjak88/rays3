@@ -85,6 +85,22 @@ public class PlaneShape extends AbstractShape {
 	}
 
 	@Override
+	public Point sampleSurfacePoint() {
+
+		final double x = ( Global.RND.nextDouble() - 0.5 ) * Double.MAX_VALUE;
+		final double y = 0d;
+		final double z = ( Global.RND.nextDouble() - 0.5 ) * Double.MAX_VALUE;
+		
+		return localToWorld(new Point(x, y, z));
+	}
+
+	@Override
+	public Point sampleSurfacePoint(Point facing) {
+
+		return sampleSurfacePoint();
+	}
+
+	@Override
 	public SurfaceDescriptor getSurfaceNearestTo(Point point) {
 
 		Point localPoint = worldToLocal(point);

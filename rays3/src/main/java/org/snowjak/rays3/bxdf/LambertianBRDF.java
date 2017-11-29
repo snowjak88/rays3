@@ -14,6 +14,7 @@ import org.snowjak.rays3.intersect.Interaction;
 import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.spectrum.RGBSpectrum;
 import org.snowjak.rays3.spectrum.Spectrum;
+import org.snowjak.rays3.texture.ConstantTexture;
 import org.snowjak.rays3.texture.Texture;
 
 /**
@@ -25,6 +26,7 @@ public class LambertianBRDF extends BSDF {
 
 	private final Texture	texture;
 	private final Texture	emissive;
+	private final Spectrum	totalEmissivePower;
 
 	/**
 	 * Construct a new Lambertian-style BDRF which allows transmittance.
@@ -37,18 +39,38 @@ public class LambertianBRDF extends BSDF {
 	}
 
 	/**
-	 * Construct a new Lambertian-style BDRF.
+	 * Construct a new Lambertian-style BDRF. Total emissive power is assumed to
+	 * equal <code>emissive * 4 * pi</code>, or <code>0</code> if
+	 * <code>emissive == null</code> .
 	 * 
 	 * @param texture
 	 * @param emissive
 	 *            <code>null</code> if this BDRF does not emit any radiance
 	 * @param indexOfRefraction
 	 */
-	public LambertianBRDF(Texture texture, Texture emissive, double indexOfRefraction) {
+	public LambertianBRDF(Texture texture, Spectrum emissive, double indexOfRefraction) {
+		this(texture, ( emissive == null ) ? null : new ConstantTexture(emissive),
+				( emissive == null ) ? RGBSpectrum.BLACK : emissive.multiply(4d * PI), indexOfRefraction);
+	}
+
+	/**
+	 * Construct a new Lambertian-style BDRF.
+	 * 
+	 * @param texture
+	 * @param emissive
+	 *            <code>null</code> if this BDRF does not emit any radiance
+	 * @param totalEmissivePower
+	 *            {@link Spectrum} giving total radiant emissions, over all
+	 *            directions, or {@link RGBSpectrum#BLACK} if no emissions at
+	 *            all
+	 * @param indexOfRefraction
+	 */
+	public LambertianBRDF(Texture texture, Texture emissive, Spectrum totalEmissivePower, double indexOfRefraction) {
 		super(new HashSet<>(Arrays.asList(Property.REFLECT_DIFFUSE)), indexOfRefraction);
 
 		this.texture = texture;
 		this.emissive = emissive;
+		this.totalEmissivePower = ( totalEmissivePower == null ) ? RGBSpectrum.BLACK : totalEmissivePower;
 	}
 
 	@Override
@@ -125,6 +147,18 @@ public class LambertianBRDF extends BSDF {
 	public Texture getEmissive() {
 
 		return emissive;
+	}
+
+	@Override
+	public Spectrum getTotalEmissivePower() {
+
+		return totalEmissivePower;
+	}
+
+	@Override
+	public boolean isEmissive() {
+
+		return ( emissive != null );
 	}
 
 }

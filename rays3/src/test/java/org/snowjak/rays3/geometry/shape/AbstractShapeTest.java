@@ -78,6 +78,22 @@ public class AbstractShapeTest {
 				// test.
 				return null;
 			}
+
+			@Override
+			public Point sampleSurfacePoint() {
+
+				// We don't care about this method for the purposes of this
+				// test.
+				return null;
+			}
+
+			@Override
+			public Point sampleSurfacePoint(Point facing) {
+
+				// We don't care about this method for the purposes of this
+				// test.
+				return null;
+			}
 		};
 	}
 

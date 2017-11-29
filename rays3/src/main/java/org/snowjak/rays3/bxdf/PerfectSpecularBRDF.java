@@ -112,4 +112,16 @@ public class PerfectSpecularBRDF extends BSDF {
 				&& Global.isNear(perfectReflection.getZ(), givenReflection.getZ());
 	}
 
+	@Override
+	public boolean isEmissive() {
+
+		return false;
+	}
+
+	@Override
+	public Spectrum getTotalEmissivePower() {
+
+		return RGBSpectrum.BLACK;
+	}
+
 }

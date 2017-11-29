@@ -22,6 +22,7 @@ public class Primitive implements Interactable, Transformable {
 	private final BSDF			bsdf;
 
 	public Primitive(AbstractShape shape, BSDF bsdf) {
+
 		this.shape = shape;
 		this.bsdf = bsdf;
 	}

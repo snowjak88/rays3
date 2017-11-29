@@ -1,5 +1,7 @@
 package org.snowjak.rays3.geometry.shape;
 
+import static org.apache.commons.math3.util.FastMath.*;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -135,6 +137,50 @@ public class SphereShape extends AbstractShape {
 			return t0;
 		else
 			return t1;
+	}
+
+	@Override
+	public Point sampleSurfacePoint() {
+
+		//
+		//
+		//
+		final double theta = Global.RND.nextDouble() * 2d * PI;
+		final double phi = acos(2d * Global.RND.nextDouble() - 1d);
+		//
+		final double x = r * cos(theta) * sin(phi);
+		final double y = r * cos(phi);
+		final double z = r * sin(theta) * sin(phi);
+		//
+		Vector localVector = Vector.I.multiply(x).add(Vector.J.multiply(y)).add(Vector.K.multiply(z));
+
+		return localToWorld(new Point(localVector));
+	}
+
+	@Override
+	public Point sampleSurfacePoint(Point facing) {
+
+		final Vector towardsV_local = new Vector(worldToLocal(facing));
+
+		final Vector J = towardsV_local.normalize();
+		final Vector I = J.orthogonal();
+		final Vector K = I.crossProduct(J);
+		//
+		//
+		//
+		final double sin2_theta = Global.RND.nextDouble();
+		final double cos2_theta = 1d - sin2_theta;
+		final double sin_theta = sqrt(sin2_theta);
+		final double cos_theta = sqrt(cos2_theta);
+
+		final double orientation = Global.RND.nextDouble() * 2d * PI;
+		//
+		final double x = sin_theta * cos(orientation);
+		final double y = cos_theta;
+		final double z = sin_theta * sin(orientation);
+		//
+		final Vector samplePoint_local = I.multiply(x).add(J.multiply(y)).add(K.multiply(z)).multiply(r);
+		return localToWorld(new Point(samplePoint_local));
 	}
 
 	@Override

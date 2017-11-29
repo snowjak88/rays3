@@ -115,6 +115,17 @@ public abstract class BSDF {
 	}
 
 	/**
+	 * @return <code>true</code> if this BSDF can emit radiance on its own
+	 */
+	public abstract boolean isEmissive();
+
+	/**
+	 * @return the total emissive power that this BSDF can emit, in all possible
+	 *         directions (or <code>0</code> if this BSDF does not emit)
+	 */
+	public abstract Spectrum getTotalEmissivePower();
+
+	/**
 	 * Enumeration describing the various properties a {@link BSDF} instance can
 	 * have (and which will affect how the active {@link AbstractIntegrator}
 	 * will treat it).
