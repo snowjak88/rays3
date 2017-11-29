@@ -94,16 +94,16 @@ public abstract class BSDF {
 
 	/**
 	 * Compute the cosine term for each BSDF interaction -- i.e., the
-	 * dot-product of the outbound direction <code>w<sub>o</sub></code> and the
+	 * dot-product of the outbound direction <code>w<sub>i</sub></code> and the
 	 * surface-normal <code>n</code>
 	 * 
 	 * @param interaction
-	 * @param w_o
+	 * @param w_i
 	 * @return
 	 */
-	public double cos_i(Interaction interaction, Vector w_o) {
+	public double cos_i(Interaction interaction, Vector w_i) {
 
-		return interaction.getNormal().asVector().normalize().dotProduct(w_o.normalize());
+		return interaction.getNormal().asVector().normalize().dotProduct(w_i.normalize());
 	}
 
 	/**
