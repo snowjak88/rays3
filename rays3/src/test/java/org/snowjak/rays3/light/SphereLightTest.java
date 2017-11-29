@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
+import org.apache.commons.math3.util.FastMath;
 import org.junit.Before;
 import org.junit.Test;
 import org.snowjak.rays3.geometry.Point;
@@ -53,7 +54,7 @@ public class SphereLightTest {
 	@Test
 	public void testProbabilitySampleVector() {
 
-		assertEquals("Probability for spherical light should always be 1!", 1d,
+		assertEquals("Probability for spherical light should always be 1 / (2 * PI)!", 1d / ( 2d * FastMath.PI ),
 				light.probabilitySampleVector(null, null, null), 0.00001);
 	}
 
