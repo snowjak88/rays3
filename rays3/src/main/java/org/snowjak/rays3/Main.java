@@ -18,7 +18,6 @@ import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.geometry.shape.SphereShape;
 import org.snowjak.rays3.integrator.AbstractIntegrator;
 import org.snowjak.rays3.integrator.MonteCarloImportanceIntegrator;
-import org.snowjak.rays3.integrator.SimplePathTracingIntegrator;
 import org.snowjak.rays3.sample.BestCandidateSampler;
 import org.snowjak.rays3.sample.Sampler;
 import org.snowjak.rays3.spectrum.RGB;
@@ -43,21 +42,16 @@ public class Main {
 		final int x0 = 0, x1 = 1 * ( imageSliceSpanX ) - 1, x2 = ( imageSizeX - 1 );
 		final int y0 = 0, y1 = ( imageSizeY - 1 );
 
-		final Sampler sampler1 = new BestCandidateSampler(x0, y0, x1, y1, 8);
-		final Sampler sampler2 = new BestCandidateSampler(x1 + 1, y0, x2, y1, 8);
-		// final Sampler sampler2 = new BestCandidateSampler(( imageSizeX - 1 )
-		// / 2 + 1, 0, ( imageSizeX - 1 ),
-		// ( imageSizeY - 1 ), 8);
+		final Sampler sampler1 = new BestCandidateSampler(x0, y0, x1, y1, 4);
+		final Sampler sampler2 = new BestCandidateSampler(x1 + 1, y0, x2, y1, 4);
 
 		final Camera camera = new PinholeCamera(imageSizeX, imageSizeY, 4d, 3d, new Point(0, 1, -5), new Point(0, 0, 0),
 				Vector.J, 5d);
 
 		final SimpleImageFilm film = new SimpleImageFilm(imageSizeX, imageSizeY, false);
 
-		// final AbstractIntegrator integrator = new
-		// MonteCarloImportanceIntegrator(camera, film, sampler, 4, 9);
-		final AbstractIntegrator integrator1 = new SimplePathTracingIntegrator(camera, film, sampler1, 8);
-		final AbstractIntegrator integrator2 = new SimplePathTracingIntegrator(camera, film, sampler2, 8);
+		final AbstractIntegrator integrator1 = new MonteCarloImportanceIntegrator(camera, film, sampler1, 4, 4);
+		final AbstractIntegrator integrator2 = new MonteCarloImportanceIntegrator(camera, film, sampler2, 4, 4);
 
 		//
 		//
@@ -116,7 +110,7 @@ public class Main {
 						( integrator1.countSamplesWaitingToRender() + integrator2.countSamplesWaitingToRender() ),
 						( integrator1.countSamplesCurrentlyRendering() + integrator2.countSamplesCurrentlyRendering() ),
 						film.countSamplesAdded())),
-				1, 1, TimeUnit.SECONDS);
+				1, 10, TimeUnit.SECONDS);
 		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(
 				() -> System.out
 						.println("[  TIME  ] ( TOT SAMPLE ) --> [ RENDR WAIT ] --> { ACTV } --> ( RESULT SAV )"),

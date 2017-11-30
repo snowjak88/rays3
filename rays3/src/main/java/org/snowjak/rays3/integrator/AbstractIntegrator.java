@@ -1,6 +1,9 @@
 package org.snowjak.rays3.integrator;
 
 import java.util.Optional;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.Semaphore;
@@ -39,17 +42,19 @@ public abstract class AbstractIntegrator {
 	 * The number of {@link RenderSampleTask}s that are allowed to be queued up
 	 * and not started in the {@link Global#RENDER_EXECUTOR}.
 	 */
-	public final static int		MAX_WAITING_SAMPLES	= 8192;
+	public final static int							MAX_WAITING_SAMPLES	= 8192;
+	public final static int							PREGENERATE_SAMPLES	= 65536;
 
-	private final Camera		camera;
-	private final Film			film;
-	private final Sampler		sampler;
+	private final Camera							camera;
+	private final Film								film;
+	private final Sampler							sampler;
+	private final BlockingQueue<Optional<Sample>>	samplesQueue;
 
-	private final int			maxRayDepth;
-	private boolean				finishedGettingSamples;
+	private final int								maxRayDepth;
+	private boolean									finishedGettingSamples;
 
-	private final Semaphore		samplesWaitingToRender;
-	private final AtomicInteger	samplesCurrentlyRenderingCount;
+	private final Semaphore							samplesWaitingToRender;
+	private final AtomicInteger						samplesCurrentlyRenderingCount;
 
 	/**
 	 * Construct a new Integrator.
@@ -63,6 +68,7 @@ public abstract class AbstractIntegrator {
 		this.camera = camera;
 		this.film = film;
 		this.sampler = sampler;
+		this.samplesQueue = new LinkedBlockingQueue<Optional<Sample>>(PREGENERATE_SAMPLES);
 
 		this.maxRayDepth = maxRayDepth;
 
@@ -82,13 +88,51 @@ public abstract class AbstractIntegrator {
 	 */
 	public void render(World world) {
 
+		final CountDownLatch pregeneratedSamples = new CountDownLatch(1);
 		Global.RENDER_EXECUTOR.submit(() -> {
 
+			System.out.println("Pre-generating " + Integer.toString(PREGENERATE_SAMPLES) + " samples ...");
+
+			boolean pregenerating = true;
+			int samplesGenerated = 0;
+
+			Optional<Sample> sample = null;
+			do {
+				sample = sampler.getNextSample();
+				try {
+					samplesQueue.put(sample);
+
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+				if (pregenerating) {
+					samplesGenerated++;
+
+					if (samplesGenerated >= PREGENERATE_SAMPLES && pregeneratedSamples.getCount() > 0) {
+						System.out.println("Finished pre-generating!");
+						pregeneratedSamples.countDown();
+						pregenerating = false;
+					}
+				}
+
+			} while (sample.isPresent());
+		});
+
+		Global.RENDER_EXECUTOR.submit(() -> {
+
+			try {
+				pregeneratedSamples.await();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			System.out.println("Commencing rendering ...");
 			Optional<Sample> currentSample;
 
 			try {
 
-				while (( currentSample = getSampler().getNextSample() ).isPresent()) {
+				while (( currentSample = samplesQueue.take() ).isPresent()) {
 
 					samplesWaitingToRender.acquire();
 
