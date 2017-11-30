@@ -3,6 +3,8 @@ package org.snowjak.rays3.integrator;
 import java.util.Optional;
 
 import static org.apache.commons.math3.util.FastMath.*;
+
+import org.snowjak.rays3.Global;
 import org.snowjak.rays3.World;
 import org.snowjak.rays3.bxdf.BSDF;
 import org.snowjak.rays3.camera.Camera;
@@ -95,23 +97,34 @@ public class MonteCarloImportanceIntegrator extends AbstractIntegrator {
 				if (emissiveInteraction.getPrimitive() != p)
 					continue;
 
-				final double sampleProb = bsdf.pdfW_i(relativeInteraction, sample, toEmissiveSurface)
+				final double pdfW_i = bsdf.pdfW_i(relativeInteraction, sample,
+						sample.getAdditionalTwinSample("sample-emissive-W_i", samplesPerInteraction), toEmissiveSurface)
 						* ( p.getShape().computeSolidAngle(point) / ( 2d * PI ) );
+				final double sampleProb = Global.isNear(pdfW_i, 0d) ? 0d : 1d / pdfW_i;
+
 				final double emissiveDistance = emissiveInteraction.getInteractingRay().getCurrT();
 
-				final Spectrum radianceFromEmissive = p.getBsdf().sampleL_e(emissiveInteraction, sample).multiply(
-						1d / ( emissiveDistance * emissiveDistance ));
+				final Spectrum radianceFromEmissive = p
+						.getBsdf()
+							.sampleL_e(emissiveInteraction, sample,
+									sample.getAdditionalTwinSample("sample-emissive-L_e", samplesPerInteraction))
+							.multiply(1d / ( emissiveDistance * emissiveDistance ));
 
-				totalProb_direct += ( 1d / sampleProb );
+				totalProb_direct += sampleProb;
 				totalW_i_direct = totalW_i_direct.add(radianceFromEmissive
-						.multiply(bsdf.f_r(relativeInteraction, sample, toEmissiveSurface))
+						.multiply(bsdf.f_r(relativeInteraction, sample,
+								sample.getAdditionalTwinSample("sample-emissive-f_r", samplesPerInteraction),
+								toEmissiveSurface))
 							.multiply(cos_i)
-							.multiply(1d / sampleProb));
+							.multiply(sampleProb));
 
 			}
 
 		}
-		totalW_i_direct = totalW_i_direct.multiply(1d / totalProb_direct);
+		if (totalProb_direct == 0.0)
+			totalW_i_direct = totalW_i_direct.multiply(0d);
+		else
+			totalW_i_direct = totalW_i_direct.multiply(1d / totalProb_direct);
 
 		//
 		//
@@ -124,28 +137,39 @@ public class MonteCarloImportanceIntegrator extends AbstractIntegrator {
 				//
 				// Sample an incident direction from the BSDF and compute its
 				// PDF.
-				final Vector sampledDirection = bsdf.sampleW_i(relativeInteraction, sample);
-				final double sampledProb = bsdf.pdfW_i(relativeInteraction, sample, sampledDirection);
+				final Vector sampledDirection = bsdf.sampleW_i(relativeInteraction, sample,
+						sample.getAdditionalTwinSample("sample-indirect-W_i", samplesPerInteraction));
+				final double pdfW_i = bsdf.pdfW_i(relativeInteraction, sample,
+						sample.getAdditionalTwinSample("sample-indirect-W_i-prob", samplesPerInteraction),
+						sampledDirection);
+				final double sampledProb = Global.isNear(pdfW_i, 0d) ? 0d : 1d / pdfW_i;
 
 				final Ray sampledRay = new Ray(point, sampledDirection, ray);
 
 				final Spectrum sampledW_i = followRay(sampledRay, world, sample)
-						.multiply(bsdf.f_r(relativeInteraction, sample, sampledDirection))
+						.multiply(bsdf.f_r(relativeInteraction, sample,
+								sample.getAdditionalTwinSample("sample-indirect-f_r", samplesPerInteraction),
+								sampledDirection))
 							.multiply(bsdf.cos_i(relativeInteraction, sampledDirection));
 
-				totalProb_indirect += ( 1d / sampledProb );
-				totalW_i_indirect = totalW_i_indirect.add(sampledW_i.multiply(1d / sampledProb));
+				totalProb_indirect += sampledProb;
+				totalW_i_indirect = totalW_i_indirect.add(sampledW_i.multiply(sampledProb));
 
 			}
 
 		}
-		totalW_i_indirect = totalW_i_indirect.multiply(1d / totalProb_indirect);
+		if (totalProb_indirect == 0.0)
+			totalW_i_indirect = totalW_i_indirect.multiply(0d);
+		else
+			totalW_i_indirect = totalW_i_indirect.multiply(1d / totalProb_indirect);
 
 		//
 		//
 		//
-		return bsdf.sampleL_e(relativeInteraction, sample).add(totalW_i_direct.multiply(1d / 2d)).add(
-				totalW_i_indirect.multiply(1d / 2d));
+		return bsdf
+				.sampleL_e(relativeInteraction, sample, sample.getAdditionalTwinSample("sample-L_e", 1))
+					.add(totalW_i_direct.multiply(1d / 2d))
+					.add(totalW_i_indirect.multiply(1d / 2d));
 	}
 
 }

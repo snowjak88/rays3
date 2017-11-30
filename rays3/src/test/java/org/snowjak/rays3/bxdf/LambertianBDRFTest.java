@@ -46,7 +46,7 @@ public class LambertianBDRFTest {
 	@Test
 	public void testF_r() {
 
-		final Spectrum reflected = bdrf.f_r(interaction, sample, Vector.J);
+		final Spectrum reflected = bdrf.f_r(interaction, sample, sample.getAdditionalTwinSample("test", 1), Vector.J);
 
 		assertEquals("Reflected-Red was not as expected!", 1d, reflected.toRGB().getRed(), 0.00001);
 		assertEquals("Reflected-Green was not as expected!", 0d, reflected.toRGB().getGreen(), 0.00001);
@@ -56,7 +56,7 @@ public class LambertianBDRFTest {
 	@Test
 	public void testsampleL_e() {
 
-		Spectrum emissive = bdrf.sampleL_e(interaction, sample);
+		Spectrum emissive = bdrf.sampleL_e(interaction, sample, sample.getAdditionalTwinSample("test", 1));
 
 		assertEquals("Emissive-Red was not as expected!", 0d, emissive.toRGB().getRed(), 0.00001);
 		assertEquals("Emissive-Green was not as expected!", 0d, emissive.toRGB().getGreen(), 0.00001);
@@ -68,7 +68,8 @@ public class LambertianBDRFTest {
 
 		for (int i = 0; i < 32; i++) {
 
-			final Vector sampledReflection = bdrf.sampleW_i(interaction, sample);
+			final Vector sampledReflection = bdrf.sampleW_i(interaction, sample,
+					sample.getAdditionalTwinSample("test", 1));
 			final double dotProduct = sampledReflection
 					.normalize()
 						.dotProduct(interaction.getNormal().asVector().normalize());
@@ -81,7 +82,7 @@ public class LambertianBDRFTest {
 	public void testPdfW_i() {
 
 		assertEquals("PDF of w_i should always be 1 / (2 * pi)", 1d / ( 2d * PI ),
-				bdrf.pdfW_i(interaction, sample, null), 0.00001);
+				bdrf.pdfW_i(interaction, sample, sample.getAdditionalTwinSample("test", 1), null), 0.00001);
 	}
 
 }

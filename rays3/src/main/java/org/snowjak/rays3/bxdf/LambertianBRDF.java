@@ -7,6 +7,7 @@ import static org.apache.commons.math3.util.FastMath.sqrt;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.function.Supplier;
 
 import org.snowjak.rays3.geometry.Point2D;
 import org.snowjak.rays3.geometry.Vector;
@@ -74,7 +75,7 @@ public class LambertianBRDF extends BSDF {
 	}
 
 	@Override
-	public Spectrum sampleL_e(Interaction interaction, Sample sample) {
+	public Spectrum sampleL_e(Interaction interaction, Sample sample, Supplier<Point2D> sampleSupplier) {
 
 		if (this.emissive == null)
 			return RGBSpectrum.BLACK;
@@ -86,16 +87,14 @@ public class LambertianBRDF extends BSDF {
 	}
 
 	@Override
-	public Vector sampleW_i(Interaction interaction, Sample sample) {
+	public Vector sampleW_i(Interaction interaction, Sample sample, Supplier<Point2D> sampleSupplier) {
 
 		//
 		//
 		// For a simple Lambertian BRDF, we can simply choose any direction in
 		// the hemisphere centered around the surface normal.
 		//
-		final Point2D sphericalPoint = sample
-				.getAdditionalTwinSample("Lambertian-W_i", sample.getSampler().getSamplesPerPixel())
-					.get();
+		final Point2D sphericalPoint = sampleSupplier.get();
 
 		final double sin2_theta = sphericalPoint.getX();
 		final double cos2_theta = 1d - sin2_theta;
@@ -124,7 +123,7 @@ public class LambertianBRDF extends BSDF {
 	}
 
 	@Override
-	public double pdfW_i(Interaction interaction, Sample sample, Vector w_i) {
+	public double pdfW_i(Interaction interaction, Sample sample, Supplier<Point2D> sampleSupplier, Vector w_i) {
 
 		//
 		// A Lambertian BRDF samples directions from anywhere on the hemisphere.
@@ -136,7 +135,7 @@ public class LambertianBRDF extends BSDF {
 	}
 
 	@Override
-	public Spectrum f_r(Interaction interaction, Sample sample, Vector w_i) {
+	public Spectrum f_r(Interaction interaction, Sample sample, Supplier<Point2D> sampleSupplier, Vector w_i) {
 
 		//
 		//

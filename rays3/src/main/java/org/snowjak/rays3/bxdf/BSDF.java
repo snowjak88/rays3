@@ -2,8 +2,10 @@ package org.snowjak.rays3.bxdf;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.snowjak.rays3.geometry.Normal;
+import org.snowjak.rays3.geometry.Point2D;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.integrator.AbstractIntegrator;
 import org.snowjak.rays3.intersect.Interaction;
@@ -59,7 +61,7 @@ public abstract class BSDF {
 	 * @param sample
 	 * @return
 	 */
-	public abstract Spectrum sampleL_e(Interaction interaction, Sample sample);
+	public abstract Spectrum sampleL_e(Interaction interaction, Sample sample, Supplier<Point2D> sampleSupplier);
 
 	/**
 	 * Sample an incident vector from the given interaction.
@@ -68,7 +70,7 @@ public abstract class BSDF {
 	 * @param sample
 	 * @return
 	 */
-	public abstract Vector sampleW_i(Interaction interaction, Sample sample);
+	public abstract Vector sampleW_i(Interaction interaction, Sample sample, Supplier<Point2D> sampleSupplier);
 
 	/**
 	 * Given an inbound vector <code>w<sub>i</sub></code>, what is the
@@ -79,7 +81,7 @@ public abstract class BSDF {
 	 * @param w_i
 	 * @return
 	 */
-	public abstract double pdfW_i(Interaction interaction, Sample sample, Vector w_i);
+	public abstract double pdfW_i(Interaction interaction, Sample sample, Supplier<Point2D> sampleSupplier, Vector w_i);
 
 	/**
 	 * Compute the fraction of energy (for each wavelength) that's reflected
@@ -90,7 +92,7 @@ public abstract class BSDF {
 	 * @param w_i
 	 * @return
 	 */
-	public abstract Spectrum f_r(Interaction interaction, Sample sample, Vector w_i);
+	public abstract Spectrum f_r(Interaction interaction, Sample sample, Supplier<Point2D> sampleSupplier, Vector w_i);
 
 	/**
 	 * Compute the cosine term for each BSDF interaction -- i.e., the

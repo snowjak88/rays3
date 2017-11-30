@@ -26,7 +26,7 @@ public class PerfectSpecularBRDFTest {
 				new Ray(new Point(-1, 1, 0), new Vector(1, -1, 0)), new Normal(Vector.J), new Point2D(1, 1), null);
 		final Sample sample = new Sample(new SimplePseudorandomSampler(32, 32, 1), 8.0, 8.0);
 
-		final Vector w_i = bsdf.sampleW_i(interaction, sample).normalize();
+		final Vector w_i = bsdf.sampleW_i(interaction, sample, sample.getAdditionalTwinSample("test", 1)).normalize();
 		final Vector expected = BSDF
 				.getPerfectSpecularReflectionVector(interaction.getW_e(), interaction.getNormal())
 					.normalize();
@@ -47,10 +47,10 @@ public class PerfectSpecularBRDFTest {
 		final Vector w_i_perfect = new Vector(1, 1, 0).normalize();
 		final Vector w_i_imperfect = new Vector(1, 0.333, 0).normalize();
 
-		assertEquals("Perfect reflection should have PDF = 1!", 1.0, bsdf.pdfW_i(interaction, sample, w_i_perfect),
-				0.00001);
-		assertEquals("Imperfect reflection should have PDF = 0!", 0.0, bsdf.pdfW_i(interaction, sample, w_i_imperfect),
-				0.00001);
+		assertEquals("Perfect reflection should have PDF = 1!", 1.0,
+				bsdf.pdfW_i(interaction, sample, sample.getAdditionalTwinSample("test", 1), w_i_perfect), 0.00001);
+		assertEquals("Imperfect reflection should have PDF = 0!", 0.0,
+				bsdf.pdfW_i(interaction, sample, sample.getAdditionalTwinSample("test", 1), w_i_imperfect), 0.00001);
 	}
 
 	@Test
@@ -64,8 +64,10 @@ public class PerfectSpecularBRDFTest {
 		final Vector w_i_perfect = new Vector(1, 1, 0).normalize();
 		final Vector w_i_imperfect = new Vector(1, 0.333, 0).normalize();
 
-		final Spectrum f_r_perfect = bsdf.f_r(interaction, sample, w_i_perfect);
-		final Spectrum f_r_imperfect = bsdf.f_r(interaction, sample, w_i_imperfect);
+		final Spectrum f_r_perfect = bsdf.f_r(interaction, sample, sample.getAdditionalTwinSample("test", 1),
+				w_i_perfect);
+		final Spectrum f_r_imperfect = bsdf.f_r(interaction, sample, sample.getAdditionalTwinSample("test", 1),
+				w_i_imperfect);
 
 		assertEquals("f_r for perfect reflection (RED) not as expected!", 1.0, f_r_perfect.toRGB().getRed(), 0.00001);
 		assertEquals("f_r for perfect reflection (GREEN) not as expected!", 0.0, f_r_perfect.toRGB().getGreen(),

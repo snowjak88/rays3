@@ -37,7 +37,7 @@ public class Main {
 		//
 		//
 		//
-		final Sampler sampler = new StratifiedSampler(imageSizeX, imageSizeY, 1);
+		final Sampler sampler = new StratifiedSampler(imageSizeX, imageSizeY, 4);
 
 		final Camera camera = new PinholeCamera(imageSizeX, imageSizeY, 4d, 3d, new Point(0, 1, -5), new Point(0, 0, 0),
 				Vector.J, 5d);
@@ -104,7 +104,7 @@ public class Main {
 						sampler.totalSamples(), integrator.countSamplesWaitingToRender(),
 						integrator.countSamplesCurrentlyRendering(), film.countSamplesAdded())),
 				1, 1, TimeUnit.SECONDS);
-		Global.SCHEDULED_EXECUTOR.scheduleAtFixedRate(
+		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(
 				() -> System.out
 						.println("[  TIME  ] ( TOT SAMPLE ) --> [ RENDR WAIT ] --> { ACTV } --> ( RESULT SAV )"),
 				0, 60, TimeUnit.SECONDS);
@@ -121,7 +121,7 @@ public class Main {
 		// This is the scheduled checker-thread. It will signal the
 		// CountDownLatch when the given condition is reached.
 		//
-		Global.SCHEDULED_EXECUTOR.scheduleAtFixedRate(() -> {
+		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(() -> {
 			if (integrator.isFinishedRenderingSamples())
 				awaitUntilDone.countDown();
 		}, 1, 1, TimeUnit.SECONDS);

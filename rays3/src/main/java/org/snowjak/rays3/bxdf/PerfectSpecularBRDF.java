@@ -2,8 +2,10 @@ package org.snowjak.rays3.bxdf;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.function.Supplier;
 
 import org.snowjak.rays3.Global;
+import org.snowjak.rays3.geometry.Point2D;
 import org.snowjak.rays3.geometry.Vector;
 import org.snowjak.rays3.intersect.Interaction;
 import org.snowjak.rays3.sample.Sample;
@@ -60,7 +62,7 @@ public class PerfectSpecularBRDF extends BSDF {
 	}
 
 	@Override
-	public Spectrum sampleL_e(Interaction interaction, Sample sample) {
+	public Spectrum sampleL_e(Interaction interaction, Sample sample, Supplier<Point2D> sampleSupplier) {
 
 		if (emissive == null)
 			return RGBSpectrum.BLACK;
@@ -72,7 +74,7 @@ public class PerfectSpecularBRDF extends BSDF {
 	}
 
 	@Override
-	public Vector sampleW_i(Interaction interaction, Sample sample) {
+	public Vector sampleW_i(Interaction interaction, Sample sample, Supplier<Point2D> sampleSupplier) {
 
 		//
 		// A perfect mirror reflects only perfectly. No other directions are
@@ -82,29 +84,30 @@ public class PerfectSpecularBRDF extends BSDF {
 	}
 
 	@Override
-	public double pdfW_i(Interaction interaction, Sample sample, Vector w_i) {
+	public double pdfW_i(Interaction interaction, Sample sample, Supplier<Point2D> sampleSupplier, Vector w_i) {
 
 		//
 		// A perfect mirror will only every reflect perfectly. Therefore, all
 		// directions that are not perfect reflections are of probability 0.
 		//
-		return ( isPerfectReflection(interaction, sample, w_i) ) ? 1d : 0d;
+		return ( isPerfectReflection(interaction, sample, sampleSupplier, w_i) ) ? 1d : 0d;
 	}
 
 	@Override
-	public Spectrum f_r(Interaction interaction, Sample sample, Vector w_i) {
+	public Spectrum f_r(Interaction interaction, Sample sample, Supplier<Point2D> sampleSupplier, Vector w_i) {
 
 		//
 		//
-		if (isPerfectReflection(interaction, sample, w_i))
+		if (isPerfectReflection(interaction, sample, sampleSupplier, w_i))
 			return texture.evaluate(interaction);
 		else
 			return RGBSpectrum.BLACK;
 	}
 
-	private boolean isPerfectReflection(Interaction interaction, Sample sample, Vector w_i) {
+	private boolean isPerfectReflection(Interaction interaction, Sample sample, Supplier<Point2D> sampleSupplier,
+			Vector w_i) {
 
-		final Vector perfectReflection = sampleW_i(interaction, sample).normalize();
+		final Vector perfectReflection = sampleW_i(interaction, sample, sampleSupplier).normalize();
 		final Vector givenReflection = w_i.normalize();
 
 		return Global.isNear(perfectReflection.getX(), givenReflection.getX())

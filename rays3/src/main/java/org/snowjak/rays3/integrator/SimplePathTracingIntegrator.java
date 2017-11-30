@@ -99,9 +99,11 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 				if (emissiveInteraction.getPrimitive() != p)
 					return RGBSpectrum.BLACK;
 
-				final Spectrum emissiveRadiance = p.getBsdf().sampleL_e(emissiveInteraction, sample);
+				final Spectrum emissiveRadiance = p.getBsdf().sampleL_e(emissiveInteraction, sample,
+						sample.getAdditionalTwinSample("sample-emisive-L_e", 1));
 				return emissiveRadiance
-						.multiply(bsdf.f_r(relativeInteraction, sample, toEmissiveVector))
+						.multiply(bsdf.f_r(relativeInteraction, sample,
+								sample.getAdditionalTwinSample("sample-emissive-f_r", 1), toEmissiveVector))
 							.multiply(bsdf.cos_i(relativeInteraction, toEmissiveVector))
 							.multiply(1d / ( emissiveDistance * emissiveDistance ));
 			}).reduce(RGBSpectrum.BLACK, Spectrum::add);
@@ -116,11 +118,13 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 				indirectSampledRadiance = RGBSpectrum.BLACK;
 			} else {
 
-				final Vector reflectedDirection = bsdf.sampleW_i(relativeInteraction, sample);
+				final Vector reflectedDirection = bsdf.sampleW_i(relativeInteraction, sample,
+						sample.getAdditionalTwinSample("sample-indirect-W_i", 1));
 				final Ray reflectedRay = new Ray(point, reflectedDirection, ray);
 
 				indirectSampledRadiance = followRay(reflectedRay, world, sample)
-						.multiply(bsdf.f_r(relativeInteraction, sample, reflectedDirection))
+						.multiply(bsdf.f_r(relativeInteraction, sample,
+								sample.getAdditionalTwinSample("sample-indirect-f_r", 1), reflectedDirection))
 							.multiply(bsdf.cos_i(relativeInteraction, reflectedDirection));
 			}
 
@@ -128,7 +132,7 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 			//
 			//
 			final Spectrum result = bsdf
-					.sampleL_e(relativeInteraction, sample)
+					.sampleL_e(relativeInteraction, sample, sample.getAdditionalTwinSample("sample-L_e", 1))
 						.add(directRadiance.multiply(1d / 2d))
 						.add(indirectSampledRadiance.multiply(1d / 2d));
 			return result;
