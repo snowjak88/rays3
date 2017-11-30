@@ -13,7 +13,6 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.math3.util.FastMath;
 import org.snowjak.rays3.sample.Sample;
-import org.snowjak.rays3.sample.Sampler;
 import org.snowjak.rays3.spectrum.RGB;
 import org.snowjak.rays3.spectrum.Spectrum;
 
@@ -32,12 +31,12 @@ public class SimpleImageFilm implements StatisticsFilm {
 	private final List<Double>[][]	filmAmplitude;
 	private final int[][]			filmCounts;
 
-	public SimpleImageFilm(int imageWidth, int imageHeight, Sampler sampler) {
-		this(imageWidth, imageHeight, sampler, false);
+	public SimpleImageFilm(int imageWidth, int imageHeight) {
+		this(imageWidth, imageHeight, false);
 	}
 
 	@SuppressWarnings("unchecked")
-	public SimpleImageFilm(int imageWidth, int imageHeight, Sampler sampler, boolean keepAmplitudes) {
+	public SimpleImageFilm(int imageWidth, int imageHeight, boolean keepAmplitudes) {
 
 		this.samplesAdded = new AtomicInteger(0);
 		this.filmLock = new ReentrantLock();

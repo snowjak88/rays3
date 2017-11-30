@@ -1,5 +1,6 @@
 package org.snowjak.rays3.integrator;
 
+import java.util.Optional;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.Semaphore;
@@ -40,9 +41,9 @@ public abstract class AbstractIntegrator {
 	 */
 	public final static int		MAX_WAITING_SAMPLES	= 8192;
 
-	private Camera				camera;
-	private Film				film;
-	private Sampler				sampler;
+	private final Camera		camera;
+	private final Film			film;
+	private final Sampler		sampler;
 
 	private final int			maxRayDepth;
 	private boolean				finishedGettingSamples;
@@ -81,23 +82,27 @@ public abstract class AbstractIntegrator {
 	 */
 	public void render(World world) {
 
-		Sample currentSample;
+		Global.RENDER_EXECUTOR.submit(() -> {
 
-		try {
+			Optional<Sample> currentSample;
 
-			while (( currentSample = getSampler().getNextSample() ) != null) {
+			try {
 
-				samplesWaitingToRender.acquire();
+				while (( currentSample = getSampler().getNextSample() ).isPresent()) {
 
-				Global.RENDER_EXECUTOR.execute(new RenderSampleTask(this, world, currentSample, getCamera(), getFilm(),
-						samplesWaitingToRender, samplesCurrentlyRenderingCount));
+					samplesWaitingToRender.acquire();
+
+					Global.RENDER_EXECUTOR.execute(new RenderSampleTask(this, world, currentSample.get(), getCamera(),
+							getFilm(), samplesWaitingToRender, samplesCurrentlyRenderingCount));
+				}
+
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+			this.finishedGettingSamples = true;
 
-		this.finishedGettingSamples = true;
+		});
 	}
 
 	/**

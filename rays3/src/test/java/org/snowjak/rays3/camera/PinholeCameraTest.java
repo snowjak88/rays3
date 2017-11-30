@@ -2,6 +2,8 @@ package org.snowjak.rays3.camera;
 
 import static org.junit.Assert.*;
 
+import java.util.Optional;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.snowjak.rays3.geometry.Point;
@@ -54,8 +56,11 @@ public class PinholeCameraTest {
 
 		Sampler sampler = new StratifiedSampler((int) camera.getFilmSizeX(), (int) camera.getFilmSizeY(), 1);
 
-		Sample sample;
-		while (( sample = sampler.getNextSample() ) != null) {
+		Optional<Sample> op_sample;
+
+		while (( op_sample = sampler.getNextSample() ).isPresent()) {
+
+			Sample sample = op_sample.get();
 
 			Ray ray = camera.getRay(sample);
 

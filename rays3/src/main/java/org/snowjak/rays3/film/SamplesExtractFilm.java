@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.math3.util.Pair;
 import org.snowjak.rays3.Global;
 import org.snowjak.rays3.sample.Sample;
-import org.snowjak.rays3.sample.Sampler;
 import org.snowjak.rays3.spectrum.Spectrum;
 
 /**
@@ -26,7 +25,7 @@ public class SamplesExtractFilm implements Film {
 
 	private FileWriter									fileWriter	= null;
 
-	public SamplesExtractFilm(File extractFile, Sampler sampler) {
+	public SamplesExtractFilm(File extractFile, int totalSamples) {
 
 		results = new LinkedBlockingQueue<>();
 		samplesAdded = new AtomicInteger(0);
@@ -40,8 +39,7 @@ public class SamplesExtractFilm implements Film {
 		}
 
 		if (fileWriter != null)
-			Global.RENDER_EXECUTOR.submit(
-					new ResultAppendingRunnable(fileWriter, results, samplesAdded, sampler.totalSamples()));
+			Global.RENDER_EXECUTOR.submit(new ResultAppendingRunnable(fileWriter, results, samplesAdded, totalSamples));
 	}
 
 	private static class ResultAppendingRunnable implements Runnable {
@@ -86,7 +84,7 @@ public class SamplesExtractFilm implements Film {
 				samplesAdded.incrementAndGet();
 
 			} while (samplesAdded.get() < samplesToExpect);
-			
+
 			try {
 				fileWriter.flush();
 				fileWriter.close();

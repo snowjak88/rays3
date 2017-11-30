@@ -18,6 +18,7 @@ import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.geometry.shape.SphereShape;
 import org.snowjak.rays3.integrator.AbstractIntegrator;
 import org.snowjak.rays3.integrator.MonteCarloImportanceIntegrator;
+import org.snowjak.rays3.integrator.SimplePathTracingIntegrator;
 import org.snowjak.rays3.sample.BestCandidateSampler;
 import org.snowjak.rays3.sample.Sampler;
 import org.snowjak.rays3.spectrum.RGB;
@@ -37,16 +38,26 @@ public class Main {
 		//
 		//
 		//
-		final Sampler sampler = new BestCandidateSampler(imageSizeX, imageSizeY, 1);
+		final int imageSliceSpanX = ( imageSizeX - 1 ) / 2;
+
+		final int x0 = 0, x1 = 1 * ( imageSliceSpanX ) - 1, x2 = ( imageSizeX - 1 );
+		final int y0 = 0, y1 = ( imageSizeY - 1 );
+
+		final Sampler sampler1 = new BestCandidateSampler(x0, y0, x1, y1, 8);
+		final Sampler sampler2 = new BestCandidateSampler(x1 + 1, y0, x2, y1, 8);
+		// final Sampler sampler2 = new BestCandidateSampler(( imageSizeX - 1 )
+		// / 2 + 1, 0, ( imageSizeX - 1 ),
+		// ( imageSizeY - 1 ), 8);
 
 		final Camera camera = new PinholeCamera(imageSizeX, imageSizeY, 4d, 3d, new Point(0, 1, -5), new Point(0, 0, 0),
 				Vector.J, 5d);
 
-		final SimpleImageFilm film = new SimpleImageFilm(imageSizeX, imageSizeY, sampler, false);
+		final SimpleImageFilm film = new SimpleImageFilm(imageSizeX, imageSizeY, false);
 
-		final AbstractIntegrator integrator = new MonteCarloImportanceIntegrator(camera, film, sampler, 4, 9);
 		// final AbstractIntegrator integrator = new
-		// SimplePathTracingIntegrator(camera, film, sampler, 4);
+		// MonteCarloImportanceIntegrator(camera, film, sampler, 4, 9);
+		final AbstractIntegrator integrator1 = new SimplePathTracingIntegrator(camera, film, sampler1, 8);
+		final AbstractIntegrator integrator2 = new SimplePathTracingIntegrator(camera, film, sampler2, 8);
 
 		//
 		//
@@ -101,15 +112,18 @@ public class Main {
 		//
 		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(
 				() -> System.out.println(String.format("[%TT] (%,12d) --> [%,12d] --> {%,6d} --> (%,12d)", new Date(),
-						sampler.totalSamples(), integrator.countSamplesWaitingToRender(),
-						integrator.countSamplesCurrentlyRendering(), film.countSamplesAdded())),
+						( sampler1.totalSamples() + sampler2.totalSamples() ),
+						( integrator1.countSamplesWaitingToRender() + integrator2.countSamplesWaitingToRender() ),
+						( integrator1.countSamplesCurrentlyRendering() + integrator2.countSamplesCurrentlyRendering() ),
+						film.countSamplesAdded())),
 				1, 1, TimeUnit.SECONDS);
 		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(
 				() -> System.out
 						.println("[  TIME  ] ( TOT SAMPLE ) --> [ RENDR WAIT ] --> { ACTV } --> ( RESULT SAV )"),
 				0, 60, TimeUnit.SECONDS);
 
-		integrator.render(world);
+		integrator1.render(world);
+		integrator2.render(world);
 
 		//
 		//
@@ -122,7 +136,7 @@ public class Main {
 		// CountDownLatch when the given condition is reached.
 		//
 		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(() -> {
-			if (integrator.isFinishedRenderingSamples())
+			if (integrator1.isFinishedRenderingSamples() && integrator2.isFinishedRenderingSamples())
 				awaitUntilDone.countDown();
 		}, 1, 1, TimeUnit.SECONDS);
 

@@ -26,7 +26,7 @@ public class SimplePseudorandomSamplerTest {
 			for (int c = 0; c < filmLocations[0].length; c++)
 				filmLocations[r][c] = 0;
 
-		Sample sample = sampler.getNextSample();
+		Sample sample = sampler.getNextSample().orElse(null);
 		assertNotNull("Expected first sample to be other than null!", sample);
 
 		while (sample != null) {
@@ -43,35 +43,13 @@ public class SimplePseudorandomSamplerTest {
 			assertTrue("Lens-U is out of bounds!", ( sample.getLensU() >= 0d ) && ( sample.getLensU() <= 1d ));
 			assertTrue("Lens-V is out of bounds!", ( sample.getLensV() >= 0d ) && ( sample.getLensV() <= 1d ));
 
-			sample = sampler.getNextSample();
+			sample = sampler.getNextSample().orElse(null);
 		}
 
 		for (int r = 0; r < filmLocations.length; r++)
 			for (int c = 0; c < filmLocations[0].length; c++)
 				assertEquals("Film-location [" + r + ", " + c + "] was not visited the expected number of times!", 2,
 						filmLocations[r][c]);
-	}
-
-	@Test
-	public void testReset() {
-
-		final Sample sample1 = sampler.getNextSample();
-		final Sample sample2 = sampler.getNextSample();
-
-		sampler.reset();
-
-		final Sample sample3 = sampler.getNextSample();
-		final Sample sample4 = sampler.getNextSample();
-
-		assertEquals("Sample-1-image-X != sample-3-image-X!", Film.convertContinuousToDiscrete(sample1.getImageX()),
-				Film.convertContinuousToDiscrete(sample3.getImageX()), 0.001);
-		assertEquals("Sample-1-image-Y != sample-3-image-Y!", Film.convertContinuousToDiscrete(sample1.getImageY()),
-				Film.convertContinuousToDiscrete(sample3.getImageY()), 0.001);
-		
-		assertEquals("Sample-2-image-X != sample-4-image-X!", Film.convertContinuousToDiscrete(sample2.getImageX()),
-				Film.convertContinuousToDiscrete(sample4.getImageX()), 0.001);
-		assertEquals("Sample-2-image-Y != sample-4-image-Y!", Film.convertContinuousToDiscrete(sample2.getImageY()),
-				Film.convertContinuousToDiscrete(sample4.getImageY()), 0.001);
 	}
 
 	@Test

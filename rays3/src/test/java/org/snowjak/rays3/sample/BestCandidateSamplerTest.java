@@ -16,8 +16,8 @@ public class BestCandidateSamplerTest {
 	@Before
 	public void setUp() throws Exception {
 
-		sampler = new BestCandidateSampler(16, 8, 3);
-		film = new short[640][480];
+		sampler = new BestCandidateSampler(0, 0, 15, 7, 3);
+		film = new short[sampler.getFilmSizeX()][sampler.getFilmSizeY()];
 	}
 
 	public void testPixelSampleCount() {
@@ -33,7 +33,7 @@ public class BestCandidateSamplerTest {
 				film[i][j] = 0;
 			}
 
-		Sample sample = sampler.getNextSample();
+		Sample sample = sampler.getNextSample().orElse(null);
 		assertNotNull("First sample was null!", sample);
 
 		while (sample != null) {
@@ -48,7 +48,7 @@ public class BestCandidateSamplerTest {
 
 			film[filmX][filmY]++;
 
-			sample = sampler.getNextSample();
+			sample = sampler.getNextSample().orElse(null);
 		}
 
 		for (int i = sampler.getMinFilmX(); i <= sampler.getMaxFilmX(); i++)
