@@ -113,16 +113,14 @@ public class ScaleTransform implements Transform {
 	public Interaction worldToLocal(Interaction interaction) {
 
 		return new Interaction(worldToLocal(interaction.getPoint()), worldToLocal(interaction.getInteractingRay()),
-				worldToLocal(interaction.getNormal()), interaction.getParam(), interaction.getPrimitive(),
-				interaction.getN1(), interaction.getN2());
+				worldToLocal(interaction.getNormal()), interaction.getParam(), interaction.getPrimitive());
 	}
 
 	@Override
 	public Interaction localToWorld(Interaction interaction) {
 
 		return new Interaction(localToWorld(interaction.getPoint()), localToWorld(interaction.getInteractingRay()),
-				localToWorld(interaction.getNormal()), interaction.getParam(), interaction.getPrimitive(),
-				interaction.getN1(), interaction.getN2());
+				localToWorld(interaction.getNormal()), interaction.getParam(), interaction.getPrimitive());
 	}
 
 	private double[] apply(Matrix matrix, double... coordinates) {

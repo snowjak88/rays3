@@ -52,7 +52,7 @@ public class MonteCarloImportanceIntegrator extends AbstractIntegrator {
 		final Interaction relativeInteraction;
 
 		if (interaction.getNormal().asVector().normalize().dotProduct(interaction.getW_e()) < 0d)
-			relativeInteraction = new Interaction(interaction, true);
+			relativeInteraction = new Interaction(interaction, interaction.getNormal().negate());
 		else
 			relativeInteraction = interaction;
 

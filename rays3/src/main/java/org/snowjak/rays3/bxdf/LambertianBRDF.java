@@ -33,10 +33,9 @@ public class LambertianBRDF extends BSDF {
 	 * Construct a new Lambertian-style BDRF which allows transmittance.
 	 * 
 	 * @param texture
-	 * @param indexOfRefraction
 	 */
-	public LambertianBRDF(Texture texture, double indexOfRefraction) {
-		this(texture, null, indexOfRefraction);
+	public LambertianBRDF(Texture texture) {
+		this(texture, null);
 	}
 
 	/**
@@ -47,11 +46,10 @@ public class LambertianBRDF extends BSDF {
 	 * @param texture
 	 * @param emissive
 	 *            <code>null</code> if this BDRF does not emit any radiance
-	 * @param indexOfRefraction
 	 */
-	public LambertianBRDF(Texture texture, Spectrum emissive, double indexOfRefraction) {
+	public LambertianBRDF(Texture texture, Spectrum emissive) {
 		this(texture, ( emissive == null ) ? null : new ConstantTexture(emissive),
-				( emissive == null ) ? RGBSpectrum.BLACK : emissive.multiply(4d * PI), indexOfRefraction);
+				( emissive == null ) ? RGBSpectrum.BLACK : emissive.multiply(4d * PI));
 	}
 
 	/**
@@ -64,10 +62,9 @@ public class LambertianBRDF extends BSDF {
 	 *            {@link Spectrum} giving total radiant emissions, over all
 	 *            directions, or {@link RGBSpectrum#BLACK} if no emissions at
 	 *            all
-	 * @param indexOfRefraction
 	 */
-	public LambertianBRDF(Texture texture, Texture emissive, Spectrum totalEmissivePower, double indexOfRefraction) {
-		super(new HashSet<>(Arrays.asList(Property.REFLECT_DIFFUSE)), indexOfRefraction);
+	public LambertianBRDF(Texture texture, Texture emissive, Spectrum totalEmissivePower) {
+		super(new HashSet<>(Arrays.asList(Property.REFLECT_DIFFUSE)));
 
 		this.texture = texture;
 		this.emissive = emissive;

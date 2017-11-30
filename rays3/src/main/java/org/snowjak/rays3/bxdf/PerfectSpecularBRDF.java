@@ -55,7 +55,7 @@ public class PerfectSpecularBRDF extends BSDF {
 	 *            <code>null</code> if no emission should take place
 	 */
 	public PerfectSpecularBRDF(Texture texture, Texture emissive) {
-		super(new HashSet<>(Arrays.asList(Property.REFLECT_SPECULAR)), 1d);
+		super(new HashSet<>(Arrays.asList(Property.REFLECT_SPECULAR)));
 
 		this.texture = texture;
 		this.emissive = emissive;

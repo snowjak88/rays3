@@ -55,7 +55,7 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 			// from its normal, then swap the two indices of refraction.
 			final Interaction relativeInteraction;
 			if (interaction.getW_e().normalize().dotProduct(interaction.getNormal().asVector().normalize()) < 0d) {
-				relativeInteraction = new Interaction(interaction, true);
+				relativeInteraction = new Interaction(interaction, interaction.getNormal().negate());
 
 			} else {
 				// Nope -- the eye-vector is on the same side as the normal.

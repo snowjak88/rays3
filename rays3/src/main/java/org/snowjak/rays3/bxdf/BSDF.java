@@ -19,30 +19,16 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public abstract class BSDF {
 
-	private final double		indexOfRefraction;
-	private final Set<Property>	properties;
+	private final Set<Property> properties;
 
 	/**
-	 * Create a new {@link BSDF} with the given list of {@link Property} and the
-	 * default index-of-refraction of 1.0
+	 * Create a new {@link BSDF} with the given list of {@link Property}s.
 	 * 
 	 * @param properties
 	 */
 	public BSDF(Set<Property> properties) {
-		this(properties, 1.0);
-	}
-
-	/**
-	 * Create a new {@link BSDF} with the given list of {@link Property} and
-	 * index-of-refraction.
-	 * 
-	 * @param properties
-	 * @param indexOfRefraction
-	 */
-	public BSDF(Set<Property> properties, double indexOfRefraction) {
 
 		this.properties = new HashSet<>(properties);
-		this.indexOfRefraction = indexOfRefraction;
 	}
 
 	/**
@@ -106,14 +92,6 @@ public abstract class BSDF {
 	public double cos_i(Interaction interaction, Vector w_i) {
 
 		return interaction.getNormal().asVector().normalize().dotProduct(w_i.normalize());
-	}
-
-	/**
-	 * @return this BSDF's index-of-refraction at the given point
-	 */
-	public double getIndexOfRefraction() {
-
-		return indexOfRefraction;
 	}
 
 	/**
