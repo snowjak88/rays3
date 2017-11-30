@@ -131,10 +131,13 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 			//
 			//
 			//
+			final Spectrum avg_indirectDirectRadiance = ( directRadiance.add(indirectSampledRadiance) )
+					.multiply(1d / 2d);
+			//
+			//
 			final Spectrum result = bsdf
 					.sampleL_e(relativeInteraction, sample, sample.getAdditionalTwinSample("sample-L_e", 1))
-						.add(directRadiance.multiply(1d / 2d))
-						.add(indirectSampledRadiance.multiply(1d / 2d));
+						.add(avg_indirectDirectRadiance);
 			return result;
 
 		} else {
