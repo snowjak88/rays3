@@ -61,4 +61,27 @@ public class World {
 							i2.getInteractingRay().getCurrT()))
 					.findFirst();
 	}
+
+	/**
+	 * Search for the closest {@link Interaction} between the given {@link Ray}
+	 * and the given {@link Primitive}.
+	 * <p>
+	 * If <code>primitive == null</code>, this method simply chains to
+	 * {@link #getClosestInteraction(Ray)}.
+	 * </p>
+	 * 
+	 * @param ray
+	 * @param primitive
+	 * @return
+	 */
+	public Optional<Interaction> getClosestInteraction(Ray ray, Primitive primitive) {
+
+		if (primitive == null)
+			return getClosestInteraction(ray);
+
+		if (!primitive.isInteracting(ray))
+			return Optional.empty();
+
+		return Optional.ofNullable(primitive.getIntersection(ray));
+	}
 }
