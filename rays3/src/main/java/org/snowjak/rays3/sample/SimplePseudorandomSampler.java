@@ -54,14 +54,6 @@ public class SimplePseudorandomSampler extends Sampler {
 	}
 
 	@Override
-	public void reset() {
-
-		this.currFilmX = this.getMinFilmX();
-		this.currFilmY = this.getMinFilmY();
-		this.currSamplePerPixel = -1;
-	}
-
-	@Override
 	public boolean isSampleAcceptable(Sample sample, Spectrum result) {
 
 		return true;

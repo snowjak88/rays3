@@ -1,5 +1,6 @@
 package org.snowjak.rays3.sample;
 
+import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -17,6 +18,8 @@ public abstract class Sampler {
 
 	private final Lock	samplerLock;
 
+	private boolean		noMoreSamples;
+
 	public Sampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int samplesPerPixel) {
 
 		this.minFilmX = minFilmX;
@@ -27,18 +30,23 @@ public abstract class Sampler {
 
 		this.samplerLock = new ReentrantLock();
 
+		this.noMoreSamples = false;
+
 	}
 
 	/**
-	 * Grab the next Sample, or <code>null</code> if no more Samples are left in
-	 * this sampling-regime.
+	 * Grab the next Sample, or an empty {@link Optional} if no more Samples are
+	 * left in this sampling-regime.
 	 */
-	public Sample getNextSample() {
+	public Optional<Sample> getNextSample() {
 
-		final Sample result;
+		final Optional<Sample> result;
 		samplerLock.lock();
 
-		result = generateNextSample();
+		result = Optional.ofNullable(generateNextSample());
+
+		if (!result.isPresent())
+			noMoreSamples = true;
 
 		samplerLock.unlock();
 
@@ -56,10 +64,13 @@ public abstract class Sampler {
 	protected abstract Sample generateNextSample();
 
 	/**
-	 * Reset this {@link Sampler} to a virginal state, effectively re-filling
-	 * the {@link Sample}s available via {@link #getNextSample()}.
+	 * @return <code>true</code> if this Sampler has generated all the
+	 *         {@link Sample}s in its domain
 	 */
-	public abstract void reset();
+	public boolean isNoMoreSamples() {
+
+		return noMoreSamples;
+	}
 
 	/**
 	 * @return the total count of {@link Sample}s this Sampler is expected to

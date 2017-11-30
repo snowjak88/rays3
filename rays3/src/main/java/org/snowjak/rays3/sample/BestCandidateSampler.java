@@ -31,8 +31,8 @@ public class BestCandidateSampler extends Sampler {
 			SAMPLE_LENS_U = "LENS_U", SAMPLE_LENS_V = "LENS_V", SAMPLE_TIME = "TIME";
 
 	@SuppressWarnings("unchecked")
-	public BestCandidateSampler(int filmSizeX, int filmSizeY, int samplesPerPixel) {
-		super(0, 0, filmSizeX - 1, filmSizeY - 1, samplesPerPixel);
+	public BestCandidateSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int samplesPerPixel) {
+		super(minFilmX, minFilmY, maxFilmX, maxFilmY, samplesPerPixel);
 
 		this.samplesPerSide = (int) ceil(sqrt(samplesPerPixel * samplesPerPixel));
 		this.samples = new HashMap[samplesPerSide][samplesPerSide];
@@ -206,18 +206,6 @@ public class BestCandidateSampler extends Sampler {
 					}
 
 				});
-	}
-
-	@Override
-	public void reset() {
-
-		for (int i = 0; i < samplesPerSide; i++)
-			for (int j = 0; j < samplesPerSide; j++)
-				this.samples[i][j].clear();
-
-		this.currentImageX = 0;
-		this.currentImageY = 0;
-		this.currentPixelSample = -1;
 	}
 
 	@Override

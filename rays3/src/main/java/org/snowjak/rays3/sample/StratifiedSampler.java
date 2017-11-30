@@ -48,8 +48,8 @@ public class StratifiedSampler extends Sampler {
 	public StratifiedSampler(int filmSizeX, int filmSizeY, int samplesPerPixel) {
 		super(0, 0, filmSizeX - 1, filmSizeY - 1, (int) pow(ceil(sqrt((double) samplesPerPixel)), 2));
 
-		currFilmX = 0;
-		currFilmY = 0;
+		currFilmX = getMinFilmX();
+		currFilmY = getMinFilmY();
 		currPixelSample = -1;
 
 		gridSideSize = (int) ceil(sqrt((double) samplesPerPixel));
@@ -99,18 +99,6 @@ public class StratifiedSampler extends Sampler {
 					}
 
 				});
-	}
-
-	@Override
-	public void reset() {
-
-		currFilmX = 0;
-		currFilmY = 0;
-		currPixelSample = -1;
-
-		imageSamples = new Stratified2DSupplier(gridSideSize);
-		lensSamples = new Stratified2DSupplier(gridSideSize);
-		timeSamples = new Stratified1DSupplier(gridSideSize);
 	}
 
 	@Override
