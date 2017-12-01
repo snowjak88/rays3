@@ -152,12 +152,7 @@ public class Main {
 			// Remember to shut down the global executors!
 			System.out.println("Shutting down worker threads ...");
 			//
-			// We need not explicitly shut down the batch-oriented EXECUTOR, a
-			// ForkJoinPool; those threads hosted by a ForkJoinPool are, as per
-			// the documentation, daemon threads, and are automatically stopped
-			// when the main thread exits.
-			//
-			// So we need only shut down the SCHEDULED_EXECUTOR.
+			Global.RENDER_EXECUTOR.shutdown();
 			Global.SCHEDULED_EXECUTOR.shutdown();
 
 			System.out.println("Writing image to file ...");

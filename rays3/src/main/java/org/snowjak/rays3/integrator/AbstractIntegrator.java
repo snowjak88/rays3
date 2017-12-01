@@ -3,13 +3,11 @@ package org.snowjak.rays3.integrator;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.RecursiveAction;
+import java.util.concurrent.Callable;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.math3.util.FastMath;
 import org.snowjak.rays3.Global;
 import org.snowjak.rays3.World;
 import org.snowjak.rays3.camera.Camera;
@@ -30,9 +28,10 @@ import org.snowjak.rays3.spectrum.Spectrum;
  * </p>
  * <p>
  * When {@link #render(World)} is called, the AbstractIntegrator will begin
- * submitting {@link RenderSampleTask}s to the {@link Global#RENDER_EXECUTOR}
- * ForkJoinPool. Each RenderSampleTask will in turn call
- * {@link #followRay(Ray, World, Sample)} on the AbstractIntegrator instance.
+ * submitting {@link RenderSampleRunnable}s to the
+ * {@link Global#RENDER_EXECUTOR} ForkJoinPool. Each RenderSampleRunnable will
+ * in turn call {@link #followRay(Ray, World, Sample)} on the AbstractIntegrator
+ * instance.
  * </p>
  * 
  * @author snowjak88
@@ -40,10 +39,10 @@ import org.snowjak.rays3.spectrum.Spectrum;
 public abstract class AbstractIntegrator {
 
 	/**
-	 * The number of {@link RenderSampleTask}s that are allowed to be queued up
-	 * and not started in the {@link Global#RENDER_EXECUTOR}.
+	 * The number of {@link RenderSampleRunnable}s that are allowed to be queued
+	 * up and not started in the {@link Global#RENDER_EXECUTOR}.
 	 */
-	public final static int							MAX_WAITING_SAMPLES	= 8192;
+	public final static int							MAX_WAITING_SAMPLES	= 2048;
 
 	private final Camera							camera;
 	private final Film								film;
@@ -81,7 +80,7 @@ public abstract class AbstractIntegrator {
 
 	/**
 	 * Start rendering the given world. This method will create
-	 * {@link RenderSampleTask}s for all {@link Sample}s returned by the
+	 * {@link RenderSampleRunnable}s for all {@link Sample}s returned by the
 	 * configured {@link Sampler}, rendering the results of
 	 * {@link AbstractIntegrator#followRay(Ray, World, Sample)} to the
 	 * configured {@link Film}.
@@ -90,26 +89,18 @@ public abstract class AbstractIntegrator {
 	 */
 	public void render(World world) {
 
-		final int samplesGenerationBiteSize = FastMath.max(MAX_WAITING_SAMPLES / 4, 4);
-
-		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(() -> {
-			if (samplesGenerationBiteSize > samplesQueue.remainingCapacity() / 2)
-				return;
-
-			int samplesGot = 0;
-
+		Global.RENDER_EXECUTOR.execute(() -> {
 			Optional<Sample> sample;
 			do {
 				sample = sampler.getNextSample();
-				samplesGot++;
 				try {
 					samplesQueue.put(sample);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 					sample = Optional.empty();
 				}
-			} while (samplesGot < samplesGenerationBiteSize && sample.isPresent());
-		}, 0, 100, TimeUnit.MILLISECONDS);
+			} while (sample.isPresent());
+		});
 
 		Global.RENDER_EXECUTOR.execute(() -> {
 			Optional<Sample> currentSample;
@@ -120,8 +111,8 @@ public abstract class AbstractIntegrator {
 
 					samplesWaitingToRender.acquire();
 
-					Global.RENDER_EXECUTOR.execute(new RenderSampleTask(this, world, currentSample.get(), getCamera(),
-							getFilm(), samplesWaitingToRender, samplesCurrentlyRenderingCount));
+					Global.RENDER_EXECUTOR.submit(new RenderSampleRunnable(this, world, currentSample.get(),
+							getCamera(), getFilm(), samplesWaitingToRender, samplesCurrentlyRenderingCount));
 				}
 
 			} catch (InterruptedException e) {
@@ -147,7 +138,7 @@ public abstract class AbstractIntegrator {
 	 * </p>
 	 * <p>
 	 * To follow sub-rays on separate threads, use
-	 * {@link FollowRayRecursiveTask#fork()} and <code>join()</code>.
+	 * {@link FollowRayCallable#fork()} and <code>join()</code>.
 	 * </p>
 	 * 
 	 * @param ray
@@ -218,19 +209,19 @@ public abstract class AbstractIntegrator {
 	}
 
 	/**
-	 * {@link RecursiveTask} implementation that renders a single {@link Sample}
-	 * to the given {@link Film}, using a {@link FollowRayRecursiveTask}.
+	 * {@link Runnable} implementation that renders a single {@link Sample} to
+	 * the given {@link Film}.
 	 * <p>
-	 * Note that this will not execute the FollowRayRecursiveTask on a separate
-	 * thread. Instead, you should execute multiple RenderSampleTasks on
-	 * separate threads to achieve multithreading.
+	 * Note that this will not execute the ray-following on a separate thread.
+	 * Instead, you should execute multiple RenderSampleTasks on separate
+	 * threads to achieve multithreading.
 	 * </p>
 	 * 
 	 * @author snowjak88
+	 * @see FollowRayCallable
+	 * @see AbstractIntegrator#followRay(Ray, World, Sample)
 	 */
-	public static class RenderSampleTask extends RecursiveAction {
-
-		private static final long			serialVersionUID	= 3322955501411696398L;
+	public static class RenderSampleRunnable implements Runnable {
 
 		private final AbstractIntegrator	integrator;
 		private final World					world;
@@ -240,7 +231,7 @@ public abstract class AbstractIntegrator {
 		private final Semaphore				samplesWaitingToRender;
 		private final AtomicInteger			samplesCurrentlyRenderingCount;
 
-		public RenderSampleTask(AbstractIntegrator integrator, World world, Sample sample, Camera camera, Film film,
+		public RenderSampleRunnable(AbstractIntegrator integrator, World world, Sample sample, Camera camera, Film film,
 				Semaphore samplesWaitingToRender, AtomicInteger samplesCurrentlyRenderingCount) {
 
 			super();
@@ -254,7 +245,7 @@ public abstract class AbstractIntegrator {
 		}
 
 		@Override
-		protected void compute() {
+		public void run() {
 
 			this.samplesWaitingToRender.release();
 			this.samplesCurrentlyRenderingCount.incrementAndGet();
@@ -271,8 +262,8 @@ public abstract class AbstractIntegrator {
 				// (notice that the initial ray-follow, at least, is kept on
 				// this
 				// same thread)
-				final Spectrum spectrum = new FollowRayRecursiveTask(integrator, ray, world, sample)
-						.invoke()
+				final Spectrum spectrum = integrator
+						.followRay(ray, world, sample)
 							.multiply(1d / (double) sample.getSampler().getSamplesPerPixel());
 
 				if (sample.getSampler().isSampleAcceptable(sample, spectrum))
@@ -280,7 +271,6 @@ public abstract class AbstractIntegrator {
 
 			} catch (Throwable t) {
 				t.printStackTrace();
-
 			} finally {
 				this.samplesCurrentlyRenderingCount.decrementAndGet();
 			}
@@ -294,15 +284,12 @@ public abstract class AbstractIntegrator {
 	 * AbstractIntegrator instance.
 	 * <p>
 	 * This class is provided for those occasions when you with to follow a ray
-	 * on a separate thread -- e.g., through
-	 * {@link FollowRayRecursiveTask#fork()}.
+	 * on a separate thread.
 	 * </p>
 	 * 
 	 * @author snowjak88
 	 */
-	public static class FollowRayRecursiveTask extends RecursiveTask<Spectrum> {
-
-		private static final long			serialVersionUID	= 891450880425940388L;
+	public static class FollowRayCallable implements Callable<Spectrum> {
 
 		private final AbstractIntegrator	integrator;
 		private final Ray					ray;
@@ -310,14 +297,14 @@ public abstract class AbstractIntegrator {
 		private final Sample				sample;
 
 		/**
-		 * Create a new {@link FollowRayRecursiveTask}.
+		 * Create a new {@link FollowRayCallable}.
 		 * 
 		 * @param integrator
 		 * @param ray
 		 * @param world
 		 * @param sample
 		 */
-		public FollowRayRecursiveTask(AbstractIntegrator integrator, Ray ray, World world, Sample sample) {
+		public FollowRayCallable(AbstractIntegrator integrator, Ray ray, World world, Sample sample) {
 			this.integrator = integrator;
 			this.ray = ray;
 			this.world = world;
@@ -325,7 +312,7 @@ public abstract class AbstractIntegrator {
 		}
 
 		@Override
-		protected Spectrum compute() {
+		public Spectrum call() {
 
 			return integrator.followRay(ray, world, sample);
 		}

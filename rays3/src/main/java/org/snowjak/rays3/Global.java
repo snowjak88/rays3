@@ -2,8 +2,8 @@ package org.snowjak.rays3;
 
 import java.util.Random;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.commons.math3.util.FastMath;
 
@@ -18,7 +18,8 @@ public class Global {
 	/**
 	 * The main rendering thread executor.
 	 */
-	public static final ForkJoinPool				RENDER_EXECUTOR		= new ForkJoinPool();
+	public static final ThreadPoolExecutor			RENDER_EXECUTOR		= (ThreadPoolExecutor) Executors
+			.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 
 	/**
 	 * A single thread allocated to execute periodic tasks. Note that there is
