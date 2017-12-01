@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collection;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.snowjak.rays3.film.Film;
@@ -15,7 +17,7 @@ public class SimplePseudorandomSamplerTest {
 	@Before
 	public void setUp() throws Exception {
 
-		sampler = new SimplePseudorandomSampler(128, 128, 2);
+		sampler = new SimplePseudorandomSampler(0, 0, 127, 127, 2);
 	}
 
 	@Test
@@ -44,6 +46,46 @@ public class SimplePseudorandomSamplerTest {
 			assertTrue("Lens-V is out of bounds!", ( sample.getLensV() >= 0d ) && ( sample.getLensV() <= 1d ));
 
 			sample = sampler.getNextSample().orElse(null);
+		}
+
+		for (int r = 0; r < filmLocations.length; r++)
+			for (int c = 0; c < filmLocations[0].length; c++)
+				assertEquals("Film-location [" + r + ", " + c + "] was not visited the expected number of times!", 2,
+						filmLocations[r][c]);
+	}
+
+	@Test
+	public void testGetNextSample_subSamplers() {
+
+		final short[][] filmLocations = new short[sampler.getFilmSizeX()][sampler.getFilmSizeY()];
+		for (int r = 0; r < filmLocations.length; r++)
+			for (int c = 0; c < filmLocations[0].length; c++)
+				filmLocations[r][c] = 0;
+
+		assertTrue("Sampler must be divisible into sub-samplers!", sampler.hasSubSamplers());
+		Collection<Sampler> subSamplers = sampler.getSubSamplers();
+
+		for (Sampler subSampler : subSamplers) {
+
+			Sample sample = subSampler.getNextSample().orElse(null);
+			assertNotNull("First sample was null!", sample);
+
+			while (sample != null) {
+
+				final double imageX = sample.getImageX();
+				final double imageY = sample.getImageY();
+				final int filmX = Film.convertContinuousToDiscrete(imageX);
+				final int filmY = Film.convertContinuousToDiscrete(imageY);
+
+				assertTrue("Film-X (" + filmX + ") is not within bounds [" + 0 + ", " + filmLocations.length + ")",
+						( filmX >= 0 ) && ( filmX < filmLocations.length ));
+				assertTrue("Film-Y (" + filmY + ") is not within bounds [" + 0 + ", " + filmLocations[0].length + ")",
+						( filmY >= 0 ) && ( filmY < filmLocations[0].length ));
+
+				filmLocations[filmX][filmY]++;
+
+				sample = subSampler.getNextSample().orElse(null);
+			}
 		}
 
 		for (int r = 0; r < filmLocations.length; r++)

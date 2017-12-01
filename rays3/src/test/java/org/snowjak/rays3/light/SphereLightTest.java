@@ -30,7 +30,7 @@ public class SphereLightTest {
 	@Test
 	public void testSampleLightVector() {
 
-		final Sample sample = new Sample(new StratifiedSampler(16, 16, 4), 0, 0);
+		final Sample sample = new Sample(new StratifiedSampler(0, 0, 15, 15, 4), 0, 0);
 		final Point towardsPoint = new Point(0, 0, 0);
 		final Vector lightZero = new Vector(light.getObjectZero());
 

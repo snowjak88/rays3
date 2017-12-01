@@ -24,7 +24,7 @@ public class PerfectSpecularBRDFTest {
 		final BSDF bsdf = new PerfectSpecularBRDF();
 		final Interaction interaction = new Interaction(new Point(0, 0, 0),
 				new Ray(new Point(-1, 1, 0), new Vector(1, -1, 0)), new Normal(Vector.J), new Point2D(1, 1), null);
-		final Sample sample = new Sample(new SimplePseudorandomSampler(32, 32, 1), 8.0, 8.0);
+		final Sample sample = new Sample(new SimplePseudorandomSampler(0, 0, 31, 31, 1), 8.0, 8.0);
 
 		final Vector w_i = bsdf.sampleW_i(interaction, sample, sample.getAdditionalTwinSample("test", 1)).normalize();
 		final Vector expected = BSDF
@@ -42,7 +42,7 @@ public class PerfectSpecularBRDFTest {
 		final BSDF bsdf = new PerfectSpecularBRDF();
 		final Interaction interaction = new Interaction(new Point(0, 0, 0),
 				new Ray(new Point(-1, 1, 0), new Vector(1, -1, 0)), new Normal(Vector.J), new Point2D(1, 1), null);
-		final Sample sample = new Sample(new SimplePseudorandomSampler(32, 32, 1), 8.0, 8.0);
+		final Sample sample = new Sample(new SimplePseudorandomSampler(0, 0, 31, 31, 1), 8.0, 8.0);
 
 		final Vector w_i_perfect = new Vector(1, 1, 0).normalize();
 		final Vector w_i_imperfect = new Vector(1, 0.333, 0).normalize();
@@ -59,7 +59,7 @@ public class PerfectSpecularBRDFTest {
 		final BSDF bsdf = new PerfectSpecularBRDF(new ConstantTexture(new RGBSpectrum(RGB.RED)));
 		final Interaction interaction = new Interaction(new Point(0, 0, 0),
 				new Ray(new Point(-1, 1, 0), new Vector(1, -1, 0)), new Normal(Vector.J), new Point2D(1, 1), null);
-		final Sample sample = new Sample(new SimplePseudorandomSampler(32, 32, 1), 8.0, 8.0);
+		final Sample sample = new Sample(new SimplePseudorandomSampler(0, 0, 31, 31, 1), 8.0, 8.0);
 
 		final Vector w_i_perfect = new Vector(1, 1, 0).normalize();
 		final Vector w_i_imperfect = new Vector(1, 0.333, 0).normalize();

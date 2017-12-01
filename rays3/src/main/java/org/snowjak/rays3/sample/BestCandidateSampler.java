@@ -52,6 +52,12 @@ public class BestCandidateSampler extends Sampler {
 	}
 
 	@Override
+	protected Sampler splitSubSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY) {
+
+		return new BestCandidateSampler(minFilmX, minFilmY, maxFilmX, maxFilmY, getSamplesPerPixel());
+	}
+
+	@Override
 	protected Sample generateNextSample() {
 
 		currentPixelSample++;

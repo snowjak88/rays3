@@ -54,7 +54,8 @@ public class PinholeCameraTest {
 	@Test
 	public void testGetRay_stratifiedSampler() {
 
-		Sampler sampler = new StratifiedSampler((int) camera.getFilmSizeX(), (int) camera.getFilmSizeY(), 1);
+		Sampler sampler = new StratifiedSampler(0, 0, (int) camera.getFilmSizeX() - 1, (int) camera.getFilmSizeY() - 1,
+				1);
 
 		Optional<Sample> op_sample;
 

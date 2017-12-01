@@ -1,5 +1,7 @@
 package org.snowjak.rays3.sample;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -32,6 +34,55 @@ public abstract class Sampler {
 
 		this.noMoreSamples = false;
 	}
+
+	/**
+	 * @return <code>true</code> if this Sampler may be subdivided into
+	 *         "sub-Samplers", splitting this Sampler's domain between them
+	 */
+	public boolean hasSubSamplers() {
+
+		if (getFilmSizeX() > getFilmSizeY())
+			return ( getMinFilmX() + 1 < getMaxFilmX() );
+
+		else
+			return ( getMinFilmY() + 1 < getMaxFilmY() );
+
+	}
+
+	/**
+	 * Subdivide this Sampler into two sub-Samplers which together cover this
+	 * Sampler's domain.
+	 * 
+	 * @return
+	 */
+	public Collection<Sampler> getSubSamplers() {
+
+		if (getFilmSizeX() > getFilmSizeY()) {
+
+			final int midX = ( getMaxFilmX() - getMinFilmX() ) / 2 + getMinFilmX();
+			return Arrays.asList(splitSubSampler(getMinFilmX(), getMinFilmY(), midX, getMaxFilmY()),
+					splitSubSampler(midX + 1, getMinFilmY(), getMaxFilmX(), getMaxFilmY()));
+
+		} else {
+
+			final int midY = ( getMaxFilmY() - getMinFilmY() ) / 2 + getMinFilmY();
+			return Arrays.asList(splitSubSampler(getMinFilmX(), getMinFilmY(), getMaxFilmX(), midY),
+					splitSubSampler(getMinFilmX(), midY + 1, getMaxFilmX(), getMaxFilmY()));
+
+		}
+	}
+
+	/**
+	 * Split off a new sub-Sampler off of this Sampler, using the given
+	 * film-extents as the sub-Sampler's new domain.
+	 * 
+	 * @param minFilmX
+	 * @param minFilmY
+	 * @param maxFilmX
+	 * @param maxFilmY
+	 * @return
+	 */
+	protected abstract Sampler splitSubSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY);
 
 	/**
 	 * Grab the next Sample, or an empty {@link Optional} if no more Samples are
