@@ -2,6 +2,7 @@ package org.snowjak.rays3.sample;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -47,6 +48,31 @@ public abstract class Sampler {
 		else
 			return ( getMinFilmY() + 1 < getMaxFilmY() );
 
+	}
+
+	/**
+	 * Recursively split this Sampler <code>n</code> times, giving you a grand
+	 * total of (at most) 2<sup>n</sup> Sampler instances.
+	 * 
+	 * @param n
+	 * @return
+	 * @see #getSubSamplers()
+	 */
+	public Collection<Sampler> recursivelySubdivide(int n) {
+
+		if (n <= 0 || !hasSubSamplers())
+			return Arrays.asList(this);
+		else {
+
+			Collection<Sampler> result = new LinkedList<>();
+
+			for (Sampler subSampler : getSubSamplers()) {
+				result.addAll(subSampler.recursivelySubdivide(n - 1));
+			}
+
+			return result;
+
+		}
 	}
 
 	/**

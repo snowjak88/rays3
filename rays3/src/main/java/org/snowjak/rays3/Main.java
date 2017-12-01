@@ -2,9 +2,7 @@ package org.snowjak.rays3;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -47,7 +45,7 @@ public class Main {
 		final SimpleImageFilm film = new SimpleImageFilm(imageSizeX, imageSizeY, false);
 
 		final AbstractIntegrator integrator = new SimplePathTracingIntegrator(camera, film,
-				gatherSubSamplers(sampler, 4), 4);
+				sampler.recursivelySubdivide(3), 4);
 
 		//
 		//
@@ -153,21 +151,6 @@ public class Main {
 
 			System.out.println("Done!");
 		}, 3, TimeUnit.SECONDS);
-	}
-
-	private static Collection<Sampler> gatherSubSamplers(Sampler sampler, int subdivisions) {
-
-		if (subdivisions <= 0 || !sampler.hasSubSamplers())
-			return Arrays.asList(sampler);
-		else {
-
-			Collection<Sampler> result = new LinkedList<>();
-			for (Sampler subSampler : sampler.getSubSamplers())
-				result.addAll(gatherSubSamplers(subSampler, subdivisions - 1));
-
-			return result;
-
-		}
 	}
 
 }
