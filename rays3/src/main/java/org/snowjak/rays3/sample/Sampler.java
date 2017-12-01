@@ -31,7 +31,6 @@ public abstract class Sampler {
 		this.samplerLock = new ReentrantLock();
 
 		this.noMoreSamples = false;
-
 	}
 
 	/**

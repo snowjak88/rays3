@@ -8,10 +8,9 @@ import static org.apache.commons.math3.util.FastMath.min;
 import static org.apache.commons.math3.util.FastMath.pow;
 import static org.apache.commons.math3.util.FastMath.sqrt;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -21,25 +20,29 @@ import org.snowjak.rays3.spectrum.Spectrum;
 
 public class BestCandidateSampler extends Sampler {
 
-	private final int						samplesPerSide;
-	private int								samplesGenerated;
-	private int								currentPixelSample, currentImageX, currentImageY;
+	private final int			samplesPerSide;
+	private int					samplesGenerated;
+	private int					currentPixelSample, currentImageX, currentImageY;
 
-	private final Map<String, Double>[][]	samples;
+	private final double[][][]	samples;
+	private final boolean[][]	samplesSet;
 
-	private static final String				SAMPLE_IMAGE_X	= "IMAGE_X", SAMPLE_IMAGE_Y = "IMAGE_Y",
-			SAMPLE_LENS_U = "LENS_U", SAMPLE_LENS_V = "LENS_V", SAMPLE_TIME = "TIME";
+	private static final int	SAMPLE_IMAGE_X	= 0, SAMPLE_IMAGE_Y = 1, SAMPLE_LENS_U = 2, SAMPLE_LENS_V = 3,
+			SAMPLE_TIME = 4;
 
-	@SuppressWarnings("unchecked")
 	public BestCandidateSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int samplesPerPixel) {
 		super(minFilmX, minFilmY, maxFilmX, maxFilmY, samplesPerPixel);
 
 		this.samplesPerSide = (int) ceil(sqrt(samplesPerPixel * samplesPerPixel));
-		this.samples = new HashMap[samplesPerSide][samplesPerSide];
+		this.samples = new double[samplesPerSide][samplesPerSide][5];
+		this.samplesSet = new boolean[samplesPerSide][samplesPerSide];
 
-		for (int i = 0; i < samplesPerSide; i++)
-			for (int j = 0; j < samplesPerSide; j++)
-				this.samples[i][j] = new HashMap<>();
+		for (int i = 0; i < samples.length; i++)
+			for (int j = 0; j < samples[i].length; j++) {
+				samplesSet[i][j] = false;
+				for (int k = 0; k < samples[i][j].length; k++)
+					this.samples[i][j][k] = 0;
+			}
 
 		this.samplesGenerated = 0;
 		this.currentImageX = getMinFilmX();
@@ -53,9 +56,12 @@ public class BestCandidateSampler extends Sampler {
 		currentPixelSample++;
 		if (currentPixelSample >= getSamplesPerPixel()) {
 
-			for (int i = 0; i < samplesPerSide; i++)
-				for (int j = 0; j < samplesPerSide; j++)
-					this.samples[i][j].clear();
+			for (int i = 0; i < samples.length; i++)
+				for (int j = 0; j < samples[i].length; j++) {
+					samplesSet[i][j] = false;
+					for (int k = 0; k < samples[i][j].length; k++)
+						this.samples[i][j][k] = 0;
+				}
 
 			currentPixelSample = 0;
 			currentImageY++;
@@ -85,11 +91,12 @@ public class BestCandidateSampler extends Sampler {
 			samples_i = (int) floor(imageX / (double) samplesPerSide);
 			samples_j = (int) floor(imageY / (double) samplesPerSide);
 
-			samples[samples_i][samples_j].put(SAMPLE_IMAGE_X, imageX);
-			samples[samples_i][samples_j].put(SAMPLE_IMAGE_Y, imageY);
-			samples[samples_i][samples_j].put(SAMPLE_LENS_U, lensU);
-			samples[samples_i][samples_j].put(SAMPLE_LENS_V, lensV);
-			samples[samples_i][samples_j].put(SAMPLE_TIME, t);
+			samples[samples_i][samples_j][SAMPLE_IMAGE_X] = imageX;
+			samples[samples_i][samples_j][SAMPLE_IMAGE_Y] = imageY;
+			samples[samples_i][samples_j][SAMPLE_LENS_U] = lensU;
+			samples[samples_i][samples_j][SAMPLE_LENS_V] = lensV;
+			samples[samples_i][samples_j][SAMPLE_TIME] = t;
+			samplesSet[samples_i][samples_j] = true;
 
 		} else {
 
@@ -103,15 +110,15 @@ public class BestCandidateSampler extends Sampler {
 			samples_i = (int) floor(imageXY.getX() / (double) samplesPerSide);
 			samples_j = (int) floor(imageXY.getY() / (double) samplesPerSide);
 
-			final double lensU = throwDart(samples_i, samples_j, SAMPLE_LENS_U);
-			final double lensV = throwDart(samples_i, samples_j, SAMPLE_LENS_V);
-			final double t = throwDart(samples_i, samples_j, SAMPLE_TIME);
+			final Point2D lensUV = throwDart2D(samples_i, samples_j, SAMPLE_LENS_U, SAMPLE_LENS_V);
+			final double t = throwDart1D(samples_i, samples_j, SAMPLE_TIME);
 
-			samples[samples_i][samples_j].put(SAMPLE_IMAGE_X, imageXY.getX());
-			samples[samples_i][samples_j].put(SAMPLE_IMAGE_Y, imageXY.getY());
-			samples[samples_i][samples_j].put(SAMPLE_LENS_U, lensU);
-			samples[samples_i][samples_j].put(SAMPLE_LENS_V, lensV);
-			samples[samples_i][samples_j].put(SAMPLE_TIME, t);
+			samples[samples_i][samples_j][SAMPLE_IMAGE_X] = imageXY.getX();
+			samples[samples_i][samples_j][SAMPLE_IMAGE_Y] = imageXY.getY();
+			samples[samples_i][samples_j][SAMPLE_LENS_U] = lensUV.getX();
+			samples[samples_i][samples_j][SAMPLE_LENS_V] = lensUV.getY();
+			samples[samples_i][samples_j][SAMPLE_TIME] = t;
+			samplesSet[samples_i][samples_j] = true;
 
 		}
 
@@ -128,13 +135,15 @@ public class BestCandidateSampler extends Sampler {
 		for (int i = 0; i < samplesGenerated; i++) {
 
 			final double dartX = Global.RND.nextDouble(), dartY = Global.RND.nextDouble();
+			final int dartImageI = (int) floor(dartX / (double) samplesPerSide),
+					dartImageJ = (int) floor(dartY / (double) samplesPerSide);
 
 			double dartDistanceSq = Double.MAX_VALUE;
-			for (int si = 0; si < samplesPerSide; si++)
-				for (int sj = 0; sj < samplesPerSide; sj++)
-					if (samples[si][sj].containsKey(SAMPLE_IMAGE_X) && samples[si][sj].containsKey(SAMPLE_IMAGE_Y)) {
-						final double currDistanceSq = pow(samples[si][sj].get(SAMPLE_IMAGE_X) - dartX, 2)
-								+ pow(samples[si][sj].get(SAMPLE_IMAGE_Y) - dartY, 2);
+			for (int si = max(dartImageI - 1, 0); si < min(dartImageI + 2, samplesPerSide); si++)
+				for (int sj = max(dartImageJ - 1, 0); sj < min(dartImageJ + 2, samplesPerSide); sj++)
+					if (samplesSet[si][sj] && samplesSet[si][sj]) {
+						final double currDistanceSq = pow(samples[si][sj][SAMPLE_IMAGE_X] - dartX, 2)
+								+ pow(samples[si][sj][SAMPLE_IMAGE_Y] - dartY, 2);
 						if (currDistanceSq < dartDistanceSq)
 							dartDistanceSq = currDistanceSq;
 					}
@@ -153,7 +162,7 @@ public class BestCandidateSampler extends Sampler {
 		return new Point2D(bestDartX, bestDartY);
 	}
 
-	private double throwDart(int samples_i, int samples_j, String dartName) {
+	private double throwDart1D(int samples_i, int samples_j, int dartIndex) {
 
 		double bestDart = 0d;
 		double bestDartDistance = -1d;
@@ -163,10 +172,10 @@ public class BestCandidateSampler extends Sampler {
 			final double dart = Global.RND.nextDouble();
 			double dartDistance = Double.MAX_VALUE;
 
-			for (int si = max(samples_i - 1, 0); si < min(samples_i + 1, samplesPerSide); si++)
-				for (int sj = max(samples_j - 1, 0); sj < min(samples_j + 1, samplesPerSide); sj++)
-					if (samples[si][sj].containsKey(dartName)) {
-						final double currDistance = abs(samples[si][sj].get(dartName) - dart);
+			for (int si = max(samples_i - 1, 0); si < min(samples_i + 2, samplesPerSide); si++)
+				for (int sj = max(samples_j - 1, 0); sj < min(samples_j + 2, samplesPerSide); sj++)
+					if (samplesSet[si][sj]) {
+						final double currDistance = abs(samples[si][sj][dartIndex] - dart);
 						if (currDistance < dartDistance)
 							dartDistance = currDistance;
 					}
@@ -184,12 +193,45 @@ public class BestCandidateSampler extends Sampler {
 		return bestDart;
 	}
 
+	private Point2D throwDart2D(int samples_i, int samples_j, int dartIndex1, int dartIndex2) {
+
+		double bestDartX = 0d, bestDartY = 0d;
+		double bestDartDistanceSq = -1d;
+
+		for (int i = 0; i < samplesGenerated; i++) {
+
+			final double dartX = Global.RND.nextDouble(), dartY = Global.RND.nextDouble();
+			double dartDistanceSq = Double.MAX_VALUE;
+
+			for (int si = max(samples_i - 1, 0); si < min(samples_i + 2, samplesPerSide); si++)
+				for (int sj = max(samples_j - 1, 0); sj < min(samples_j + 2, samplesPerSide); sj++)
+					if (samplesSet[si][sj]) {
+						final double currDistanceSq = pow(samples[si][sj][dartIndex1] - dartX, 2)
+								+ pow(samples[si][sj][dartIndex2] - dartY, 2);
+						if (currDistanceSq < dartDistanceSq)
+							dartDistanceSq = currDistanceSq;
+					}
+
+			if (dartDistanceSq == Double.MAX_VALUE)
+				dartDistanceSq = 0d;
+
+			if (bestDartDistanceSq < dartDistanceSq) {
+				bestDartDistanceSq = dartDistanceSq;
+				bestDartX = dartX;
+				bestDartY = dartY;
+			}
+
+		}
+
+		return new Point2D(bestDartX, bestDartY);
+	}
+
 	private Sample createSample(int samples_i, int samples_j) {
 
-		return new Sample(this, samples[samples_i][samples_j].get(SAMPLE_IMAGE_X) + (double) currentImageX,
-				samples[samples_i][samples_j].get(SAMPLE_IMAGE_Y) + (double) currentImageY,
-				samples[samples_i][samples_j].get(SAMPLE_LENS_U), samples[samples_i][samples_j].get(SAMPLE_LENS_V),
-				samples[samples_i][samples_j].get(SAMPLE_TIME), null, new Function<Integer, Supplier<Double>>() {
+		return new Sample(this, samples[samples_i][samples_j][SAMPLE_IMAGE_X] + (double) currentImageX,
+				samples[samples_i][samples_j][SAMPLE_IMAGE_Y] + (double) currentImageY,
+				samples[samples_i][samples_j][SAMPLE_LENS_U], samples[samples_i][samples_j][SAMPLE_LENS_V],
+				samples[samples_i][samples_j][SAMPLE_TIME], null, new Function<Integer, Supplier<Double>>() {
 
 					@Override
 					public Supplier<Double> apply(Integer period) {
@@ -220,7 +262,7 @@ public class BestCandidateSampler extends Sampler {
 		private final int			period;
 
 		public DartBoard1D(int period) {
-			this.board = new LinkedList<>();
+			this.board = new ArrayList<>(period);
 			this.period = period;
 		}
 

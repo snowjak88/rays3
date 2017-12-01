@@ -42,16 +42,16 @@ public class Main {
 		final int x0 = 0, x1 = 1 * ( imageSliceSpanX ) - 1, x2 = ( imageSizeX - 1 );
 		final int y0 = 0, y1 = ( imageSizeY - 1 );
 
-		final Sampler sampler1 = new BestCandidateSampler(x0, y0, x1, y1, 4);
-		final Sampler sampler2 = new BestCandidateSampler(x1 + 1, y0, x2, y1, 4);
+		final Sampler sampler1 = new BestCandidateSampler(x0, y0, x1, y1, 1);
+		final Sampler sampler2 = new BestCandidateSampler(x1 + 1, y0, x2, y1, 1);
 
 		final Camera camera = new PinholeCamera(imageSizeX, imageSizeY, 4d, 3d, new Point(0, 1, -5), new Point(0, 0, 0),
 				Vector.J, 5d);
 
 		final SimpleImageFilm film = new SimpleImageFilm(imageSizeX, imageSizeY, false);
 
-		final AbstractIntegrator integrator1 = new MonteCarloImportanceIntegrator(camera, film, sampler1, 4, 4);
-		final AbstractIntegrator integrator2 = new MonteCarloImportanceIntegrator(camera, film, sampler2, 4, 4);
+		final AbstractIntegrator integrator1 = new MonteCarloImportanceIntegrator(camera, film, sampler1, 4, 9);
+		final AbstractIntegrator integrator2 = new MonteCarloImportanceIntegrator(camera, film, sampler2, 4, 9);
 
 		//
 		//

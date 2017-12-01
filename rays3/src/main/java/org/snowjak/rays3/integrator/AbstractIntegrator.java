@@ -1,14 +1,15 @@
 package org.snowjak.rays3.integrator;
 
 import java.util.Optional;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.math3.util.FastMath;
 import org.snowjak.rays3.Global;
 import org.snowjak.rays3.World;
 import org.snowjak.rays3.camera.Camera;
@@ -43,11 +44,11 @@ public abstract class AbstractIntegrator {
 	 * and not started in the {@link Global#RENDER_EXECUTOR}.
 	 */
 	public final static int							MAX_WAITING_SAMPLES	= 8192;
-	public final static int							PREGENERATE_SAMPLES	= 65536;
 
 	private final Camera							camera;
 	private final Film								film;
 	private final Sampler							sampler;
+
 	private final BlockingQueue<Optional<Sample>>	samplesQueue;
 
 	private final int								maxRayDepth;
@@ -68,7 +69,8 @@ public abstract class AbstractIntegrator {
 		this.camera = camera;
 		this.film = film;
 		this.sampler = sampler;
-		this.samplesQueue = new LinkedBlockingQueue<Optional<Sample>>(PREGENERATE_SAMPLES);
+
+		this.samplesQueue = new ArrayBlockingQueue<>(MAX_WAITING_SAMPLES);
 
 		this.maxRayDepth = maxRayDepth;
 
@@ -88,46 +90,25 @@ public abstract class AbstractIntegrator {
 	 */
 	public void render(World world) {
 
-		final CountDownLatch pregeneratedSamples = new CountDownLatch(1);
-		Global.RENDER_EXECUTOR.submit(() -> {
-
-			System.out.println("Pre-generating " + Integer.toString(PREGENERATE_SAMPLES) + " samples ...");
-
-			boolean pregenerating = true;
-			int samplesGenerated = 0;
-
-			Optional<Sample> sample = null;
+		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(() -> {
+			Optional<Sample> sample;
+			final int samplesToGet = FastMath.min(FastMath.max(MAX_WAITING_SAMPLES / 16, 4),
+					samplesQueue.remainingCapacity());
+			int samplesGot = 0;
+			
 			do {
 				sample = sampler.getNextSample();
+				samplesGot++;
 				try {
 					samplesQueue.put(sample);
-
 				} catch (InterruptedException e) {
 					e.printStackTrace();
+					sample = Optional.empty();
 				}
+			} while (samplesGot < samplesToGet && sample.isPresent());
+		}, 0, 10, TimeUnit.MILLISECONDS);
 
-				if (pregenerating) {
-					samplesGenerated++;
-
-					if (samplesGenerated >= PREGENERATE_SAMPLES && pregeneratedSamples.getCount() > 0) {
-						System.out.println("Finished pre-generating!");
-						pregeneratedSamples.countDown();
-						pregenerating = false;
-					}
-				}
-
-			} while (sample.isPresent());
-		});
-
-		Global.RENDER_EXECUTOR.submit(() -> {
-
-			try {
-				pregeneratedSamples.await();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-
-			System.out.println("Commencing rendering ...");
+		Global.RENDER_EXECUTOR.execute(() -> {
 			Optional<Sample> currentSample;
 
 			try {
