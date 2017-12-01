@@ -32,9 +32,9 @@ public class BestCandidateSampler extends Sampler {
 	private static final int	COUNT_SAMPLE_DIMENSIONS	= 5;
 
 	public BestCandidateSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int samplesPerPixel) {
-		super(minFilmX, minFilmY, maxFilmX, maxFilmY, samplesPerPixel);
+		super(minFilmX, minFilmY, maxFilmX, maxFilmY, (int) pow(ceil(sqrt((double) samplesPerPixel)), 2));
 
-		this.samplesPerSide = (int) ceil(sqrt(samplesPerPixel * samplesPerPixel));
+		this.samplesPerSide = (int) ceil(sqrt(getSamplesPerPixel()));
 		this.samples = new double[samplesPerSide][samplesPerSide][COUNT_SAMPLE_DIMENSIONS];
 		this.samplesSet = new boolean[samplesPerSide][samplesPerSide];
 
