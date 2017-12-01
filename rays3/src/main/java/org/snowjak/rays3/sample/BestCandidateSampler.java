@@ -64,11 +64,8 @@ public class BestCandidateSampler extends Sampler {
 		if (currentPixelSample >= getSamplesPerPixel()) {
 
 			for (int i = 0; i < samples.length; i++)
-				for (int j = 0; j < samples[i].length; j++) {
+				for (int j = 0; j < samples[i].length; j++)
 					samplesSet[i][j] = false;
-					for (int k = 0; k < samples[i][j].length; k++)
-						this.samples[i][j][k] = 0;
-				}
 
 			currentPixelSample = 0;
 			currentImageY++;

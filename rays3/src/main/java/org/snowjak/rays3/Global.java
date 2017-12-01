@@ -19,7 +19,7 @@ public class Global {
 	 * The main rendering thread executor.
 	 */
 	public static final ThreadPoolExecutor			RENDER_EXECUTOR		= (ThreadPoolExecutor) Executors
-			.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+			.newCachedThreadPool();
 
 	/**
 	 * A single thread allocated to execute periodic tasks. Note that there is

@@ -1,12 +1,14 @@
 package org.snowjak.rays3.integrator;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.snowjak.rays3.Global;
 import org.snowjak.rays3.World;
@@ -42,7 +44,14 @@ public abstract class AbstractIntegrator {
 	 * The number of {@link RenderSampleRunnable}s that are allowed to be queued
 	 * up and not started in the {@link Global#RENDER_EXECUTOR}.
 	 */
-	public final static int							MAX_WAITING_SAMPLES	= 2048;
+	public final static int							MAX_WAITING_SAMPLES		= 4096;
+	/**
+	 * The number of {@link RenderSampleRunnable}s that are allowed to be
+	 * currently executing on the {@link Global#RENDER_EXECUTOR}.
+	 */
+	public final static int							MAX_RENDERING_SAMPLES	= Runtime
+			.getRuntime()
+				.availableProcessors();
 
 	private final Camera							camera;
 	private final Film								film;
@@ -53,8 +62,7 @@ public abstract class AbstractIntegrator {
 	private final int								maxRayDepth;
 	private boolean									finishedGettingSamples;
 
-	private final Semaphore							samplesWaitingToRender;
-	private final AtomicInteger						samplesCurrentlyRenderingCount;
+	private final Semaphore							samplesCurrentlyRenderingCount;
 
 	/**
 	 * Construct a new Integrator.
@@ -74,8 +82,7 @@ public abstract class AbstractIntegrator {
 		this.maxRayDepth = maxRayDepth;
 
 		this.finishedGettingSamples = false;
-		this.samplesWaitingToRender = new Semaphore(MAX_WAITING_SAMPLES);
-		this.samplesCurrentlyRenderingCount = new AtomicInteger(0);
+		this.samplesCurrentlyRenderingCount = new Semaphore(MAX_RENDERING_SAMPLES);
 	}
 
 	/**
@@ -89,18 +96,37 @@ public abstract class AbstractIntegrator {
 	 */
 	public void render(World world) {
 
-		Global.RENDER_EXECUTOR.execute(() -> {
-			Optional<Sample> sample;
-			do {
-				sample = sampler.getNextSample();
-				try {
-					samplesQueue.put(sample);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					sample = Optional.empty();
-				}
-			} while (sample.isPresent());
-		});
+		final Collection<Sampler> gatheredSubSamplers = gatherSubSamplers(sampler, 2);
+		final BlockingQueue<Sampler> subSamplers = new ArrayBlockingQueue<>(gatheredSubSamplers.size());
+		subSamplers.addAll(gatheredSubSamplers);
+
+		for (Sampler subSampler : subSamplers)
+			Global.RENDER_EXECUTOR.execute(() -> {
+				Optional<Sample> sample;
+				do {
+					sample = subSampler.getNextSample();
+
+					if (!sample.isPresent()) {
+						subSamplers.remove(subSampler);
+						if (subSamplers.isEmpty())
+							try {
+								samplesQueue.put(Optional.empty());
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						return;
+					}
+
+					try {
+						samplesQueue.put(sample);
+
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+						sample = Optional.empty();
+					}
+
+				} while (sample.isPresent());
+			});
 
 		Global.RENDER_EXECUTOR.execute(() -> {
 			Optional<Sample> currentSample;
@@ -109,10 +135,10 @@ public abstract class AbstractIntegrator {
 
 				while (( currentSample = samplesQueue.take() ).isPresent()) {
 
-					samplesWaitingToRender.acquire();
+					this.samplesCurrentlyRenderingCount.acquire();
 
 					Global.RENDER_EXECUTOR.submit(new RenderSampleRunnable(this, world, currentSample.get(),
-							getCamera(), getFilm(), samplesWaitingToRender, samplesCurrentlyRenderingCount));
+							getCamera(), getFilm(), samplesCurrentlyRenderingCount));
 				}
 
 			} catch (InterruptedException e) {
@@ -122,6 +148,21 @@ public abstract class AbstractIntegrator {
 			this.finishedGettingSamples = true;
 
 		});
+	}
+
+	private Collection<Sampler> gatherSubSamplers(Sampler sampler, int subdivisions) {
+
+		if (subdivisions <= 0 || !sampler.hasSubSamplers())
+			return Arrays.asList(sampler);
+		else {
+
+			Collection<Sampler> result = new LinkedList<>();
+			for (Sampler subSampler : sampler.getSubSamplers())
+				result.addAll(gatherSubSamplers(subSampler, subdivisions - 1));
+
+			return result;
+
+		}
 	}
 
 	/**
@@ -174,7 +215,7 @@ public abstract class AbstractIntegrator {
 	 */
 	public int countSamplesWaitingToRender() {
 
-		return MAX_WAITING_SAMPLES - samplesWaitingToRender.availablePermits();
+		return samplesQueue.size();
 	}
 
 	/**
@@ -185,7 +226,7 @@ public abstract class AbstractIntegrator {
 	 */
 	public int countSamplesCurrentlyRendering() {
 
-		return samplesCurrentlyRenderingCount.get();
+		return MAX_RENDERING_SAMPLES - samplesCurrentlyRenderingCount.availablePermits();
 	}
 
 	public Camera getCamera() {
@@ -228,11 +269,10 @@ public abstract class AbstractIntegrator {
 		private final Sample				sample;
 		private final Camera				camera;
 		private final Film					film;
-		private final Semaphore				samplesWaitingToRender;
-		private final AtomicInteger			samplesCurrentlyRenderingCount;
+		private final Semaphore				samplesCurrentlyRenderingCount;
 
 		public RenderSampleRunnable(AbstractIntegrator integrator, World world, Sample sample, Camera camera, Film film,
-				Semaphore samplesWaitingToRender, AtomicInteger samplesCurrentlyRenderingCount) {
+				Semaphore samplesCurrentlyRenderingCount) {
 
 			super();
 			this.integrator = integrator;
@@ -240,15 +280,11 @@ public abstract class AbstractIntegrator {
 			this.sample = sample;
 			this.camera = camera;
 			this.film = film;
-			this.samplesWaitingToRender = samplesWaitingToRender;
 			this.samplesCurrentlyRenderingCount = samplesCurrentlyRenderingCount;
 		}
 
 		@Override
 		public void run() {
-
-			this.samplesWaitingToRender.release();
-			this.samplesCurrentlyRenderingCount.incrementAndGet();
 
 			try {
 
@@ -269,10 +305,10 @@ public abstract class AbstractIntegrator {
 				if (sample.getSampler().isSampleAcceptable(sample, spectrum))
 					film.addSample(sample, spectrum);
 
+				this.samplesCurrentlyRenderingCount.release();
+
 			} catch (Throwable t) {
 				t.printStackTrace();
-			} finally {
-				this.samplesCurrentlyRenderingCount.decrementAndGet();
 			}
 		}
 

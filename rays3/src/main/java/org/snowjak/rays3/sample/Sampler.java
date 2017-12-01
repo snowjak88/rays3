@@ -51,11 +51,15 @@ public abstract class Sampler {
 
 	/**
 	 * Subdivide this Sampler into two sub-Samplers which together cover this
-	 * Sampler's domain.
+	 * Sampler's domain, or <code>this</code> if this Sampler cannot be so
+	 * divided.
 	 * 
 	 * @return
 	 */
 	public Collection<Sampler> getSubSamplers() {
+
+		if (!hasSubSamplers())
+			return Arrays.asList(this);
 
 		if (getFilmSizeX() > getFilmSizeY()) {
 
