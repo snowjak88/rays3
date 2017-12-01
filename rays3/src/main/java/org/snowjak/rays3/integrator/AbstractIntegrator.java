@@ -1,8 +1,6 @@
 package org.snowjak.rays3.integrator;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -55,7 +53,7 @@ public abstract class AbstractIntegrator {
 
 	private final Camera							camera;
 	private final Film								film;
-	private final Sampler							sampler;
+	private final BlockingQueue<Sampler>			samplers;
 
 	private final BlockingQueue<Optional<Sample>>	samplesQueue;
 
@@ -71,11 +69,12 @@ public abstract class AbstractIntegrator {
 	 * @param film
 	 * @param sampler
 	 */
-	public AbstractIntegrator(Camera camera, Film film, Sampler sampler, int maxRayDepth) {
+	public AbstractIntegrator(Camera camera, Film film, Collection<Sampler> samplers, int maxRayDepth) {
 
 		this.camera = camera;
 		this.film = film;
-		this.sampler = sampler;
+		this.samplers = new ArrayBlockingQueue<>(samplers.size());
+		this.samplers.addAll(samplers);
 
 		this.samplesQueue = new ArrayBlockingQueue<>(MAX_WAITING_SAMPLES);
 
@@ -96,9 +95,8 @@ public abstract class AbstractIntegrator {
 	 */
 	public void render(World world) {
 
-		final Collection<Sampler> gatheredSubSamplers = gatherSubSamplers(sampler, 2);
-		final BlockingQueue<Sampler> subSamplers = new ArrayBlockingQueue<>(gatheredSubSamplers.size());
-		subSamplers.addAll(gatheredSubSamplers);
+		final BlockingQueue<Sampler> subSamplers = new ArrayBlockingQueue<>(samplers.size());
+		subSamplers.addAll(samplers);
 
 		for (Sampler subSampler : subSamplers)
 			Global.RENDER_EXECUTOR.execute(() -> {
@@ -148,21 +146,6 @@ public abstract class AbstractIntegrator {
 			this.finishedGettingSamples = true;
 
 		});
-	}
-
-	private Collection<Sampler> gatherSubSamplers(Sampler sampler, int subdivisions) {
-
-		if (subdivisions <= 0 || !sampler.hasSubSamplers())
-			return Arrays.asList(sampler);
-		else {
-
-			Collection<Sampler> result = new LinkedList<>();
-			for (Sampler subSampler : sampler.getSubSamplers())
-				result.addAll(gatherSubSamplers(subSampler, subdivisions - 1));
-
-			return result;
-
-		}
 	}
 
 	/**
@@ -239,9 +222,9 @@ public abstract class AbstractIntegrator {
 		return film;
 	}
 
-	public Sampler getSampler() {
+	public Collection<Sampler> getSamplers() {
 
-		return sampler;
+		return samplers;
 	}
 
 	public int getMaxRayDepth() {

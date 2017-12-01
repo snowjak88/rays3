@@ -1,5 +1,7 @@
 package org.snowjak.rays3.integrator;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Optional;
 
 import static org.apache.commons.math3.util.FastMath.*;
@@ -28,10 +30,33 @@ public class MonteCarloImportanceIntegrator extends AbstractIntegrator {
 
 	private final int samplesPerInteraction;
 
+	/**
+	 * Construct a new {@link MonteCarloImportanceIntegrator}.
+	 * 
+	 * @param camera
+	 * @param film
+	 * @param sampler
+	 * @param maxRayDepth
+	 * @param samplesPerInteraction
+	 */
 	public MonteCarloImportanceIntegrator(Camera camera, Film film, Sampler sampler, int maxRayDepth,
 			int samplesPerInteraction) {
+		this(camera, film, Arrays.asList(sampler), maxRayDepth, samplesPerInteraction);
+	}
 
-		super(camera, film, sampler, maxRayDepth);
+	/**
+	 * Construct a new {@link MonteCarloImportanceIntegrator}.
+	 * 
+	 * @param camera
+	 * @param film
+	 * @param samplers
+	 * @param maxRayDepth
+	 * @param samplesPerInteraction
+	 */
+	public MonteCarloImportanceIntegrator(Camera camera, Film film, Collection<Sampler> samplers, int maxRayDepth,
+			int samplesPerInteraction) {
+
+		super(camera, film, samplers, maxRayDepth);
 		this.samplesPerInteraction = samplesPerInteraction;
 	}
 

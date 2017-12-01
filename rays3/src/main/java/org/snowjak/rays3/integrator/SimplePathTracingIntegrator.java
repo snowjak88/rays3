@@ -1,5 +1,7 @@
 package org.snowjak.rays3.integrator;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Optional;
 
 import org.snowjak.rays3.World;
@@ -38,7 +40,18 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 	 * @param sampler
 	 */
 	public SimplePathTracingIntegrator(Camera camera, Film film, Sampler sampler, int maxRayDepth) {
-		super(camera, film, sampler, maxRayDepth);
+		this(camera, film, Arrays.asList(sampler), maxRayDepth);
+	}
+
+	/**
+	 * Construct a new {@link SimplePathTracingIntegrator}.
+	 * 
+	 * @param camera
+	 * @param film
+	 * @param samplers
+	 */
+	public SimplePathTracingIntegrator(Camera camera, Film film, Collection<Sampler> samplers, int maxRayDepth) {
+		super(camera, film, samplers, maxRayDepth);
 	}
 
 	@Override

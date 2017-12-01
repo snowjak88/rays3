@@ -2,7 +2,9 @@ package org.snowjak.rays3;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -17,7 +19,7 @@ import org.snowjak.rays3.geometry.shape.PlaneShape;
 import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.geometry.shape.SphereShape;
 import org.snowjak.rays3.integrator.AbstractIntegrator;
-import org.snowjak.rays3.integrator.MonteCarloImportanceIntegrator;
+import org.snowjak.rays3.integrator.SimplePathTracingIntegrator;
 import org.snowjak.rays3.sample.BestCandidateSampler;
 import org.snowjak.rays3.sample.Sampler;
 import org.snowjak.rays3.spectrum.RGB;
@@ -37,14 +39,15 @@ public class Main {
 		//
 		//
 		//
-		final Sampler sampler = new BestCandidateSampler(0, 0, imageSizeX - 1, imageSizeY - 1, 1);
+		final Sampler sampler = new BestCandidateSampler(0, 0, imageSizeX - 1, imageSizeY - 1, 3);
 
 		final Camera camera = new PinholeCamera(imageSizeX, imageSizeY, 4d, 3d, new Point(0, 1, -5), new Point(0, 0, 0),
 				Vector.J, 5d);
 
 		final SimpleImageFilm film = new SimpleImageFilm(imageSizeX, imageSizeY, false);
 
-		final AbstractIntegrator integrator = new MonteCarloImportanceIntegrator(camera, film, sampler, 4, 8);
+		final AbstractIntegrator integrator = new SimplePathTracingIntegrator(camera, film,
+				gatherSubSamplers(sampler, 4), 4);
 
 		//
 		//
@@ -150,6 +153,21 @@ public class Main {
 
 			System.out.println("Done!");
 		}, 3, TimeUnit.SECONDS);
+	}
+
+	private static Collection<Sampler> gatherSubSamplers(Sampler sampler, int subdivisions) {
+
+		if (subdivisions <= 0 || !sampler.hasSubSamplers())
+			return Arrays.asList(sampler);
+		else {
+
+			Collection<Sampler> result = new LinkedList<>();
+			for (Sampler subSampler : sampler.getSubSamplers())
+				result.addAll(gatherSubSamplers(subSampler, subdivisions - 1));
+
+			return result;
+
+		}
 	}
 
 }
