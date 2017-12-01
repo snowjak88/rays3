@@ -90,12 +90,15 @@ public abstract class AbstractIntegrator {
 	 */
 	public void render(World world) {
 
+		final int samplesGenerationBiteSize = FastMath.max(MAX_WAITING_SAMPLES / 4, 4);
+
 		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(() -> {
-			Optional<Sample> sample;
-			final int samplesToGet = FastMath.min(FastMath.max(MAX_WAITING_SAMPLES / 16, 4),
-					samplesQueue.remainingCapacity());
+			if (samplesGenerationBiteSize > samplesQueue.remainingCapacity() / 2)
+				return;
+
 			int samplesGot = 0;
-			
+
+			Optional<Sample> sample;
 			do {
 				sample = sampler.getNextSample();
 				samplesGot++;
@@ -105,8 +108,8 @@ public abstract class AbstractIntegrator {
 					e.printStackTrace();
 					sample = Optional.empty();
 				}
-			} while (samplesGot < samplesToGet && sample.isPresent());
-		}, 0, 10, TimeUnit.MILLISECONDS);
+			} while (samplesGot < samplesGenerationBiteSize && sample.isPresent());
+		}, 0, 100, TimeUnit.MILLISECONDS);
 
 		Global.RENDER_EXECUTOR.execute(() -> {
 			Optional<Sample> currentSample;

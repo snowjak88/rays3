@@ -27,14 +27,15 @@ public class BestCandidateSampler extends Sampler {
 	private final double[][][]	samples;
 	private final boolean[][]	samplesSet;
 
-	private static final int	SAMPLE_IMAGE_X	= 0, SAMPLE_IMAGE_Y = 1, SAMPLE_LENS_U = 2, SAMPLE_LENS_V = 3,
+	private static final int	SAMPLE_IMAGE_X			= 0, SAMPLE_IMAGE_Y = 1, SAMPLE_LENS_U = 2, SAMPLE_LENS_V = 3,
 			SAMPLE_TIME = 4;
+	private static final int	COUNT_SAMPLE_DIMENSIONS	= 5;
 
 	public BestCandidateSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int samplesPerPixel) {
 		super(minFilmX, minFilmY, maxFilmX, maxFilmY, samplesPerPixel);
 
 		this.samplesPerSide = (int) ceil(sqrt(samplesPerPixel * samplesPerPixel));
-		this.samples = new double[samplesPerSide][samplesPerSide][5];
+		this.samples = new double[samplesPerSide][samplesPerSide][COUNT_SAMPLE_DIMENSIONS];
 		this.samplesSet = new boolean[samplesPerSide][samplesPerSide];
 
 		for (int i = 0; i < samples.length; i++)
