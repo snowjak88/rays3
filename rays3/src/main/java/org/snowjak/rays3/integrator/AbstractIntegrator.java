@@ -42,7 +42,8 @@ public abstract class AbstractIntegrator {
 	 * The number of {@link RenderSampleRunnable}s that are allowed to be queued
 	 * up and not started in the {@link Global#RENDER_EXECUTOR}.
 	 */
-	public final static int							MAX_WAITING_SAMPLES		= 4096;
+	public final static int							MAX_WAITING_SAMPLES		= Runtime.getRuntime().availableProcessors()
+			* 2;
 	/**
 	 * The number of {@link RenderSampleRunnable}s that are allowed to be
 	 * currently executing on the {@link Global#RENDER_EXECUTOR}.
