@@ -199,7 +199,7 @@ public abstract class Sampler {
 	 */
 	public int countSamplesPregenerated() {
 
-		return samplesQueue.size();
+		return ( samplesQueue == null ) ? 0 : samplesQueue.size();
 	}
 
 	/**
