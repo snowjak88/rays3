@@ -122,6 +122,15 @@ public abstract class Sampler {
 	 */
 	protected abstract Sampler splitSubSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY);
 
+	/**
+	 * Pre-generates all {@link Sample}s within this Sampler's domain. Blocks
+	 * until all Samples are generated and stored in this Sampler's internal
+	 * queue.
+	 * <p>
+	 * <strong>Note</strong> that all pregenerated Samples will not be copied
+	 * into any subdivided sub-Samplers you may subsequently split off.
+	 * </p>
+	 */
 	public void pregenerateSamples() {
 
 		this.pregenerate = true;
@@ -137,6 +146,10 @@ public abstract class Sampler {
 		}
 	}
 
+	/**
+	 * @return a count of those {@link Sample}s that were pre-generated and
+	 *         stored in this Sampler's internal queue
+	 */
 	public int countSamplesPregenerated() {
 
 		return samplesQueue.size();
