@@ -30,7 +30,7 @@ public class LambertianBRDF extends BSDF {
 	private final Spectrum	totalEmissivePower;
 
 	/**
-	 * Construct a new Lambertian-style BDRF which allows transmittance.
+	 * Construct a new Lambertian-style BDRF.
 	 * 
 	 * @param texture
 	 */
