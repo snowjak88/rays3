@@ -20,7 +20,7 @@ public class SamplerTest {
 	@Test
 	public void testRecursivelySubdivide() {
 
-		Sampler sampler = new SamplerImpl(0, 0, 16, 16, 1);
+		Sampler sampler = new SamplerImpl(0, 0, 16, 16, 1, 0);
 
 		Collection<Sampler> subSamplers = sampler.recursivelySubdivide(4);
 
@@ -30,14 +30,16 @@ public class SamplerTest {
 
 	private static class SamplerImpl extends Sampler {
 
-		public SamplerImpl(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int samplesPerPixel) {
-			super(minFilmX, minFilmY, maxFilmX, maxFilmY, samplesPerPixel);
+		public SamplerImpl(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int samplesPerPixel,
+				int pregenerateBufferSize) {
+			super(minFilmX, minFilmY, maxFilmX, maxFilmY, samplesPerPixel, pregenerateBufferSize);
 		}
 
 		@Override
-		protected Sampler splitSubSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY) {
+		protected Sampler splitSubSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY,
+				int pregenerateBufferSize) {
 
-			return new SamplerImpl(minFilmX, minFilmY, maxFilmX, maxFilmY, getSamplesPerPixel());
+			return new SamplerImpl(minFilmX, minFilmY, maxFilmX, maxFilmY, getSamplesPerPixel(), pregenerateBufferSize);
 		}
 
 		@Override

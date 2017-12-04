@@ -46,7 +46,25 @@ public class StratifiedSampler extends Sampler {
 	 * @param samplesPerPixel
 	 */
 	public StratifiedSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int samplesPerPixel) {
-		super(minFilmX, minFilmY, maxFilmX, maxFilmY, (int) pow(ceil(sqrt((double) samplesPerPixel)), 2));
+		this(minFilmX, minFilmY, maxFilmX, maxFilmY, samplesPerPixel, 0);
+	}
+
+	/**
+	 * Create a new StratifiedSampler.
+	 * <p>
+	 * <strong>Note</strong> that <code>samplesPerPixel</code> must be a power
+	 * of 2. If necessary, this number is <strong>rounded up</strong>.
+	 * </p>
+	 * 
+	 * @param filmSizeX
+	 * @param filmSizeY
+	 * @param samplesPerPixel
+	 * @param pregenerateBufferSize
+	 */
+	public StratifiedSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int samplesPerPixel,
+			int pregenerateBufferSize) {
+		super(minFilmX, minFilmY, maxFilmX, maxFilmY, (int) pow(ceil(sqrt((double) samplesPerPixel)), 2),
+				pregenerateBufferSize);
 
 		currFilmX = getMinFilmX();
 		currFilmY = getMinFilmY();
@@ -60,9 +78,11 @@ public class StratifiedSampler extends Sampler {
 	}
 
 	@Override
-	protected Sampler splitSubSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY) {
+	protected Sampler splitSubSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY,
+			int pregenerateBufferSize) {
 
-		return new StratifiedSampler(minFilmX, minFilmY, maxFilmX, maxFilmY, getSamplesPerPixel());
+		return new StratifiedSampler(minFilmX, minFilmY, maxFilmX, maxFilmY, getSamplesPerPixel(),
+				pregenerateBufferSize);
 	}
 
 	@Override

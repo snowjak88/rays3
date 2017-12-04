@@ -1,14 +1,20 @@
 package org.snowjak.rays3.sample;
 
+import static org.apache.commons.math3.util.FastMath.max;
+import static org.apache.commons.math3.util.FastMath.min;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Optional;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.snowjak.rays3.Global;
 import org.snowjak.rays3.spectrum.Spectrum;
 
 /**
@@ -21,14 +27,47 @@ public abstract class Sampler {
 	private final int					minFilmX, minFilmY, maxFilmX, maxFilmY;
 	private final int					samplesPerPixel;
 
+	private final Runnable				samplesPregenerator;
+	private final CountDownLatch		samplesPregeneratedLatch;
 	private final BlockingQueue<Sample>	samplesQueue;
 
 	private final Lock					samplerLock;
 
+	private final int					pregenerateBufferSize;
 	private boolean						pregenerate;
+	private AtomicBoolean				generatorStarted;
+	private AtomicBoolean				generatorFinished;
 	private boolean						noMoreSamples;
 
+	/**
+	 * Construct a new Sampler.
+	 * 
+	 * @param minFilmX
+	 * @param minFilmY
+	 * @param maxFilmX
+	 * @param maxFilmY
+	 * @param samplesPerPixel
+	 */
 	public Sampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int samplesPerPixel) {
+		this(minFilmX, minFilmY, maxFilmX, maxFilmY, samplesPerPixel, 0);
+	}
+
+	/**
+	 * Construct a new Sampler. If you want to pre-generate any {@link Sample}s
+	 * on this Sampler's internal queue, provide a positive non-zero value for
+	 * <code>pregenerateBuffer</code>.
+	 * 
+	 * @param minFilmX
+	 * @param minFilmY
+	 * @param maxFilmX
+	 * @param maxFilmY
+	 * @param samplesPerPixel
+	 * @param pregenerateBufferSize
+	 *            Must be <code>&gt; 0</code> if you want to pre-generate any
+	 *            Samples
+	 */
+	public Sampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int samplesPerPixel,
+			int pregenerateBufferSize) {
 
 		this.minFilmX = minFilmX;
 		this.minFilmY = minFilmY;
@@ -36,12 +75,38 @@ public abstract class Sampler {
 		this.maxFilmY = maxFilmY;
 		this.samplesPerPixel = samplesPerPixel;
 
-		this.samplesQueue = new LinkedBlockingQueue<>();
-
 		this.samplerLock = new ReentrantLock();
-
-		this.pregenerate = false;
 		this.noMoreSamples = false;
+
+		this.pregenerateBufferSize = min(max(pregenerateBufferSize, 0), totalSamples());
+
+		this.pregenerate = ( this.pregenerateBufferSize > 0 );
+		this.generatorStarted = new AtomicBoolean(false);
+		this.generatorFinished = new AtomicBoolean(false);
+
+		if (this.pregenerateBufferSize > 0)
+			this.samplesQueue = new ArrayBlockingQueue<>(this.pregenerateBufferSize);
+		else
+			this.samplesQueue = null;
+
+		this.samplesPregeneratedLatch = new CountDownLatch(this.pregenerateBufferSize);
+
+		this.samplesPregenerator = () -> {
+
+			generatorStarted.set(true);
+
+			Sample currentSample;
+			while (( currentSample = generateNextSample() ) != null) {
+				try {
+					samplesQueue.put(currentSample);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				samplesPregeneratedLatch.countDown();
+			}
+
+			this.generatorFinished.set(true);
+		};
 	}
 
 	/**
@@ -98,14 +163,18 @@ public abstract class Sampler {
 		if (getFilmSizeX() > getFilmSizeY()) {
 
 			final int midX = ( getMaxFilmX() - getMinFilmX() ) / 2 + getMinFilmX();
-			return Arrays.asList(splitSubSampler(getMinFilmX(), getMinFilmY(), midX, getMaxFilmY()),
-					splitSubSampler(midX + 1, getMinFilmY(), getMaxFilmX(), getMaxFilmY()));
+			return Arrays.asList(
+					splitSubSampler(getMinFilmX(), getMinFilmY(), midX, getMaxFilmY(), getPregenerateBufferSize() / 2),
+					splitSubSampler(midX + 1, getMinFilmY(), getMaxFilmX(), getMaxFilmY(),
+							getPregenerateBufferSize() / 2));
 
 		} else {
 
 			final int midY = ( getMaxFilmY() - getMinFilmY() ) / 2 + getMinFilmY();
-			return Arrays.asList(splitSubSampler(getMinFilmX(), getMinFilmY(), getMaxFilmX(), midY),
-					splitSubSampler(getMinFilmX(), midY + 1, getMaxFilmX(), getMaxFilmY()));
+			return Arrays.asList(
+					splitSubSampler(getMinFilmX(), getMinFilmY(), getMaxFilmX(), midY, getPregenerateBufferSize() / 2),
+					splitSubSampler(getMinFilmX(), midY + 1, getMaxFilmX(), getMaxFilmY(),
+							getPregenerateBufferSize() / 2));
 
 		}
 	}
@@ -118,36 +187,14 @@ public abstract class Sampler {
 	 * @param minFilmY
 	 * @param maxFilmX
 	 * @param maxFilmY
+	 * @param pregenerateBufferSize
 	 * @return
 	 */
-	protected abstract Sampler splitSubSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY);
+	protected abstract Sampler splitSubSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY,
+			int pregenerateBufferSize);
 
 	/**
-	 * Pre-generates all {@link Sample}s within this Sampler's domain. Blocks
-	 * until all Samples are generated and stored in this Sampler's internal
-	 * queue.
-	 * <p>
-	 * <strong>Note</strong> that all pregenerated Samples will not be copied
-	 * into any subdivided sub-Samplers you may subsequently split off.
-	 * </p>
-	 */
-	public void pregenerateSamples() {
-
-		this.pregenerate = true;
-
-		try {
-
-			Sample currentSample;
-			while (( currentSample = generateNextSample() ) != null)
-				samplesQueue.put(currentSample);
-
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * @return a count of those {@link Sample}s that were pre-generated and
+	 * @return a count of those {@link Sample}s that have been pre-generated and
 	 *         stored in this Sampler's internal queue
 	 */
 	public int countSamplesPregenerated() {
@@ -161,28 +208,68 @@ public abstract class Sampler {
 	 */
 	public Optional<Sample> getNextSample() {
 
-		final Optional<Sample> result;
+		Optional<Sample> result = Optional.empty();
 		samplerLock.lock();
 
-		if (this.pregenerate)
-			if (samplesQueue.isEmpty())
+		//
+		//
+		// Are we pre-generating Samples for this Sampler?
+		if (pregenerate) {
+
+			//
+			// If we haven't started the pre-generator sampler, start it now!
+			if (!generatorStarted.get())
+				pregenerateSamples();
+
+			//
+			// If the pre-generator finished and there are no more samples, then
+			// this Sampler is finished!
+			if (generatorFinished.get() && samplesQueue.isEmpty())
 				result = Optional.empty();
 			else
 				try {
 					result = Optional.of(samplesQueue.take());
 				} catch (InterruptedException e) {
 					e.printStackTrace();
-					return Optional.empty();
+					result = Optional.empty();
 				}
-		else
+
+		} else {
+
+			//
+			// We are *not* pre-generating anything.
+			// So generate the next Sample in this Sampler's domain.
 			result = Optional.ofNullable(generateNextSample());
 
+		}
+
+		//
+		//
+		//
 		if (!result.isPresent())
 			noMoreSamples = true;
 
 		samplerLock.unlock();
 
 		return result;
+	}
+
+	/**
+	 * If this Sampler was configued to do any {@link Sample} pre-generation,
+	 * generate those Samples now.
+	 * <p>
+	 * This method will block until pre-generation is complete.
+	 * </p>
+	 */
+	public void pregenerateSamples() {
+
+		Global.RENDER_EXECUTOR.submit(samplesPregenerator);
+
+		try {
+			samplesPregeneratedLatch.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -252,6 +339,11 @@ public abstract class Sampler {
 	public int getFilmSizeY() {
 
 		return maxFilmY - minFilmY + 1;
+	}
+
+	public int getPregenerateBufferSize() {
+
+		return pregenerateBufferSize;
 	}
 
 	public static double mapXToU(double x, double minX, double maxX) {

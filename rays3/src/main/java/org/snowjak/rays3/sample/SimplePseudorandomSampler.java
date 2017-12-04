@@ -17,8 +17,13 @@ public class SimplePseudorandomSampler extends Sampler {
 	private int	currSamplePerPixel;
 
 	public SimplePseudorandomSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int samplesPerPixel) {
+		this(minFilmX, minFilmY, maxFilmX, maxFilmY, samplesPerPixel, 0);
+	}
 
-		super(minFilmX, minFilmY, maxFilmX, maxFilmY, samplesPerPixel);
+	public SimplePseudorandomSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int samplesPerPixel,
+			int pregenerateBufferSize) {
+
+		super(minFilmX, minFilmY, maxFilmX, maxFilmY, samplesPerPixel, pregenerateBufferSize);
 
 		this.currFilmX = this.getMinFilmX();
 		this.currFilmY = this.getMinFilmY();
@@ -26,9 +31,11 @@ public class SimplePseudorandomSampler extends Sampler {
 	}
 
 	@Override
-	protected Sampler splitSubSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY) {
+	protected Sampler splitSubSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY,
+			int pregenerateBufferSize) {
 
-		return new SimplePseudorandomSampler(minFilmX, minFilmY, maxFilmX, maxFilmY, getSamplesPerPixel());
+		return new SimplePseudorandomSampler(minFilmX, minFilmY, maxFilmX, maxFilmY, getSamplesPerPixel(),
+				pregenerateBufferSize);
 	}
 
 	@Override

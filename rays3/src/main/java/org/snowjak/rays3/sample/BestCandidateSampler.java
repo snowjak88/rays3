@@ -32,7 +32,13 @@ public class BestCandidateSampler extends Sampler {
 	private static final int	COUNT_SAMPLE_DIMENSIONS	= 5;
 
 	public BestCandidateSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int samplesPerPixel) {
-		super(minFilmX, minFilmY, maxFilmX, maxFilmY, (int) pow(ceil(sqrt((double) samplesPerPixel)), 2));
+		this(minFilmX, minFilmY, maxFilmX, maxFilmY, samplesPerPixel, 0);
+	}
+
+	public BestCandidateSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int samplesPerPixel,
+			int pregenerateBufferSize) {
+		super(minFilmX, minFilmY, maxFilmX, maxFilmY, (int) pow(ceil(sqrt((double) samplesPerPixel)), 2),
+				pregenerateBufferSize);
 
 		this.samplesPerSide = (int) ceil(sqrt(getSamplesPerPixel()));
 		this.samples = new double[samplesPerSide][samplesPerSide][COUNT_SAMPLE_DIMENSIONS];
@@ -52,9 +58,10 @@ public class BestCandidateSampler extends Sampler {
 	}
 
 	@Override
-	protected Sampler splitSubSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY) {
+	protected Sampler splitSubSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int pregenerateBufferSize) {
 
-		return new BestCandidateSampler(minFilmX, minFilmY, maxFilmX, maxFilmY, getSamplesPerPixel());
+		return new BestCandidateSampler(minFilmX, minFilmY, maxFilmX, maxFilmY, getSamplesPerPixel(),
+				pregenerateBufferSize);
 	}
 
 	@Override

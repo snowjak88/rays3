@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -21,8 +20,8 @@ import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.geometry.shape.SphereShape;
 import org.snowjak.rays3.integrator.AbstractIntegrator;
 import org.snowjak.rays3.integrator.SimplePathTracingIntegrator;
-import org.snowjak.rays3.sample.BestCandidateSampler;
 import org.snowjak.rays3.sample.Sampler;
+import org.snowjak.rays3.sample.StratifiedSampler;
 import org.snowjak.rays3.spectrum.RGB;
 import org.snowjak.rays3.spectrum.RGBSpectrum;
 import org.snowjak.rays3.texture.CheckerboardTexture;
@@ -40,35 +39,8 @@ public class Main {
 		//
 		//
 		//
-		final Sampler sampler = new BestCandidateSampler(0, 0, imageSizeX - 1, imageSizeY - 1, 4);
-
-		System.out.println(String.format("Pre-generating %,d samples ...", sampler.totalSamples()));
-		Collection<Sampler> subSamplers = sampler.recursivelySubdivide(2);
-
-		final CountDownLatch pregenerateComplete = new CountDownLatch(subSamplers.size());
-
-		subSamplers.forEach(s -> Global.RENDER_EXECUTOR.submit(() -> {
-			s.pregenerateSamples();
-			pregenerateComplete.countDown();
-		}));
-
-		final Future<?> pregenerateMessage = Global.SCHEDULED_EXECUTOR
-				.scheduleWithFixedDelay(
-						() -> System.out.println(String.format("%,d samples pregenerated ...",
-								subSamplers
-										.stream()
-											.collect(Collectors.summingInt(s -> s.countSamplesPregenerated())))),
-						1, 1, TimeUnit.SECONDS);
-
-		try {
-			pregenerateComplete.await();
-		} catch (InterruptedException e1) {
-			e1.printStackTrace();
-			return;
-		}
-
-		pregenerateMessage.cancel(false);
-		System.out.println("Done pre-generating samples!");
+		final Sampler sampler = new StratifiedSampler(0, 0, imageSizeX - 1, imageSizeY - 1, 64, 480000);
+		final Collection<Sampler> subSamplers = sampler.recursivelySubdivide(2);
 		//
 		//
 		//
@@ -132,13 +104,15 @@ public class Main {
 		//
 		//
 		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(
-				() -> System.out.println(String.format("[%TT] (%,12d) --> [%,12d] --> {%,6d} --> (%,12d)", new Date(),
-						( sampler.totalSamples() ), ( integrator.countSamplesWaitingToRender() ),
-						( integrator.countSamplesCurrentlyRendering() ), film.countSamplesAdded())),
+				() -> System.out.println(String.format("[%TT] (%,12d) --> [%,12d] --> [%,12d] --> {%,6d} --> (%,12d)",
+						new Date(), ( sampler.totalSamples() ),
+						( subSamplers.stream().collect(Collectors.summingInt(s -> s.countSamplesPregenerated())) ),
+						( integrator.countSamplesWaitingToRender() ), ( integrator.countSamplesCurrentlyRendering() ),
+						film.countSamplesAdded())),
 				1, 10, TimeUnit.SECONDS);
 		Global.SCHEDULED_EXECUTOR.scheduleWithFixedDelay(
-				() -> System.out
-						.println("[  TIME  ] ( TOT SAMPLE ) --> [ SAMPL WAIT ] --> { ACTV } --> ( RESULT SAV )"),
+				() -> System.out.println(
+						"[  TIME  ] ( TOT SAMPLE ) --> [ SAMPL WAIT ] --> [ RENDR WAIT ] --> { ACTV } --> ( RESULT SAV )"),
 				0, 60, TimeUnit.SECONDS);
 
 		integrator.render(world);
