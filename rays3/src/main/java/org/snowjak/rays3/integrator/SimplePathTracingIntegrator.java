@@ -91,8 +91,11 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 
 			//
 			//
-			// First, form an estimate of the total incident radiance due to
-			// direct illumination.
+			//
+			final Spectrum incidentRadiance;
+
+			// Estimate the total incident radiance due to direct
+			// illumination.
 			final Spectrum directRadiance = world.getEmissives().stream().map(p -> {
 				final Point emissiveSurfacePoint = p
 						.sampleSurfacePoint(sample.getAdditionalTwinSample("sample-emissive-surface", 1), point);
@@ -123,33 +126,37 @@ public class SimplePathTracingIntegrator extends AbstractIntegrator {
 
 			//
 			//
-			// Second, estimate the total incident radiance due to indirect
-			// illumination.
-			final Spectrum indirectSampledRadiance;
+			//
 
-			if (ray.getDepth() >= getMaxRayDepth()) {
-				indirectSampledRadiance = RGBSpectrum.BLACK;
-			} else {
+			final Spectrum indirectRadiance;
+			if (ray.getDepth() < getMaxRayDepth()) {
+
+				// Estimate the total incident radiance due to indirect
+				// illumination.
 
 				final Vector reflectedDirection = bsdf.sampleW_i(relativeInteraction, sample,
 						sample.getAdditionalTwinSample("sample-indirect-W_i", 1));
 				final Ray reflectedRay = new Ray(point, reflectedDirection, ray);
 
-				indirectSampledRadiance = followRay(reflectedRay, world, sample)
+				indirectRadiance = followRay(reflectedRay, world, sample)
 						.multiply(bsdf.f_r(relativeInteraction, sample,
 								sample.getAdditionalTwinSample("sample-indirect-f_r", 1), reflectedDirection))
 							.multiply(bsdf.cos_i(relativeInteraction, reflectedDirection));
+
+			} else {
+				indirectRadiance = RGBSpectrum.BLACK;
 			}
 
-			//
-			//
-			//
-			final Spectrum totalIncidentRadiance = ( directRadiance.add(indirectSampledRadiance) ).multiply(1d / 2d);
+			if (ray.getDepth() < getMaxRayDepth())
+				incidentRadiance = directRadiance.add(indirectRadiance).multiply(1d / 2d);
+			else
+				incidentRadiance = directRadiance;
+
 			//
 			//
 			final Spectrum result = bsdf
 					.sampleL_e(relativeInteraction, sample, sample.getAdditionalTwinSample("sample-L_e", 1))
-						.add(totalIncidentRadiance);
+						.add(incidentRadiance);
 			return result;
 
 		} else {

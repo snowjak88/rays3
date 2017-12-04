@@ -39,7 +39,7 @@ public class Main {
 		//
 		//
 		//
-		final Sampler sampler = new StratifiedSampler(0, 0, imageSizeX - 1, imageSizeY - 1, 64, 480000);
+		final Sampler sampler = new StratifiedSampler(0, 0, imageSizeX - 1, imageSizeY - 1, 1024);
 		final Collection<Sampler> subSamplers = sampler.recursivelySubdivide(2);
 		//
 		//
