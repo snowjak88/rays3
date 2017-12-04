@@ -258,17 +258,23 @@ public abstract class Sampler {
 	 * If this Sampler was configued to do any {@link Sample} pre-generation,
 	 * generate those Samples now.
 	 * <p>
-	 * This method will block until pre-generation is complete.
+	 * This method will block until pre-generation is complete. Note that the
+	 * separate Sample-generation task will keep going until all Samples are
+	 * generated!
 	 * </p>
 	 */
 	public void pregenerateSamples() {
 
-		Global.RENDER_EXECUTOR.submit(samplesPregenerator);
+		if (pregenerate && generatorStarted.compareAndSet(false, true)) {
 
-		try {
-			samplesPregeneratedLatch.await();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+			Global.RENDER_EXECUTOR.submit(samplesPregenerator);
+
+			try {
+				samplesPregeneratedLatch.await();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
 		}
 	}
 
