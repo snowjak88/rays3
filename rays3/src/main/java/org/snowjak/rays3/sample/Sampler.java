@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Optional;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -16,12 +18,15 @@ import org.snowjak.rays3.spectrum.Spectrum;
  */
 public abstract class Sampler {
 
-	private final int	minFilmX, minFilmY, maxFilmX, maxFilmY;
-	private final int	samplesPerPixel;
+	private final int					minFilmX, minFilmY, maxFilmX, maxFilmY;
+	private final int					samplesPerPixel;
 
-	private final Lock	samplerLock;
+	private final BlockingQueue<Sample>	samplesQueue;
 
-	private boolean		noMoreSamples;
+	private final Lock					samplerLock;
+
+	private boolean						pregenerate;
+	private boolean						noMoreSamples;
 
 	public Sampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY, int samplesPerPixel) {
 
@@ -31,8 +36,11 @@ public abstract class Sampler {
 		this.maxFilmY = maxFilmY;
 		this.samplesPerPixel = samplesPerPixel;
 
+		this.samplesQueue = new LinkedBlockingQueue<>();
+
 		this.samplerLock = new ReentrantLock();
 
+		this.pregenerate = false;
 		this.noMoreSamples = false;
 	}
 
@@ -114,6 +122,26 @@ public abstract class Sampler {
 	 */
 	protected abstract Sampler splitSubSampler(int minFilmX, int minFilmY, int maxFilmX, int maxFilmY);
 
+	public void pregenerateSamples() {
+
+		this.pregenerate = true;
+
+		try {
+
+			Sample currentSample;
+			while (( currentSample = generateNextSample() ) != null)
+				samplesQueue.put(currentSample);
+
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public int countSamplesPregenerated() {
+
+		return samplesQueue.size();
+	}
+
 	/**
 	 * Grab the next Sample, or an empty {@link Optional} if no more Samples are
 	 * left in this sampling-regime.
@@ -123,7 +151,18 @@ public abstract class Sampler {
 		final Optional<Sample> result;
 		samplerLock.lock();
 
-		result = Optional.ofNullable(generateNextSample());
+		if (this.pregenerate)
+			if (samplesQueue.isEmpty())
+				result = Optional.empty();
+			else
+				try {
+					result = Optional.of(samplesQueue.take());
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					return Optional.empty();
+				}
+		else
+			result = Optional.ofNullable(generateNextSample());
 
 		if (!result.isPresent())
 			noMoreSamples = true;

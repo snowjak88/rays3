@@ -2,9 +2,12 @@ package org.snowjak.rays3;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.snowjak.rays3.bxdf.LambertianBRDF;
 import org.snowjak.rays3.bxdf.PerfectSpecularBRDF;
@@ -37,15 +40,45 @@ public class Main {
 		//
 		//
 		//
-		final Sampler sampler = new BestCandidateSampler(0, 0, imageSizeX - 1, imageSizeY - 1, 3);
+		final Sampler sampler = new BestCandidateSampler(0, 0, imageSizeX - 1, imageSizeY - 1, 4);
+
+		System.out.println(String.format("Pre-generating %,d samples ...", sampler.totalSamples()));
+		Collection<Sampler> subSamplers = sampler.recursivelySubdivide(2);
+
+		final CountDownLatch pregenerateComplete = new CountDownLatch(subSamplers.size());
+
+		subSamplers.forEach(s -> Global.RENDER_EXECUTOR.submit(() -> {
+			s.pregenerateSamples();
+			pregenerateComplete.countDown();
+		}));
+
+		final Future<?> pregenerateMessage = Global.SCHEDULED_EXECUTOR
+				.scheduleWithFixedDelay(
+						() -> System.out.println(String.format("%,d samples pregenerated ...",
+								subSamplers
+										.stream()
+											.collect(Collectors.summingInt(s -> s.countSamplesPregenerated())))),
+						1, 1, TimeUnit.SECONDS);
+
+		try {
+			pregenerateComplete.await();
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+			return;
+		}
+
+		pregenerateMessage.cancel(false);
+		System.out.println("Done pre-generating samples!");
+		//
+		//
+		//
 
 		final Camera camera = new PinholeCamera(imageSizeX, imageSizeY, 4d, 3d, new Point(0, 1, -5), new Point(0, 0, 0),
 				Vector.J, 5d);
 
 		final SimpleImageFilm film = new SimpleImageFilm(imageSizeX, imageSizeY, false);
 
-		final AbstractIntegrator integrator = new SimplePathTracingIntegrator(camera, film,
-				sampler.recursivelySubdivide(3), 4);
+		final AbstractIntegrator integrator = new SimplePathTracingIntegrator(camera, film, subSamplers, 4);
 
 		//
 		//
