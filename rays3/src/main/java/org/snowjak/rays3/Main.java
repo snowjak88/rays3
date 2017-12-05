@@ -8,10 +8,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import javax.imageio.ImageIO;
+
 import org.snowjak.rays3.bxdf.LambertianBRDF;
 import org.snowjak.rays3.bxdf.PerfectSpecularBRDF;
 import org.snowjak.rays3.camera.Camera;
 import org.snowjak.rays3.camera.PinholeCamera;
+import org.snowjak.rays3.film.Film.ImageFormat;
 import org.snowjak.rays3.film.SimpleImageFilm;
 import org.snowjak.rays3.geometry.Point;
 import org.snowjak.rays3.geometry.Vector;
@@ -33,6 +36,9 @@ public class Main {
 
 	public static void main(String[] args) {
 
+		for(String name : ImageIO.getReaderFormatNames())
+			System.out.println("name = " + name);
+		
 		final int imageSizeX = 400;
 		final int imageSizeY = 300;
 
@@ -154,7 +160,7 @@ public class Main {
 			Global.SCHEDULED_EXECUTOR.shutdown();
 
 			System.out.println("Writing image to file ...");
-			film.writeImage(new File("render.png"));
+			film.writeImage(new File("render.png"), ImageFormat.PNG);
 
 			System.out.println("Done!");
 		}, 3, TimeUnit.SECONDS);

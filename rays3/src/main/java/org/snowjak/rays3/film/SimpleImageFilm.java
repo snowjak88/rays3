@@ -3,8 +3,6 @@ package org.snowjak.rays3.film;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -22,45 +20,24 @@ import org.snowjak.rays3.spectrum.Spectrum;
  * 
  * @author snowjak88
  */
-public class SimpleImageFilm implements StatisticsFilm {
+public class SimpleImageFilm implements Film {
 
-	private final AtomicInteger		samplesAdded;
-	private final Lock				filmLock;
+	private final AtomicInteger	samplesAdded;
+	private final Lock			filmLock;
 
-	private final double[][][]		filmRGB;
-	private final List<Double>[][]	filmAmplitude;
-	private final int[][]			filmCounts;
+	private final double[][][]	filmRGB;
 
 	public SimpleImageFilm(int imageWidth, int imageHeight) {
-		this(imageWidth, imageHeight, false);
-	}
-
-	@SuppressWarnings("unchecked")
-	public SimpleImageFilm(int imageWidth, int imageHeight, boolean keepAmplitudes) {
 
 		this.samplesAdded = new AtomicInteger(0);
 		this.filmLock = new ReentrantLock();
 
 		this.filmRGB = new double[imageWidth][imageHeight][3];
 
-		if (keepAmplitudes)
-			this.filmAmplitude = new ArrayList[imageWidth][imageHeight];
-		else
-			this.filmAmplitude = null;
-
-		this.filmCounts = new int[imageWidth][imageHeight];
-
 		for (int i = 0; i < imageWidth; i++)
-			for (int j = 0; j < imageHeight; j++) {
-
-				filmCounts[i][j] = 0;
-
-				if (filmAmplitude != null)
-					filmAmplitude[i][j] = null;
-
+			for (int j = 0; j < imageHeight; j++)
 				for (int k = 0; k < 3; k++)
 					filmRGB[i][j][k] = 0d;
-			}
 
 	}
 
@@ -71,7 +48,7 @@ public class SimpleImageFilm implements StatisticsFilm {
 		final int filmY = Film.convertContinuousToDiscrete(sample.getImageY());
 
 		this.addSample(filmX, filmY, sample.getSampler().getSamplesPerPixel(), radiance);
-		
+
 		samplesAdded.incrementAndGet();
 
 	}
@@ -79,14 +56,6 @@ public class SimpleImageFilm implements StatisticsFilm {
 	protected void addSample(int filmX, int filmY, int samplesPerPixel, Spectrum radiance) {
 
 		filmLock.lock();
-
-		if (filmAmplitude != null) {
-			if (filmAmplitude[filmX][filmY] == null)
-				filmAmplitude[filmX][filmY] = new ArrayList<Double>(samplesPerPixel);
-
-			filmAmplitude[filmX][filmY].add(radiance.getAmplitude());
-		}
-		filmCounts[filmX][filmY]++;
 
 		final RGB rgb = radiance.toRGB();
 		filmRGB[filmX][filmY][0] += rgb.getRed();
@@ -103,46 +72,7 @@ public class SimpleImageFilm implements StatisticsFilm {
 	}
 
 	@Override
-	public double getVariance(double imageX, double imageY) {
-
-		final int filmX = Film.convertContinuousToDiscrete(imageX);
-		final int filmY = Film.convertContinuousToDiscrete(imageY);
-
-		if (filmAmplitude == null)
-			return 0d;
-
-		final List<Double> amplitudes = filmAmplitude[filmX][filmY];
-
-		filmLock.lock();
-
-		double result = 0d;
-		for (int i = 0; i < amplitudes.size() - 1; i++)
-			for (int j = i + 1; j < amplitudes.size(); j++) {
-				result += FastMath.pow(( amplitudes.get(i) - amplitudes.get(j) ), 2);
-			}
-
-		filmLock.unlock();
-
-		return result / ( (double) amplitudes.size() * (double) amplitudes.size() );
-	}
-
-	@Override
-	public int getCountAt(double imageX, double imageY) {
-
-		final int filmX = Film.convertContinuousToDiscrete(imageX);
-		final int filmY = Film.convertContinuousToDiscrete(imageY);
-
-		return filmCounts[filmX][filmY];
-	}
-
-	/**
-	 * Write the current contents of this Film to a file as a PNG image.
-	 * 
-	 * @param imageFile
-	 * @throws IOException
-	 *             if any exception occurred during file-writing
-	 */
-	public void writeImage(final File imageFile) {
+	public void writeImage(final File imageFile, ImageFormat format) {
 
 		BufferedImage image = new BufferedImage(filmRGB.length, filmRGB[0].length, BufferedImage.TYPE_INT_RGB);
 
@@ -151,7 +81,7 @@ public class SimpleImageFilm implements StatisticsFilm {
 				image.setRGB(u, filmRGB[0].length - v - 1, packRGB(filmRGB[u][v]));
 
 		try {
-			ImageIO.write(image, "png", imageFile);
+			ImageIO.write(image, format.getFormatName(), imageFile);
 
 		} catch (IOException e) {
 			System.err.println("Exception encountered while saving to the image-file \"" + imageFile.getAbsolutePath()

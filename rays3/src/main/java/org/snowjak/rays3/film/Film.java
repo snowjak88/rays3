@@ -1,5 +1,8 @@
 package org.snowjak.rays3.film;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.commons.math3.util.FastMath;
 import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.spectrum.Spectrum;
@@ -27,7 +30,7 @@ public interface Film {
 	 * @param radiance
 	 */
 	public void addSample(Sample sample, Spectrum radiance);
-	
+
 	public int countSamplesAdded();
 
 	/**
@@ -53,8 +56,32 @@ public interface Film {
 
 		return ( (double) discreteCoordinate ) + 0.5d;
 	}
-	
+
 	public int getWidth();
-	
+
 	public int getHeight();
+
+	/**
+	 * Write the current contents of this Film to a file as an image.
+	 * 
+	 * @param imageFile
+	 * @throws IOException
+	 *             if any exception occurred during file-writing
+	 */
+	public void writeImage(final File imageFile, ImageFormat format);
+
+	public enum ImageFormat {
+		PNG("png"), JPEG("jpeg"), BMP("bmp"), GIF("gif"), WBMP("wbmp");
+
+		private String formatName;
+
+		ImageFormat(String formatName) {
+			this.formatName = formatName;
+		}
+
+		public String getFormatName() {
+
+			return formatName;
+		}
+	}
 }
