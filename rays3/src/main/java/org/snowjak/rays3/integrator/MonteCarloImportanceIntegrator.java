@@ -18,6 +18,7 @@ import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.intersect.Interaction;
 import org.snowjak.rays3.sample.Sample;
 import org.snowjak.rays3.sample.Sampler;
+import org.snowjak.rays3.spectrum.RGB;
 import org.snowjak.rays3.spectrum.RGBSpectrum;
 import org.snowjak.rays3.spectrum.Spectrum;
 
@@ -94,6 +95,10 @@ public class MonteCarloImportanceIntegrator extends AbstractIntegrator {
 
 		double totalProb_direct = 0d;
 		double totalProb_indirect = 0d;
+		
+		//
+		//
+		final int twinSampleGridPerInteraction = (int) ceil(sqrt(samplesPerInteraction));
 		//
 		//
 		// First, sample all known emissives, to estimate direct illumination.
@@ -106,7 +111,7 @@ public class MonteCarloImportanceIntegrator extends AbstractIntegrator {
 				// emissive shape.
 				//
 				final Point emissiveSurfacePoint = p.sampleSurfacePoint(
-						sample.getAdditionalTwinSample("sample-emissive-surface", samplesPerInteraction), point);
+						sample.getAdditionalTwinSample("sample-emissive-surface", twinSampleGridPerInteraction), point);
 				final Vector toEmissiveSurface = new Vector(point, emissiveSurfacePoint);
 
 				final double cos_i = bsdf.cos_i(relativeInteraction, toEmissiveSurface);
@@ -123,7 +128,7 @@ public class MonteCarloImportanceIntegrator extends AbstractIntegrator {
 					continue;
 
 				final double pdfW_i = bsdf.pdfW_i(relativeInteraction, sample,
-						sample.getAdditionalTwinSample("sample-emissive-W_i", samplesPerInteraction), toEmissiveSurface)
+						sample.getAdditionalTwinSample("sample-emissive-W_i", twinSampleGridPerInteraction), toEmissiveSurface)
 						* ( p.getShape().computeSolidAngle(point) / ( 2d * PI ) );
 				final double sampleProb = Global.isNear(pdfW_i, 0d) ? 0d : 1d / pdfW_i;
 
@@ -132,13 +137,13 @@ public class MonteCarloImportanceIntegrator extends AbstractIntegrator {
 				final Spectrum radianceFromEmissive = p
 						.getBsdf()
 							.sampleL_e(emissiveInteraction, sample,
-									sample.getAdditionalTwinSample("sample-emissive-L_e", samplesPerInteraction))
+									sample.getAdditionalTwinSample("sample-emissive-L_e", twinSampleGridPerInteraction))
 							.multiply(1d / ( emissiveDistance * emissiveDistance ));
 
 				totalProb_direct += sampleProb;
 				totalW_i_direct = totalW_i_direct.add(radianceFromEmissive
 						.multiply(bsdf.f_r(relativeInteraction, sample,
-								sample.getAdditionalTwinSample("sample-emissive-f_r", samplesPerInteraction),
+								sample.getAdditionalTwinSample("sample-emissive-f_r", twinSampleGridPerInteraction),
 								toEmissiveSurface))
 							.multiply(cos_i)
 							.multiply(sampleProb));
@@ -160,39 +165,55 @@ public class MonteCarloImportanceIntegrator extends AbstractIntegrator {
 
 			for (int i = 0; i < samplesPerInteraction; i++) {
 				//
-				// Sample an incident direction from the BSDF and compute its
+				// Sample an incident direction from the BSDF and compute
+				// its
 				// PDF.
 				final Vector sampledDirection = bsdf.sampleW_i(relativeInteraction, sample,
-						sample.getAdditionalTwinSample("sample-indirect-W_i", samplesPerInteraction));
+						sample.getAdditionalTwinSample("sample-indirect-W_i", twinSampleGridPerInteraction));
 				final double pdfW_i = bsdf.pdfW_i(relativeInteraction, sample,
-						sample.getAdditionalTwinSample("sample-indirect-W_i-prob", samplesPerInteraction),
+						sample.getAdditionalTwinSample("sample-indirect-W_i-prob", twinSampleGridPerInteraction),
 						sampledDirection);
 				final double sampledProb = Global.isNear(pdfW_i, 0d) ? 0d : 1d / pdfW_i;
+				
+				//
+				// Perform Russian-roulette elimination on paths that will not contribute much to the total light estimate.
+				//
+				Spectrum indirectContribution =
+									bsdf.f_r(relativeInteraction, sample, sample.getAdditionalTwinSample("sample-indirect-f_r", twinSampleGridPerInteraction), sampledDirection)
+										.multiply(bsdf.cos_i(relativeInteraction, sampledDirection));
+				final RGB indirectContrib_rgb = indirectContribution.toRGB();
+				final double maxIndirectContribComponent = max(max(indirectContrib_rgb.getRed(), indirectContrib_rgb.getGreen()), indirectContrib_rgb.getBlue());
+				
+				final double russianRouletteProbability = Global.RND.nextDouble();
+				if (russianRouletteProbability >= maxIndirectContribComponent)
+					continue;
+				else
+					indirectContribution = indirectContribution.multiply(1d / maxIndirectContribComponent);
+				//
+				//
+				//
 
 				final Ray sampledRay = new Ray(point, sampledDirection, ray);
 
 				final Spectrum sampledW_i = followRay(sampledRay, world, sample)
-						.multiply(bsdf.f_r(relativeInteraction, sample,
-								sample.getAdditionalTwinSample("sample-indirect-f_r", samplesPerInteraction),
-								sampledDirection))
-							.multiply(bsdf.cos_i(relativeInteraction, sampledDirection));
+						.multiply(indirectContribution);
 
 				totalProb_indirect += sampledProb;
 				totalW_i_indirect = totalW_i_indirect.add(sampledW_i.multiply(sampledProb));
 
 			}
-
+			
+			if (totalProb_indirect == 0.0)
+				totalW_i_indirect = totalW_i_indirect.multiply(0d);
+			else
+				totalW_i_indirect = totalW_i_indirect.multiply(1d / totalProb_indirect);
 		}
-		if (totalProb_indirect == 0.0)
-			totalW_i_indirect = totalW_i_indirect.multiply(0d);
-		else
-			totalW_i_indirect = totalW_i_indirect.multiply(1d / totalProb_indirect);
 
 		//
 		//
 		//
 		return bsdf
-				.sampleL_e(relativeInteraction, sample, sample.getAdditionalTwinSample("sample-L_e", 1))
+				.sampleL_e(relativeInteraction, sample, sample.getAdditionalTwinSample("sample-L_e", twinSampleGridPerInteraction))
 					.add(totalW_i_direct.multiply(1d / 2d))
 					.add(totalW_i_indirect.multiply(1d / 2d));
 	}

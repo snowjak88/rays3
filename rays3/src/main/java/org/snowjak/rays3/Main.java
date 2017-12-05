@@ -19,7 +19,7 @@ import org.snowjak.rays3.geometry.shape.PlaneShape;
 import org.snowjak.rays3.geometry.shape.Primitive;
 import org.snowjak.rays3.geometry.shape.SphereShape;
 import org.snowjak.rays3.integrator.AbstractIntegrator;
-import org.snowjak.rays3.integrator.SimplePathTracingIntegrator;
+import org.snowjak.rays3.integrator.MonteCarloImportanceIntegrator;
 import org.snowjak.rays3.sample.Sampler;
 import org.snowjak.rays3.sample.StratifiedSampler;
 import org.snowjak.rays3.spectrum.RGB;
@@ -39,7 +39,7 @@ public class Main {
 		//
 		//
 		//
-		final Sampler sampler = new StratifiedSampler(0, 0, imageSizeX - 1, imageSizeY - 1, 1024);
+		final Sampler sampler = new StratifiedSampler(0, 0, imageSizeX - 1, imageSizeY - 1, 4, 1048576);
 		final Collection<Sampler> subSamplers = sampler.recursivelySubdivide(2);
 		//
 		//
@@ -48,9 +48,9 @@ public class Main {
 		final Camera camera = new PinholeCamera(imageSizeX, imageSizeY, 4d, 3d, new Point(0, 1, -5), new Point(0, 0, 0),
 				Vector.J, 5d);
 
-		final SimpleImageFilm film = new SimpleImageFilm(imageSizeX, imageSizeY, false);
+		final SimpleImageFilm film = new SimpleImageFilm(imageSizeX, imageSizeY);
 
-		final AbstractIntegrator integrator = new SimplePathTracingIntegrator(camera, film, subSamplers, 4);
+		final AbstractIntegrator integrator = new MonteCarloImportanceIntegrator(camera, film, subSamplers, 4, 16);
 
 		//
 		//
