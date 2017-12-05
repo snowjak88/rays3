@@ -53,4 +53,8 @@ public interface Film {
 
 		return ( (double) discreteCoordinate ) + 0.5d;
 	}
+	
+	public int getWidth();
+	
+	public int getHeight();
 }

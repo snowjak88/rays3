@@ -70,11 +70,19 @@ public class SimpleImageFilm implements StatisticsFilm {
 		final int filmX = Film.convertContinuousToDiscrete(sample.getImageX());
 		final int filmY = Film.convertContinuousToDiscrete(sample.getImageY());
 
+		this.addSample(filmX, filmY, sample.getSampler().getSamplesPerPixel(), radiance);
+		
+		samplesAdded.incrementAndGet();
+
+	}
+
+	protected void addSample(int filmX, int filmY, int samplesPerPixel, Spectrum radiance) {
+
 		filmLock.lock();
 
 		if (filmAmplitude != null) {
 			if (filmAmplitude[filmX][filmY] == null)
-				filmAmplitude[filmX][filmY] = new ArrayList<Double>(sample.getSampler().getSamplesPerPixel());
+				filmAmplitude[filmX][filmY] = new ArrayList<Double>(samplesPerPixel);
 
 			filmAmplitude[filmX][filmY].add(radiance.getAmplitude());
 		}
@@ -85,10 +93,7 @@ public class SimpleImageFilm implements StatisticsFilm {
 		filmRGB[filmX][filmY][1] += rgb.getGreen();
 		filmRGB[filmX][filmY][2] += rgb.getBlue();
 
-		samplesAdded.incrementAndGet();
-
 		filmLock.unlock();
-
 	}
 
 	@Override
@@ -162,6 +167,18 @@ public class SimpleImageFilm implements StatisticsFilm {
 		final double g = FastMath.max(FastMath.min(rgb[1], 1d), 0d);
 		final double b = FastMath.max(FastMath.min(rgb[2], 1d), 0d);
 		return ( (int) ( r * 255d ) ) << 16 | ( (int) ( g * 255d ) ) << 8 | ( (int) ( b * 255d ) );
+	}
+
+	@Override
+	public int getWidth() {
+
+		return filmRGB.length;
+	}
+
+	@Override
+	public int getHeight() {
+
+		return filmRGB[0].length;
 	}
 
 }
